@@ -1,0 +1,1 @@
+[File Adapter](https://calcite.apache.org/docs/file_adapter.html)

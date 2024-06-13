@@ -1,0 +1,24 @@
+[
+  {
+    "rows": [
+      {
+        "first_name": "John",
+        "last_name": "Hughes",
+        "articles_aggregate": {
+          "aggregates": {
+            "count": 2
+          }
+        }
+      },
+      {
+        "first_name": "Peter",
+        "last_name": "Landin",
+        "articles_aggregate": {
+          "aggregates": {
+            "count": 1
+          }
+        }
+      }
+    ]
+  }
+]

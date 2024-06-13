@@ -1,0 +1,19 @@
+{
+  "version": "0.1.3",
+  "capabilities": {
+    "query": {
+      "aggregates": {},
+      "variables": {},
+      "nested_fields": {
+        "filter_by": {},
+        "order_by": {},
+        "aggregates": {}
+      }
+    },
+    "mutation": {},
+    "relationships": {
+      "relation_comparisons": {},
+      "order_by_aggregate": {}
+    }
+  }
+}

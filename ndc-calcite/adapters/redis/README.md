@@ -1,0 +1,1 @@
+[Redis Adapter](https://calcite.apache.org/docs/redis_adapter.html)
