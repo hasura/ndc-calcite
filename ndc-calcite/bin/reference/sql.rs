@@ -89,7 +89,7 @@ pub fn aggregates(query: &models::Query) -> Vec<String> {
             for (name, aggregate) in query.aggregates.as_ref().unwrap() {
                 let aggregate_phrase = match aggregate {
                     Aggregate::ColumnCount { column, distinct, field_path } => {
-                        format!("COUNT({}{}) AS \"{}\"",
+                        format!("COUNT({}\"{}\") AS \"{}\"",
                                 if *distinct { "DISTINCT " } else { "" },
                                 create_column_name(column, field_path),
                                 name)
@@ -197,7 +197,7 @@ fn process_expression(collection: &str, variables: &BTreeMap<String, serde_json:
                 ComparisonValue::Scalar { value } => {
                     let sql_value = sql_quotes(&sql_brackets(&value.to_string()));
                     if sql_value == "()" {
-                        format!("(SELECT {} FROM {} WHERE FALSE)", left_side, collection)
+                        format!("(SELECT {} FROM \"{}\" WHERE FALSE)", left_side, collection)
                     } else {
                         sql_value
                     }
@@ -262,7 +262,7 @@ pub fn query_collection(
             if w.is_empty() {
                 "".to_string()
             } else {
-                format!(" WHERE {}", w).to_string()
+                format!(" WHERE \"{}\"", w).to_string()
             }
         }
     };
@@ -282,7 +282,7 @@ pub fn query_collection(
     };
 
     let query = format!(
-        "SELECT {} FROM {}{}{}{}",
+        "SELECT {} FROM \"{}\"{}{}{}",
         select_clause,
         collection_name,
         expanded_where_clause,

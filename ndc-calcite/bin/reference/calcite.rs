@@ -8,9 +8,10 @@ use jni::JavaVM;
 use jni::JNIEnv;
 use jni::objects::{GlobalRef, JObject, JString, JValueGen, JValueOwned};
 use jni::objects::JValueGen::Object;
+use serde_json::Value;
 use tracing::{event, Level};
 
-use ndc_models::{CapabilitiesResponse, ErrorResponse, LeafCapability, NestedFieldCapabilities, RelationshipCapabilities};
+use ndc_models::{CapabilitiesResponse, ErrorResponse, LeafCapability, NestedFieldCapabilities, RelationshipCapabilities, RowFieldValue};
 
 use crate::Row;
 use ndc_models as models;
@@ -91,12 +92,26 @@ pub fn get_query(calcite_ref: GlobalRef, jvm: Arc<JavaVM>, query: &str) -> crate
             });
             match json_array {
                 Ok(rows) => {
+                    let mut max_keys = 0;
+                    let mut key_sample : Vec<String> = vec![];
+                    for row in &rows {
+                        if row.len() > max_keys {
+                            max_keys = row.len();
+                            key_sample = row.keys().cloned().collect();
+                        }
+                    }
                     let new_rows: Vec<Row> = rows.into_iter().map(|mut row| {
+                        if max_keys > row.len() {
+                            for key in &key_sample {
+                                if !row.contains_key(key)  {
+                                    row.insert(key.into(), RowFieldValue(Value::String("null".into())));
+                                }
+                            }
+                        }
                         row.swap_remove("CONSTANT");
                         row
                     }).collect();
-                    let message = format!("Retrieved {} rows from", new_rows.len().to_string());
-                    event!(Level::INFO, message);
+                    event!(Level::INFO, message = format!("Retrieved {} rows from", new_rows.len().to_string()));
                     event!(Level::DEBUG, message = serde_json::to_string(&new_rows).unwrap());
                     Ok(new_rows)
                 }

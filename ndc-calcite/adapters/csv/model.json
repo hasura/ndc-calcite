@@ -25,7 +25,7 @@
       "type": "custom",
       "factory": "org.apache.calcite.adapter.csv.CsvSchemaFactory",
       "operand": {
-        "directory": "./resource/test/sales"
+        "directory": "./resources/test/sales"
       }
     }
   ]

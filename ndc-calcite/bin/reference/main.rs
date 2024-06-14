@@ -113,11 +113,11 @@ async fn init_app_state() -> std::result::Result<AppState, (StatusCode, Json<Err
                 calcite_ref,
             })
         }
-        Err(_) => {
+        Err(e) => {
             return Err((
                 StatusCode::BAD_REQUEST,
                 Json(ErrorResponse {
-                    message: "duplicate argument names".into(),
+                    message: e.to_string(),
                     details: serde_json::Value::Null,
                 }),
             ));
@@ -139,9 +139,9 @@ async fn main() -> std::result::Result<(), std::io::Error> {
 
     let app_state = match init_app_state().await {
         Ok(state) => Arc::new(Mutex::new(state)),
-        Err(_) => {
+        Err((_, ErrorResponse)) => {
             eprintln!("Failed to initialize app state");
-            return Err(std::io::Error::new(std::io::ErrorKind::Other, "Failed to initialize app state"));
+            return Err(std::io::Error::new(std::io::ErrorKind::Other, format!("Failed to initialize app state: {}", ErrorResponse.message)));
         },
     };
 

@@ -22,7 +22,8 @@ pub fn create_jvm() -> JavaVM {
         jar_paths.push(jar_name);
     }
     let expanded_paths: String = jar_paths.join(":");
-    let mut jvm_args = InitArgsBuilder::new().version(JNIVersion::V8);
+    let mut jvm_args = InitArgsBuilder::new().version(JNIVersion::V8)
+        .option("--add-opens=java.base/java.nio=ALL-UNNAMED");
     let log4j2_config_file = env::var("log4j2_config_file").unwrap_or_default();
     if !log4j2_config_file.is_empty() {
         jvm_args = jvm_args.option(format!("-Dlog4j.configurationFile={}", log4j2_config_file));

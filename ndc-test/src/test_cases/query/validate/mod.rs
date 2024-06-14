@@ -396,13 +396,13 @@ mod representations {
             | models::TypeRepresentation::Float32
             | models::TypeRepresentation::Float64 => check!(value.is_number(), "number"),
             models::TypeRepresentation::Integer
+            | models::TypeRepresentation::Int64
+            | models::TypeRepresentation::BigInteger
+            | models::TypeRepresentation::BigDecimal
             | models::TypeRepresentation::Int8
             | models::TypeRepresentation::Int16
             | models::TypeRepresentation::Int32 => check!(value.is_i64(), "integer"),
             models::TypeRepresentation::String
-            | models::TypeRepresentation::Int64
-            | models::TypeRepresentation::BigInteger
-            | models::TypeRepresentation::BigDecimal
             | models::TypeRepresentation::UUID
             | models::TypeRepresentation::Date
             | models::TypeRepresentation::Timestamp

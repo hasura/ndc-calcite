@@ -14,7 +14,6 @@ use crate::calcite;
 // ANCHOR: get_schema
 #[tracing::instrument]
 pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::result::Result<SchemaResponse, Box<dyn Error>> {
-
     let env = java_vm.attach_current_thread().unwrap();
     let calcite = env.new_local_ref(calcite_ref).unwrap();
     let data_models = calcite::get_models(calcite, &java_vm);
@@ -61,6 +60,22 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
         ),
         (
             "VARCHAR".into(),
+            models::ScalarType {
+                representation: Some(models::TypeRepresentation::String),
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: numeric_comparison_operators.clone(),
+            },
+        ),
+        (
+            "JavaType(class java.util.ArrayList)".into(),
+            models::ScalarType {
+                representation: Some(models::TypeRepresentation::String),
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: numeric_comparison_operators.clone(),
+            },
+        ),
+        (
+            "JavaType(class java.lang.String)".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::String),
                 aggregate_functions: BTreeMap::new(),
@@ -220,12 +235,26 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::Date),
                 aggregate_functions: BTreeMap::new(),
-                comparison_operators: BTreeMap::from_iter([
-                    ("eq".into(), models::ComparisonOperatorDefinition::Equal),
-                    ("in".into(), models::ComparisonOperatorDefinition::In),
-                ]),
+                comparison_operators: numeric_comparison_operators.clone(),
             },
-        ), (
+        ),
+        (
+            "TIME(0)".into(),
+            models::ScalarType {
+                representation: Some(models::TypeRepresentation::String),
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: numeric_comparison_operators.clone(),
+            },
+        ),
+        (
+            "TIMESTAMP(0)".into(),
+            models::ScalarType {
+                representation: Some(models::TypeRepresentation::Timestamp),
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: numeric_comparison_operators.clone(),
+            },
+        ),
+        (
             "TIMESTAMP".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::TimestampTZ),
@@ -245,33 +274,41 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
         for (column_name, column_type) in columns {
             fields.insert(column_name.into(), ObjectField {
                 description: Some("".into()),
-                r#type: models::Type::Named { name: column_type.into() },
+                r#type: models::Type::Nullable {
+                    underlying_type: Box::new(models::Type::Named {name: column_type.into() })
+                },
                 arguments: BTreeMap::new(),
             });
         }
-        object_types.insert(
-            table_name.into(), ObjectType {
-                description: Some("".into()),
-                fields: fields.clone(),
-            });
-        collections.push(CollectionInfo {
-            name: table_name.into(),
-            description: Some(format!("A collection of {}", table_name)),
-            collection_type: table_name.into(),
-            arguments: BTreeMap::new(),
-            foreign_keys: BTreeMap::from_iter([]),
-            uniqueness_constraints: BTreeMap::from_iter([]),
-        })
+        if !scalar_types.contains_key(table_name) {
+            object_types.insert(
+                table_name.into(), ObjectType {
+                    description: Some("".into()),
+                    fields: fields.clone(),
+                });
+            collections.push(CollectionInfo {
+                name: table_name.into(),
+                description: Some(format!("A collection of {}", table_name)),
+                collection_type: table_name.into(),
+                arguments: BTreeMap::new(),
+                foreign_keys: BTreeMap::from_iter([]),
+                uniqueness_constraints: BTreeMap::from_iter([]),
+            })
+        }
+        else {
+            return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, format!("Table names cannot be same as a scalar type name: {}", table_name))));
+        }
     }
     let procedures = vec![];
     let functions: Vec<models::FunctionInfo> = vec![];
-
-    event!(Level::INFO, "Introspected Schema");
-    Ok(models::SchemaResponse {
+    let schema = models::SchemaResponse {
         scalar_types,
         object_types,
         collections,
         functions,
         procedures,
-    })
+    };
+
+    event!(Level::INFO, schema = serde_json::to_string_pretty(&schema).unwrap());
+    Ok(schema)
 }

@@ -12,6 +12,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <arrow.version>16.1.0</arrow.version>
     </properties>
 
     <dependencyManagement>
@@ -20,6 +21,13 @@
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-bom</artifactId>
                 <version>1.39.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.arrow</groupId>
+                <artifactId>arrow-bom</artifactId>
+                <version>${arrow.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -131,22 +139,51 @@
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>arrow-vector</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>arrow-memory-netty</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>flight-core</artifactId>
+            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-buffer</artifactId>
+            <version>4.1.111.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.111.Final</version>
+        </dependency>
     </dependencies>
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.0</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>
-                        --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
-                        --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
-                        --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED
-                        --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
-                        --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+                        --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>
         </plugins>
     </build>
 </project>
+
