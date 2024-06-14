@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, env, net, sync::Arc};
+use std::{collections::BTreeMap, env, fmt, net, sync::Arc};
 
 use axum::{
     extract::State,
@@ -30,12 +30,18 @@ pub type Row = IndexMap<String, RowFieldValue>;
 // ANCHOR_END: row-type
 
 // ANCHOR: app-state
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppState {
     pub schema: SchemaResponse,
     pub metrics: Metrics,
     pub java_vm: Arc<JavaVM>,
     pub calcite_ref: GlobalRef,
+}
+
+impl<'a> fmt::Debug for AppState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "<redacted>")
+    }
 }
 // ANCHOR_END: app-state
 

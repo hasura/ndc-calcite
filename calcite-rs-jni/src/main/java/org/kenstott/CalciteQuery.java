@@ -95,20 +95,30 @@ public class CalciteQuery {
                     int columnType = metaData.getColumnType(i);
                     switch (columnType) {
                         case Types.CHAR:
+                        case Types.LONGNVARCHAR:
                         case Types.VARCHAR:
+                        case Types.LONGVARBINARY:
+                        case Types.VARBINARY:
+                        case Types.BINARY:
                             jsonObject.addProperty(columnName, resultSet.getString(i));
                             break;
                         case Types.BIGINT:
                         case Types.INTEGER:
                         case Types.SMALLINT:
                         case Types.TINYINT:
+                        case Types.BIT:
                             jsonObject.addProperty(columnName, resultSet.getInt(i));
                             break;
                         case Types.BOOLEAN:
                             jsonObject.addProperty(columnName, resultSet.getBoolean(i));
                             break;
+                        case Types.REAL:
                         case Types.FLOAT:
                             jsonObject.addProperty(columnName, resultSet.getFloat(i));
+                            break;
+                        case Types.NUMERIC:
+                        case Types.DOUBLE:
+                            jsonObject.addProperty(columnName, resultSet.getDouble(i));
                             break;
                         case Types.DECIMAL:
                             jsonObject.addProperty(columnName, resultSet.getBigDecimal(i));

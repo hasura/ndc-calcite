@@ -3,6 +3,7 @@ use std::error::Error;
 use axum::http::StatusCode;
 use axum::Json;
 use indexmap::IndexMap;
+use serde_json::Value;
 
 use ndc_models::{Aggregate, ComparisonTarget, ComparisonValue, ErrorResponse, Expression, RowFieldValue, UnaryComparisonOperator};
 use tracing::{event, Level};
@@ -181,7 +182,7 @@ fn process_expression(collection: &str, variables: &BTreeMap<String, serde_json:
             let sql_operation: &String = sql_operations.get(operator).unwrap();
             let left_side = match column {
                 ComparisonTarget::Column { name, field_path, .. } => {
-                    create_column_name(name, field_path)
+                    format!("\"{}\"", create_column_name(name, field_path))
                 }
                 ComparisonTarget::RootCollectionColumn { .. } => todo!()
             };
@@ -229,6 +230,7 @@ pub fn query_collection(
     order_by: Option<String>,
     pagination: Option<String>,
     where_clause: Option<String>,
+    query_metadata: &models::Query,
 ) -> crate::Result<Vec<Row>> {
     let select_clause: String = match select {
         None => {
@@ -251,7 +253,7 @@ pub fn query_collection(
             if ord.is_empty() {
                 "".into()
             } else {
-                format!(" ORDER BY {}", ord)
+                format!(" ORDER BY \"{}\"", ord)
             }
         }
     };
@@ -262,7 +264,7 @@ pub fn query_collection(
             if w.is_empty() {
                 "".to_string()
             } else {
-                format!(" WHERE \"{}\"", w).to_string()
+                format!(" WHERE {}", w).to_string()
             }
         }
     };
@@ -294,6 +296,7 @@ pub fn query_collection(
         state.calcite_ref.clone(),
         state.java_vm.clone(),
         &query,
+        &query_metadata
     )
 }
 // ANCHOR_END: query_collection
@@ -362,6 +365,7 @@ pub fn query_with_variables(
                     order_by.clone(),
                     pagination.clone(),
                     predicates.clone(),
+                    &query
                 ) {
                     Ok(collection) => {
                         Some(collection)
@@ -389,9 +393,17 @@ pub fn query_with_variables(
                     order_by.clone(),
                     pagination.clone(),
                     predicates.clone(),
+                    &query
                 ) {
                     Ok(collection) => {
-                        let row = collection.first().cloned().unwrap();
+                        let mut row = collection.first().cloned().unwrap_or(IndexMap::new());
+                        let aggregates = query.clone().aggregates.unwrap_or_default();
+                        for (key, _) in aggregates {
+                            if !row.contains_key(&key) {
+                                row.insert(key.into(), RowFieldValue(Value::Null));
+                            }
+                        }
+
                         row.into_iter().map(|(k, v)| {
                             let value = match v {
                                 RowFieldValue(x) => {x}
