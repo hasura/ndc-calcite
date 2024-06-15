@@ -24,6 +24,60 @@ fn numeric_aggregates(underlying_type: &str) -> BTreeMap<String, models::Aggrega
             },
         ),
         (
+            "count".into(),
+            models::AggregateFunctionDefinition {
+                result_type: models::Type::Nullable {
+                    underlying_type: Box::new(models::Type::Named {
+                        name: "INTEGER".into(),
+                    }),
+                },
+            },
+        ),
+        (
+            "avg".into(),
+            models::AggregateFunctionDefinition {
+                result_type: models::Type::Nullable {
+                    underlying_type: Box::new(models::Type::Named {
+                        name: "DOUBLE".into(),
+                    }),
+                },
+            },
+        ),
+        (
+            "max".into(),
+            models::AggregateFunctionDefinition {
+                result_type: models::Type::Nullable {
+                    underlying_type: Box::new(models::Type::Named {
+                        name: underlying_type.into(),
+                    }),
+                },
+            },
+        ),
+        (
+            "min".into(),
+            models::AggregateFunctionDefinition {
+                result_type: models::Type::Nullable {
+                    underlying_type: Box::new(models::Type::Named {
+                        name: underlying_type.into(),
+                    }),
+                },
+            },
+        ),
+    ])
+}
+fn string_aggregates(underlying_type: &str) -> BTreeMap<String, models::AggregateFunctionDefinition> {
+    BTreeMap::from_iter([
+        (
+            "count".into(),
+            models::AggregateFunctionDefinition {
+                result_type: models::Type::Nullable {
+                    underlying_type: Box::new(models::Type::Named {
+                        name: "INTEGER".into(),
+                    }),
+                },
+            },
+        ),
+        (
             "max".into(),
             models::AggregateFunctionDefinition {
                 result_type: models::Type::Nullable {
@@ -87,7 +141,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "CHAR".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::String),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("CHAR"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -95,7 +149,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "VARCHAR".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::String),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("VARCHAR"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -103,7 +157,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "VARCHAR(65536)".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::String),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("VARCHAR(65536)"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -111,7 +165,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "VARCHAR NOT NULL".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::String),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("VARCHAR NOT NULL"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -127,7 +181,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "JavaType(class java.lang.String)".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::String),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("JavaType(class java.lang.String)"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -220,7 +274,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "DATE".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::Date),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("DATE"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -228,7 +282,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "TIME(0)".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::String),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("TIME(0)"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -236,7 +290,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "TIMESTAMP(0)".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::Timestamp),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("TIMESTAMP(0)"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -244,7 +298,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "TIMESTAMP(3)".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::Timestamp),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("TIMESTAMP(3)"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
@@ -252,7 +306,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
             "TIMESTAMP".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::TimestampTZ),
-                aggregate_functions: BTreeMap::new(),
+                aggregate_functions: string_aggregates("TIMESTAMP"),
                 comparison_operators: string_comparison_operators.clone(),
             },
         ),
