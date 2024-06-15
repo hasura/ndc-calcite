@@ -113,7 +113,6 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
         ("gte".into(), models::ComparisonOperatorDefinition::GreaterThanOrEqualsTo),
         ("lte".into(), models::ComparisonOperatorDefinition::LessThanOrEqualsTo),
     ]);
-
     let mut string_comparison_operators = numeric_comparison_operators.clone();
     string_comparison_operators.insert(
             "like".into(),
@@ -123,7 +122,6 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
                 },
             },
         );
-
     let _array_arguments: BTreeMap<String, _> = vec![(
         "limit".to_string(),
         ArgumentInfo {
@@ -135,6 +133,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
     )]
         .into_iter()
         .collect();
+
     // ANCHOR: schema_scalar_types
     let scalar_types = BTreeMap::from_iter([
         (
@@ -192,14 +191,24 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
                 aggregate_functions: numeric_aggregates("INTEGER"),
                 comparison_operators: numeric_comparison_operators.clone(),
             },
-        ), (
+        ),
+        (
+            "JavaType(class java.lang.Integer)".into(),
+            models::ScalarType {
+                representation: Some(models::TypeRepresentation::Int32),
+                aggregate_functions: numeric_aggregates("INTEGER"),
+                comparison_operators: numeric_comparison_operators.clone(),
+            },
+        ),
+        (
             "SMALLINT".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::Int16),
                 aggregate_functions: numeric_aggregates("INTEGER"),
                 comparison_operators: numeric_comparison_operators.clone(),
             },
-        ), (
+        ),
+        (
             "TINYINT".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::Int8),
@@ -230,7 +239,16 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
                 aggregate_functions: numeric_aggregates("DOUBLE"),
                 comparison_operators: numeric_comparison_operators.clone(),
             },
-        ), (
+        ),
+        (
+            "JavaType(class java.lang.Double)".into(),
+            models::ScalarType {
+                representation: Some(models::TypeRepresentation::Float64),
+                aggregate_functions: numeric_aggregates("DOUBLE"),
+                comparison_operators: numeric_comparison_operators.clone(),
+            },
+        ),
+        (
             "DOUBLE".into(),
             models::ScalarType {
                 representation: Some(models::TypeRepresentation::Float64),
@@ -312,6 +330,7 @@ pub async fn get_schema(java_vm: Arc<JavaVM>, calcite_ref: GlobalRef) -> std::re
         ),
     ]);
     // ANCHOR_END: scalar_types
+
     let mut object_types: BTreeMap<String, ObjectType> = BTreeMap::new();
     let mut collections: Vec<CollectionInfo> = Vec::new();
     for (table_name, columns) in &data_models {

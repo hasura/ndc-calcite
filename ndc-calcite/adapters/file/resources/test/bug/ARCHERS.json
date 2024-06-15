@@ -1,6 +1,6 @@
 [
   {
-    "id": "19990101",
+    "id": 19990101,
     "a": "Friday",
     "b": "New Years Day",
     "c": "Tractor trouble.",
@@ -17,7 +17,7 @@
     ]
   },
   {
-    "id": "19990103",
+    "id": 19990103,
     "a": "Sunday",
     "b": "Sunday 3rd January",
     "c": "Charlie's surprise.",

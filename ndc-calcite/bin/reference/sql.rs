@@ -400,7 +400,10 @@ pub fn query_with_variables(
                         let aggregates = query.clone().aggregates.unwrap_or_default();
                         for (key, _) in aggregates {
                             if !row.contains_key(&key) {
-                                row.insert(key.into(), RowFieldValue(Value::Null));
+                                row.insert(key.into(), RowFieldValue(Value::Number(serde_json::Number::from(0))));
+                            } else if row.get(&key) == None {
+                                row.swap_remove(&key);
+                                row.insert(key.into(), RowFieldValue(Value::Number(serde_json::Number::from(0))));
                             }
                         }
 
