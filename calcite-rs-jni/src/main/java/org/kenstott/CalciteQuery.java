@@ -99,10 +99,11 @@ public class CalciteQuery {
                         case Types.VARCHAR:
                         case Types.LONGVARBINARY:
                         case Types.VARBINARY:
+                        case Types.BIGINT:
+                        case Types.DECIMAL:
                         case Types.BINARY:
                             jsonObject.addProperty(columnName, resultSet.getString(i));
                             break;
-                        case Types.BIGINT:
                         case Types.INTEGER:
                         case Types.SMALLINT:
                         case Types.TINYINT:
@@ -119,9 +120,6 @@ public class CalciteQuery {
                         case Types.NUMERIC:
                         case Types.DOUBLE:
                             jsonObject.addProperty(columnName, resultSet.getDouble(i));
-                            break;
-                        case Types.DECIMAL:
-                            jsonObject.addProperty(columnName, resultSet.getBigDecimal(i));
                             break;
                         case Types.DATE:
                         case Types.TIMESTAMP:
