@@ -8,7 +8,7 @@ license.workspace = true
 workspace = true
 
 [lib]
-name = "ndc_calcite"
+name = "calcite"
 path = "src/lib.rs"
 
 [[bin]]

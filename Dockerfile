@@ -1,46 +1,57 @@
-# this should match the Rust version in rust-toolchain.yaml and the
-FROM rust:1.77.0 AS chef
-
-WORKDIR app
-
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive \
-    apt-get install --no-install-recommends --assume-yes \
-      lld libssl-dev ssh git pkg-config
-
-ENV CARGO_HOME=/app/.cargo
-ENV PATH="$PATH:$CARGO_HOME/bin"
-
+# https://github.com/LukeMathWalker/cargo-chef
+FROM rust:1.75.0 as chef
 RUN cargo install cargo-chef
+WORKDIR /app
 
-COPY rust-toolchain.toml .
-RUN rustup show
-
-###
-# Plan recipe
 FROM chef AS planner
-
-COPY . .
+COPY Cargo.toml ./
+COPY Cargo.lock ./
+COPY crates crates
 RUN cargo chef prepare --recipe-path recipe.json
 
-###
-# Build recipe
-FROM chef AS build
-
+FROM chef AS builder
+ARG RUSTFLAGS
 COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --profile release --recipe-path recipe.json
+COPY Cargo.toml ./
+COPY Cargo.lock ./
+COPY crates crates
+RUN cargo build --locked --profile release --package ndc-calcite
 
-# build dependencies to produce a cached layer
-RUN cargo chef cook --release --all-targets --recipe-path recipe.json
-RUN cargo chef cook --all-targets --recipe-path recipe.json
 
-# copy the source after building dependencies to allow caching
-COPY . .
+FROM ubuntu:latest AS runtime
+RUN apt-get update && apt-get install -y ca-certificates
 
-# Build the app
-RUN cargo build --release --all-targets
+# Install Java (OpenJDK) first
+RUN apt-get update && apt-get install -y openjdk-21-jdk
+ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-arm64
 
-###
-# Ship the app in an image with very little else
-FROM debian:bookworm-slim as ndc-reference
-COPY --from=build /app/target/release/ndc-reference /usr/bin/ndc-reference
-ENTRYPOINT ["ndc-reference"]
+# Install Maven
+RUN apt-get update && apt-get install -y maven
+ENV MAVEN_HOME /usr/share/maven
+ENV PATH $JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
+
+# Your other instructions here (e.g., copying your Rust code)
+
+WORKDIR /app
+COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
+
+RUN mkdir -p /etc/connector
+ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
+ENV RUST_BACKTRACE=full
+
+COPY adapters/ /adapters/
+COPY calcite-rs-jni/ /calcite-rs-jni/
+
+WORKDIR /calcite-rs-jni
+RUN echo "The current working directory: $PWD"
+RUN mvn -version
+RUN mvn clean install
+RUN mvn dependency:copy-dependencies
+
+WORKDIR /adapters/file
+#ENTRYPOINT ["mvn", "-version"]
+#ENTRYPOINT ["tail", "-f", "/dev/null"]
+ENTRYPOINT ["ndc-calcite"]
+CMD ["serve"]
+

@@ -1,12 +1,13 @@
+mod aggregates;
 mod calcite;
+mod capabilities;
+mod collections;
+mod comparators;
 mod jvm;
+mod scalars;
 mod schema;
 mod sql;
-mod collections;
-mod scalars;
-mod capabilities;
-mod comparators;
-mod aggregates;
+mod configuration;
 
 pub mod connector {
     pub mod calcite;

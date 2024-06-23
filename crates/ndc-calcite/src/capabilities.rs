@@ -1,4 +1,7 @@
-use ndc_models::{Capabilities, CapabilitiesResponse, LeafCapability, MutationCapabilities, NestedFieldCapabilities, QueryCapabilities, RelationshipCapabilities};
+use ndc_models::{
+    Capabilities, CapabilitiesResponse, LeafCapability, MutationCapabilities,
+    NestedFieldCapabilities, QueryCapabilities, RelationshipCapabilities,
+};
 
 // ANCHOR: calcite_capabilities
 pub fn calcite_capabilities() -> CapabilitiesResponse {
@@ -27,4 +30,3 @@ pub fn calcite_capabilities() -> CapabilitiesResponse {
     }
 }
 // ANCHOR_END: calcite_capabilities
-

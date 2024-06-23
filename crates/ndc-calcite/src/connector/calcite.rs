@@ -1,17 +1,29 @@
 use std::collections::BTreeMap;
+use std::fs;
+use std::fs::File;
+use std::io::Write;
 use std::path::Path;
+
 use async_trait::async_trait;
 use dotenv;
 use jni::objects::GlobalRef;
-use ndc_sdk::connector::{Connector, ConnectorSetup, ExplainError, FetchMetricsError, HealthError, InitializationError, MutationError, ParseError, QueryError, SchemaError};
+use ndc_sdk::connector::{
+    Connector, ConnectorSetup, ExplainError, FetchMetricsError, HealthError, InitializationError,
+    MutationError, ParseError, QueryError, SchemaError,
+};
 use ndc_sdk::json_response::JsonResponse;
 use ndc_sdk::models;
+use serde_json::to_string_pretty;
 use tracing::info_span;
 use tracing::Instrument;
 
 use crate::{calcite, jvm, schema, sql};
 use crate::capabilities::calcite_capabilities;
+use crate::configuration::CalciteConfiguration;
 use crate::jvm::init_jvm;
+
+pub const CONFIG_FILE_NAME: &str = "configuration.json";
+pub const CONFIG_SCHEMA_FILE_NAME: &str = "configuration.schema.json";
 
 #[derive(Clone, Default)]
 pub struct Calcite {}
@@ -23,6 +35,7 @@ pub struct CalciteState {
 
 #[tracing::instrument]
 fn execute_query_with_variables(
+    configuration: &CalciteConfiguration,
     collection: &str,
     arguments: &BTreeMap<String, models::Argument>,
     _collection_relationships: &BTreeMap<String, models::Relationship>,
@@ -30,7 +43,7 @@ fn execute_query_with_variables(
     variables: &BTreeMap<String, serde_json::Value>,
     state: &CalciteState,
 ) -> Result<models::RowSet, QueryError> {
-    sql::query_with_variables(collection, arguments, query, variables, state)
+    sql::query_with_variables(configuration, collection, arguments, query, variables, state)
 }
 
 #[async_trait]
@@ -39,26 +52,40 @@ impl ConnectorSetup for Calcite {
 
     async fn parse_configuration(
         &self,
-        _configuration_dir: impl AsRef<Path> + Send,
+        configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<<Self as Connector>::Configuration, ParseError> {
         dotenv::dotenv().ok();
-        Ok(())
+        let file_path = configuration_dir.as_ref().join("configuration.json");
+        match fs::read_to_string(file_path) {
+            Ok(file_content) => {
+                let mut json_object: CalciteConfiguration = serde_json::from_str(&file_content)
+                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+                let serialized_json = to_string_pretty(&json_object.model)
+                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+                let mut file = File::create("model.json")
+                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+                file.write_all(serialized_json.as_bytes())
+                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+                json_object.model_file_path = Some("./model.json".to_string());
+                Ok(json_object)
+            }
+            Err(err) => Err(ParseError::Other(Box::from(err.to_string()))),
+        }
     }
 
     async fn try_init_state(
         &self,
-        _configuration: &<Self as Connector>::Configuration,
+        configuration: &<Self as Connector>::Configuration,
         _metrics: &mut prometheus::Registry,
     ) -> Result<<Self as Connector>::State, InitializationError> {
         dotenv::dotenv().ok();
-        init_jvm();
+        init_jvm(configuration);
         let java_vm = jvm::get_jvm().lock().unwrap();
         let calcite;
         let calcite_ref;
-
         {
             let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_calcite_query_engine(&mut env);
+            calcite = calcite::create_calcite_query_engine(configuration, &mut env);
             let env = java_vm.attach_current_thread_as_daemon().unwrap();
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }
@@ -68,7 +95,7 @@ impl ConnectorSetup for Calcite {
 
 #[async_trait]
 impl Connector for Calcite {
-    type Configuration = ();
+    type Configuration = CalciteConfiguration;
     type State = CalciteState;
 
     fn fetch_metrics(
@@ -90,7 +117,7 @@ impl Connector for Calcite {
     }
 
     async fn get_schema(
-        _configuration: &Self::Configuration,
+        configuration: &Self::Configuration,
     ) -> Result<JsonResponse<models::SchemaResponse>, SchemaError> {
         async {
             info_span!("inside tracing Calcite");
@@ -103,7 +130,7 @@ impl Connector for Calcite {
         {
             let java_vm = jvm::get_jvm().lock().unwrap();
             let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_calcite_query_engine(&mut env);
+            calcite = calcite::create_calcite_query_engine(configuration, &mut env);
             let env = java_vm.attach_current_thread_as_daemon().unwrap();
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }
@@ -111,9 +138,7 @@ impl Connector for Calcite {
         let schema = schema::get_schema(calcite_ref.clone());
         match schema {
             Ok(schema) => Ok(schema.into()),
-            Err(e) => {
-                Err(SchemaError::Other(e.to_string().into()))
-            }
+            Err(e) => Err(SchemaError::Other(e.to_string().into())),
         }
     }
 
@@ -150,6 +175,7 @@ impl Connector for Calcite {
         let mut row_sets = vec![];
         for variables in &variable_sets {
             let row_set = execute_query_with_variables(
+                configuration,
                 &request.collection,
                 &request.arguments,
                 &request.collection_relationships,

@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run ndc-test" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --manifest-path $USER_HOME$/ndc-spec/Cargo.toml --bin ndc-test  -- test --endpoint http://localhost:8080 " />
+    <option name="command" value="run --manifest-path $USER_HOME$/ndc-spec/Cargo.toml --bin ndc-test  -- test --endpoint https://f47f-172-124-73-177.ngrok-free.app " />
     <option name="workingDirectory" value="file://$PROJECT_DIR$/adapters/file" />
     <envs />
     <option name="emulateTerminal" value="true" />

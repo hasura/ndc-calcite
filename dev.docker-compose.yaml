@@ -1,8 +1,9 @@
-version: "3.9"
 services:
-  source:
-    build:
-      context: .
-      dockerfile: dev.dockerfile
-      ssh:
-        - default
+  my_subgraph_calcite:
+    image: ndc-calcite:latest
+    env_file:
+      - ./adapters/file/.env
+    extra_hosts:
+      - local.hasura.dev=host-gateway
+    ports:
+      - "8083:8080"

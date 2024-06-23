@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use ndc_sdk::default_main::default_main;
 
-use ndc_calcite::connector::calcite::Calcite;
+use calcite::connector::calcite::Calcite;
 
 /// Run the [`Calcite`] connector using the [`default_main`]
 /// function, which accepts standard configuration options

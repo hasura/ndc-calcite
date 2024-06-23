@@ -12,12 +12,16 @@ import org.apache.logging.log4j.Logger;
 import java.sql.*;
 import java.util.*;
 
+import static java.util.Map.entry;
+
 public class CalciteQuery {
 
     private static final Logger logger = LogManager.getLogger(CalciteQuery.class);
     Connection connection;
     private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     private static final Tracer tracer = openTelemetry.getTracer("calcite-driver");
+    private static final Gson gson = new Gson();
+
     public Connection createCalciteConnection(String modelPath) {
         Span span = tracer.spanBuilder("createCalciteConnection").startSpan();
         span.addEvent(modelPath);
@@ -59,7 +63,32 @@ public class CalciteQuery {
             while (columnsSet.next()) {
                 String columnName = columnsSet.getString("COLUMN_NAME");
                 String dataTypeName = columnsSet.getString("TYPE_NAME");
-                columns.put(columnName, dataTypeName);
+                Map<String, String> remapTypes = Map.ofEntries(
+                        entry("CHAR", "CHAR"),
+                        entry("VARCHAR", "VARCHAR"),
+                        entry("VARCHAR(65536)", "VARCHAR"),
+                        entry("VARCHAR NOT NULL", "VARCHAR"),
+                        entry("JavaType(class java.util.ArrayList)", "LIST"),
+                        entry("JavaType(class java.util.LinkedHashMap)", "MAP"),
+                        entry("JavaType(class java.lang.String)", "VARCHAR"),
+                        entry("JavaType(class java.lang.Integer)", "INTEGER"),
+                        entry("INTEGER", "INTEGER"),
+                        entry("SMALLINT", "INTEGER"),
+                        entry("TINYINT", "INTEGER"),
+                        entry("BIGINT", "BIGINT"),
+                        entry("BIGINT NOT NULL", "BIGINT"),
+                        entry("FLOAT", "FLOAT"),
+                        entry("DOUBLE", "DOUBLE"),
+                        entry("BOOLEAN", "BOOLEAN"),
+                        entry("VARBINARY", "VARBINARY"),
+                        entry("BINARY", "BINARY"),
+                        entry("DATE", "DATE"),
+                        entry("TIME(0)", "TIME"),
+                        entry("TIMESTAMP(0)", "TIMESTAMP"),
+                        entry("TIMESTAMP(3)", "TIMESTAMP"),
+                        entry("TIMESTAMP", "TIMESTAMPTZ")
+                );
+                columns.put(columnName, remapTypes.get(dataTypeName));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -92,6 +121,7 @@ public class CalciteQuery {
                 JsonObject jsonObject = new JsonObject();
                 for (int i = 1; i <= columnCount; i++) {
                     String columnName = metaData.getColumnName(i);
+                    String label = metaData.getColumnLabel(i);
                     int columnType = metaData.getColumnType(i);
                     switch (columnType) {
                         case Types.CHAR:
@@ -102,32 +132,39 @@ public class CalciteQuery {
                         case Types.BIGINT:
                         case Types.DECIMAL:
                         case Types.BINARY:
-                            jsonObject.addProperty(columnName, resultSet.getString(i));
+                            jsonObject.addProperty(label, resultSet.getString(i));
                             break;
                         case Types.INTEGER:
                         case Types.SMALLINT:
                         case Types.TINYINT:
                         case Types.BIT:
-                            jsonObject.addProperty(columnName, resultSet.getInt(i));
+                            jsonObject.addProperty(label, resultSet.getInt(i));
                             break;
                         case Types.BOOLEAN:
-                            jsonObject.addProperty(columnName, resultSet.getBoolean(i));
+                            jsonObject.addProperty(label, resultSet.getBoolean(i));
                             break;
                         case Types.REAL:
                         case Types.FLOAT:
-                            jsonObject.addProperty(columnName, resultSet.getFloat(i));
+                            jsonObject.addProperty(label, resultSet.getFloat(i));
                             break;
                         case Types.NUMERIC:
                         case Types.DOUBLE:
-                            jsonObject.addProperty(columnName, resultSet.getDouble(i));
+                            jsonObject.addProperty(label, resultSet.getDouble(i));
                             break;
                         case Types.DATE:
                         case Types.TIMESTAMP:
-                            jsonObject.addProperty(columnName, String.valueOf(resultSet.getDate(i)));
+                            jsonObject.addProperty(label, String.valueOf(resultSet.getDate(i)));
                             break;
                         default:
                             Object columnValue = resultSet.getObject(i);
-                            jsonObject.addProperty(columnName, columnValue == null ? null : columnValue.toString());
+                            boolean isArrayList = columnValue instanceof ArrayList;
+                            if (isArrayList) {
+                                JsonArray nestedArray = gson.toJsonTree(columnValue).getAsJsonArray();
+                                jsonObject.add(label, nestedArray);
+                            } else {
+                                JsonObject nestedJsonObject = JsonParser.parseString(gson.toJson(columnValue)).getAsJsonObject();
+                                jsonObject.add(label, nestedJsonObject);
+                            }
                             break;
                     }
                 }
