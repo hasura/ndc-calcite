@@ -158,12 +158,17 @@ public class CalciteQuery {
                         default:
                             Object columnValue = resultSet.getObject(i);
                             boolean isArrayList = columnValue instanceof ArrayList;
-                            if (isArrayList) {
+                            boolean isHashMap = columnValue instanceof HashMap;
+                            if (columnValue == null) {
+                                jsonObject.addProperty(label, (String) null);
+                            } else if (isArrayList) {
                                 JsonArray nestedArray = gson.toJsonTree(columnValue).getAsJsonArray();
                                 jsonObject.add(label, nestedArray);
-                            } else {
+                            } else if (isHashMap) {
                                 JsonObject nestedJsonObject = JsonParser.parseString(gson.toJson(columnValue)).getAsJsonObject();
                                 jsonObject.add(label, nestedJsonObject);
+                            } else {
+                                jsonObject.addProperty(label, columnValue.toString());
                             }
                             break;
                     }
