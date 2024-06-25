@@ -13,3 +13,4 @@
 *.iml
 target/
 *.rs.bk
+/adapters/file/model.json

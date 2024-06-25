@@ -10,7 +10,7 @@
         "type": "custom",
         "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
         "operand": {
-          "directory": "/data"
+          "directory": "/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/file/resources/test/sales"
         }
       }
     ]

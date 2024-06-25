@@ -8,6 +8,9 @@ pub struct Schema {
     pub r#type: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "sqlDialectFactory")]
+    pub sql_dialect_factory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "jdbcUser")]
     pub jdbc_user: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -78,5 +81,8 @@ pub struct CalciteConfiguration {
     pub _schema: String,
     pub model: Model,
     pub model_file_path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub fixes: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub jars: Option<String>
 }

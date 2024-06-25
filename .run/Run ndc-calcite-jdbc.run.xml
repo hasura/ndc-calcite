@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run ndc-calcite-jdbc" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --package ndc-calcite --bin ndc-calciterun --package ndc-calcite --bin ndc-calcite -- serve --configuration=." />
+    <option name="command" value="run --package ndc-calcite --bin ndc-calcite -- serve --configuration=." />
     <option name="workingDirectory" value="file://$PROJECT_DIR$/adapters/jdbc" />
     <envs />
     <option name="emulateTerminal" value="true" />

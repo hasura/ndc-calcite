@@ -40,7 +40,6 @@ RUN mkdir -p /etc/connector
 ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
 ENV RUST_BACKTRACE=full
 
-COPY adapters/ /adapters/
 COPY calcite-rs-jni/ /calcite-rs-jni/
 
 WORKDIR /calcite-rs-jni
@@ -49,7 +48,7 @@ RUN mvn -version
 RUN mvn clean install
 RUN mvn dependency:copy-dependencies
 
-WORKDIR /adapters/file
+WORKDIR /app
 #ENTRYPOINT ["mvn", "-version"]
 #ENTRYPOINT ["tail", "-f", "/dev/null"]
 ENTRYPOINT ["ndc-calcite"]

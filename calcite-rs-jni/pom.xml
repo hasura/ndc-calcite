@@ -110,6 +110,11 @@
             <artifactId>calcite-splunk</artifactId>
             <version>1.37.0</version> <!-- Adjust version as needed -->
         </dependency>
+            <dependency>
+                <groupId>org.apache.calcite.avatica</groupId>
+                <artifactId>avatica-core</artifactId>
+                <version>1.25.0</version>
+            </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-kafka</artifactId>
@@ -139,11 +144,11 @@
             <artifactId>calcite-core</artifactId>
             <version>1.37.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.23.1</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.logging.log4j</groupId>-->
+<!--            <artifactId>log4j-core</artifactId>-->
+<!--            <version>2.23.1</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
@@ -169,11 +174,62 @@
             <artifactId>netty-buffer</artifactId>
             <version>4.1.111.Final</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.slf4j</groupId>-->
+<!--            <artifactId>slf4j-simple</artifactId>-->
+<!--            <version>1.7.36</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>4.1.111.Final</version>
         </dependency>
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc10</artifactId>
+            <version>19.3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-jdbc</artifactId>
+            <version>449</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.6.3.jre11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <version>0.6.0-patch4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ibm.db2</groupId>
+            <artifactId>jcc</artifactId>
+            <version>11.5.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.16.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.exasol</groupId>
+            <artifactId>exasol-jdbc</artifactId>
+            <version>7.1.20</version>
+        </dependency>
+        <dependency>
+            <groupId>org.firebirdsql.jdbc</groupId>
+            <artifactId>jaybird</artifactId>
+            <version>5.0.5.java11</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>io.firebolt</groupId>-->
+<!--            <artifactId>firebolt-jdbc</artifactId>-->
+<!--            <version>3.0.2</version>-->
+<!--        </dependency>-->
+
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -184,6 +240,117 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.36.0.3</version>
         </dependency>
+        <!-- H2 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.200</version>
+        </dependency>
+
+        <!-- HIVE -->
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+
+        <!-- HSQLDB -->
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+
+        <!-- INFOBRIGHT (Manual download) -->
+
+        <!-- INFORMIX -->
+        <dependency>
+            <groupId>com.ibm.informix</groupId>
+            <artifactId>jdbc</artifactId>
+            <version>4.10.16</version>
+        </dependency>
+
+        <!-- INGRES (Manual download) -->
+        <dependency>
+            <groupId>com.ingres.jdbc</groupId>
+            <artifactId>iijdbc</artifactId>
+            <version>10.2-4.1.10</version>
+        </dependency>
+
+        <!-- INTERBASE (Manual download) -->
+
+        <!-- LUCIDDB (Manual download) -->
+
+        <!-- MYSQL -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.27</version>
+        </dependency>
+
+        <!-- NEOVIEW (Manual download) -->
+
+        <!-- NETEZZA (Manual download) -->
+
+        <!-- PARACCEL (Manual download) -->
+        <!-- PHOENIX -->
+        <dependency>
+            <groupId>org.apache.phoenix</groupId>
+            <artifactId>phoenix-core</artifactId>
+            <version>5.2.0</version>
+        </dependency>
+
+        <!-- PRESTO -->
+        <dependency>
+            <groupId>com.facebook.presto</groupId>
+            <artifactId>presto-jdbc</artifactId>
+            <version>0.287</version>
+        </dependency>
+
+        <!-- REDSHIFT -->
+        <dependency>
+            <groupId>com.amazon.redshift</groupId>
+            <artifactId>redshift-jdbc42</artifactId>
+            <version>2.1.0.29</version>
+        </dependency>
+
+        <!-- SNOWFLAKE -->
+        <dependency>
+            <groupId>net.snowflake</groupId>
+            <artifactId>snowflake-jdbc</artifactId>
+            <version>3.13.12</version>
+        </dependency>
+
+        <!-- SPARK (Manual download) -->
+
+        <!-- STARROCKS -->
+        <dependency>
+            <groupId>io.edurt.datacap</groupId>
+            <artifactId>datacap-jdbc-starrocks</artifactId>
+            <version>2024.03.6</version>
+        </dependency>
+
+        <!-- SYBASE (Manual download) -->
+        <dependency>
+            <groupId>org.anyline</groupId>
+            <artifactId>anyline-jdbc-sybase</artifactId>
+            <version>8.5.7-20220928</version>
+        </dependency>
+
+        <!-- TERADATA (Manual download) -->
+        <dependency>
+            <groupId>com.teradata.jdbc</groupId>
+            <artifactId>terajdbc</artifactId>
+            <version>20.00.00.24</version>
+        </dependency>
+
+        <!-- VERTICA -->
+        <dependency>
+            <groupId>com.vertica.jdbc</groupId>
+            <artifactId>vertica-jdbc</artifactId>
+            <version>24.2.0-2</version>
+        </dependency>
+
     </dependencies>
     <build>
         <extensions>
@@ -196,10 +363,19 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version> <!-- Use the appropriate version -->
+                <configuration>
+                    <release>21</release> <!-- Set the Java release version -->
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.0</version>
                 <configuration>
                     <argLine>
-                        --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED
+                        --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED -Dotel.java.global-autoconfigure.enabled=true
                     </argLine>
                 </configuration>
             </plugin>

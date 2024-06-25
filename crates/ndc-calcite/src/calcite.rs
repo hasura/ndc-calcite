@@ -145,9 +145,7 @@ pub fn calcite_query(
                                         }
                                     }
                                 }
-                                // Didn't seem to be a problem to return more than
-                                // what was requested.
-                                //row.swap_remove("CONSTANT");
+                                row.swap_remove("CONSTANT");
                                 row
                             })
                             .collect();
@@ -173,7 +171,7 @@ pub fn calcite_query(
                     }
                 }
                 Err(e) => {
-                    eprintln!("An error occurred: {:?}", e);
+                    eprintln!("An error occurred: {:?} / {}", e, query);
                     event!(
                         Level::ERROR,
                         message = format!("An error occurred: {:?}", e)

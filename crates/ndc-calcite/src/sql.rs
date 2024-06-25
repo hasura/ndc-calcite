@@ -79,7 +79,7 @@ fn order_by(query: &models::Query) -> Vec<String> {
                         let field_path = field_path.clone().unwrap_or_default();
                         let mut p: Vec<String> = vec![name.clone()];
                         p.extend(field_path);
-                        order_statements.push(format!("{} {}", p.join("."), order_direction));
+                        order_statements.push(format!("\"{}\" {}", p.join("."), order_direction));
                     }
                     models::OrderByTarget::SingleColumnAggregate { .. } => todo!(),
                     models::OrderByTarget::StarCountAggregate { .. } => todo!(),
@@ -139,7 +139,7 @@ fn aggregates(query: &models::Query) -> Vec<String> {
                         function,
                     } => {
                         format!(
-                            "{}({}) AS \"{}\"",
+                            "{}(\"{}\") AS \"{}\"",
                             function,
                             create_column_name(column, field_path),
                             name
@@ -185,12 +185,12 @@ fn sql_brackets(input: &str) -> String {
         let len_minus_one = chars.len() - 1;
         chars[len_minus_one] = ')';
     }
-    chars.into_iter().collect()
+    return chars.into_iter().collect();
 }
 
 #[tracing::instrument]
 fn sql_quotes(input: &str) -> String {
-    input.replace("\"", "'").replace("\\'", "\"")
+    input.replace("'", "\\'").replace("\"", "__UTF8__")
 }
 
 #[tracing::instrument]
@@ -233,7 +233,15 @@ fn process_sql_expression(
             process_sql_expression(collection, variables, expression)
         )),
         Expression::UnaryComparisonOperator { operator, column } => match operator {
-            UnaryComparisonOperator::IsNull => Ok(format!("{:?} IS NULL", column)),
+            UnaryComparisonOperator::IsNull => {
+                match column {
+                    ComparisonTarget::Column { name, field_path, .. } => {
+                        Ok(format!("{:?} IS NULL", create_column_name(name, field_path)))
+                    }
+                    ComparisonTarget::RootCollectionColumn { .. } => todo!()
+                }
+
+            },
         },
         Expression::BinaryComparisonOperator {
             column,
@@ -262,7 +270,17 @@ fn process_sql_expression(
                     if sql_value == "()" {
                         format!("(SELECT {} FROM \"{}\" WHERE FALSE)", left_side, collection)
                     } else {
-                        sql_value
+                        if value.is_string() {
+                            sql_value
+                        } else if value.is_number() {
+                            sql_value
+                        } else if value.is_object() {
+                            sql_value
+                        } else if value.is_array() {
+                            sql_value
+                        } else {
+                            sql_value
+                        }
                     }
                 }
                 ComparisonValue::Variable { name } => variables.get(name).unwrap().to_string(),
@@ -309,7 +327,7 @@ fn query_collection(
             if ord.is_empty() {
                 "".into()
             } else {
-                format!(" ORDER BY \"{}\"", ord)
+                format!(" ORDER BY {}", ord)
             }
         }
     };
@@ -440,9 +458,10 @@ pub fn query_with_variables(
                         row.into_iter()
                             .map(|(k, v)| {
                                 let value = match v {
-                                    RowFieldValue(x) => match x.as_str() {
-                                        None => x.as_i64().unwrap(),
-                                        Some(str) => str.parse::<i64>().expect("Parsing error"),
+                                    RowFieldValue(x) =>
+                                        match x.as_str() {
+                                            None => x,
+                                            Some(str) => serde_json::from_str(str).expect("Parsing error"),
                                     },
                                 }
                                     .into();

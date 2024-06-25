@@ -41,6 +41,9 @@
               "jdbcUrl": {
                 "type": "string"
               },
+              "sqlDialectFactory": {
+                "type": "string"
+              },
               "jdbcCatalog": {
                 "type": "string"
               },

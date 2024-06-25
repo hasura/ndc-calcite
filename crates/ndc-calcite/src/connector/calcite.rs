@@ -23,7 +23,7 @@ use crate::configuration::CalciteConfiguration;
 use crate::jvm::init_jvm;
 
 pub const CONFIG_FILE_NAME: &str = "configuration.json";
-pub const CONFIG_SCHEMA_FILE_NAME: &str = "configuration.schema.json";
+pub const DEV_CONFIG_FILE_NAME: &str = "dev.local.configuration.json";
 
 #[derive(Clone, Default)]
 pub struct Calcite {}
@@ -31,6 +31,10 @@ pub struct Calcite {}
 #[derive(Clone, Debug)]
 pub struct CalciteState {
     pub calcite_ref: GlobalRef,
+}
+
+pub fn is_running_in_container() -> bool {
+    Path::new("/.dockerenv").exists()
 }
 
 #[tracing::instrument]
@@ -55,7 +59,11 @@ impl ConnectorSetup for Calcite {
         configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<<Self as Connector>::Configuration, ParseError> {
         dotenv::dotenv().ok();
-        let file_path = configuration_dir.as_ref().join("configuration.json");
+        let file_path = if is_running_in_container() {
+            configuration_dir.as_ref().join(CONFIG_FILE_NAME)
+        } else {
+            configuration_dir.as_ref().join(DEV_CONFIG_FILE_NAME)
+        };
         match fs::read_to_string(file_path) {
             Ok(file_content) => {
                 let mut json_object: CalciteConfiguration = serde_json::from_str(&file_content)

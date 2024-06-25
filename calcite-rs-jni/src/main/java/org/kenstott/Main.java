@@ -8,27 +8,18 @@ import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
-        String modelPath = "../adapters/file/model.json";
+        String modelPath = "../adapters/jdbc/model.json";
         String username = "<username>";
         String password ="<password>";
-
-//        try {
-//            PrintAllVectorsExample.printFile("/Users/kennethstott/Documents/GitHub/ndc-calcite/ndc-calcite/adapters/arrow/resources/arrow/findProducts.arrow");
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
 
         try {
             CalciteQuery query = new CalciteQuery();
             try (Connection calciteConnection = query.createCalciteConnection(modelPath)) {
                 System.out.println("Got connection");
-                Collection<String> list = query.getTableNames();
-                System.out.println(list.toString());
-                Map<String, String> c = query.getTableColumnInfo("ARCHERS");
-                System.out.println(c.toString());
+                query.getModels();
                 String x = query.getModels();
                 System.out.println(x);
-                String z1 = query.queryModels("SELECT \"DEPTNO\" AS \"zz\" FROM \"LONG_EMPS\" LIMIT 10");
+                String z1 = query.queryModels("SELECT \"Address\" AS \"Address\", \"City\" AS \"City\", \"Company\" AS \"Company\", \"Country\" AS \"Country\", \"CustomerId\" AS \"CustomerId\", \"Email\" AS \"Email\", \"Fax\" AS \"Fax\", \"FirstName\" AS \"FirstName\", \"LastName\" AS \"LastName\", \"Phone\" AS \"Phone\", \"PostalCode\" AS \"PostalCode\", \"State\" AS \"State\", \"SupportRepId\" AS \"SupportRepId\" FROM \"customers\" WHERE \"FirstName\" IN (__UTF8__Luís__UTF8__,__UTF8__Helena__UTF8__)  LIMIT 10");
                 String z2 = query.queryModels("SELECT * FROM WACKY_COLUMN_NAMES LIMIT 10");
                 String z3 = query.queryModels("SELECT \"object\", \"g\" from  \"ARCHERS\"  LIMIT 10");
                 System.out.println(z1);

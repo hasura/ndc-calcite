@@ -9,7 +9,7 @@
         "type": "jdbc",
         "name": "test",
         "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
-        "jdbcUrl": "jdbc:sqlite:./chinook.db"
+        "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/jdbc/chinook.db"
       }
     ]
   },

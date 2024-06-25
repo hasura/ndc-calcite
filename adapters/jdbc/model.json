@@ -5,11 +5,8 @@
     {
       "type": "jdbc",
       "name": "test",
-      "jdbcUser": "kenstott",
-      "jdbcPassword": "rN8qOh6AEMCP",
-      "jdbcUrl": "jdbc:postgresql://ep-yellow-salad-961725.us-west-2.aws.neon.tech/crisp-sheepdog-47_db_3216533?sslmode=require",
-      "jdbcCatalog": "public",
-      "jdbcSchema": null
+      "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
+      "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/jdbc/chinook.db"
     }
   ]
 }
