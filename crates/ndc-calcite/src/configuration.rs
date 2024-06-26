@@ -2,6 +2,8 @@ extern crate serde_json;
 
 use serde::{Deserialize, Serialize};
 
+/// The type of the schema.
+// ANCHOR: Schema
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Schema {
     #[serde(rename = "type")]
@@ -30,6 +32,7 @@ pub struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operand: Option<Operand>,
 }
+// ANCHOR_END: Schema
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Field {
@@ -38,6 +41,13 @@ pub struct Field {
     pub name: String,
 }
 
+/// Represents a table.
+///
+/// ## Fields
+///
+/// - `name` - The name of the table. It is an optional field.
+/// - `factory` - The factory of the table. It is an optional field.
+/// - `operand` - The operand of the table. It is an optional field.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Table {
     name: Option<String>,
@@ -45,6 +55,7 @@ pub struct Table {
     operand: Option<Operand>,
 }
 
+/// Represents the operand used in the schema.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Operand {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -62,6 +73,7 @@ pub struct Operand {
     data_format: Option<String>,
 }
 
+/// Represents a model.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Model {
     pub version: String,
@@ -74,6 +86,7 @@ pub struct Model {
     pub tables: Option<Vec<Table>>,
 }
 
+/// Represents the configuration for the Calcite engine.
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct CalciteConfiguration {
     pub version: String,

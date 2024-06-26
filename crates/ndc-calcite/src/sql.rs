@@ -362,7 +362,45 @@ fn query_collection(
     calcite_query(configuration, state.calcite_ref.clone(), &query, &query_metadata)
 }
 
-// ANCHOR: query_with_variables
+/// Executes a query with variables.
+///
+/// This function takes in the configuration, collection, arguments, query, variables, and state
+/// and executes the query with the provided variables. It returns a `Result` with the `RowSet` result
+/// or a `QueryError` if an error occurs during execution.
+///
+/// # Parameters
+///
+/// - `configuration`: A reference to the `CalciteConfiguration` struct.
+/// - `collection`: The name of the collection to query.
+/// - `arguments`: A map of argument names to their corresponding `Argument` values.
+/// - `query`: A reference to the `Query` struct.
+/// - `variables`: A map of variable names to their corresponding values.
+/// - `state`: A reference to the `CalciteState` struct.
+///
+/// # Returns
+///
+/// A `Result` with the `RowSet` result or a `QueryError`.
+///
+/// # Examples
+///
+/// ```rust
+/// use std::collections::BTreeMap;
+/// use calcite::models::{Argument, Query, RowSet};
+/// use calcite::{CalciteConfiguration, CalciteState, QueryError};
+///
+/// let configuration = CalciteConfiguration::new();
+/// let collection = "my_collection";
+/// let arguments: BTreeMap<String, Argument> = BTreeMap::new();
+/// let query = Query::new();
+/// let variables: BTreeMap<String, Value> = BTreeMap::new();
+/// let state = CalciteState::new();
+///
+/// let result = calcite::query_with_variables(&configuration, collection, &arguments, &query, &variables, &state);
+/// match result {
+///     Ok(row_set) => println!("Query result: {:?}", row_set),
+///     Err(error) => eprintln!("Query error: {:?}", error),
+/// }
+/// ```
 pub fn query_with_variables(
     configuration: &CalciteConfiguration,
     collection: &str,
@@ -477,4 +515,3 @@ pub fn query_with_variables(
 
     return Ok(models::RowSet { aggregates, rows });
 }
-// ANCHOR_END: query_with_variables

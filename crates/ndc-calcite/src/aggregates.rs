@@ -2,7 +2,15 @@ use std::collections::BTreeMap;
 
 use ndc_models::{AggregateFunctionDefinition, Type};
 
-// ANCHOR: numeric_aggregates
+/// Generates numeric aggregate functions for a given underlying type.
+///
+/// # Arguments
+///
+/// * `underlying_type` - A string representing the underlying numeric type.
+///
+/// # Returns
+///
+/// A `BTreeMap` containing aggregate function definitions for `sum`, `max`, `avg`, and `min`.
 #[tracing::instrument]
 pub fn numeric_aggregates(
     underlying_type: &str,
@@ -19,7 +27,6 @@ pub fn numeric_aggregates(
             .collect();
     BTreeMap::from_iter(aggregate_functions)
 }
-// ANCHOR_END: numeric_aggregates
 
 #[tracing::instrument]
 fn aggregate_function_definition(underlying_type: &str) -> AggregateFunctionDefinition {

@@ -3,6 +3,25 @@ use ndc_models::{
     NestedFieldCapabilities, QueryCapabilities, RelationshipCapabilities,
 };
 
+/// Calculates the capabilities of the Calcite system.
+///
+/// The `calcite_capabilities` function returns a `CapabilitiesResponse` struct
+/// that represents the capabilities of the Calcite system. The `CapabilitiesResponse`
+/// contains the version of the Calcite system and various capabilities in different
+/// aspects such as query, mutation, and relationships.
+///
+/// # Example
+///
+/// ```rust
+/// use some_library::calcite_capabilities;
+///
+/// let capabilities = calcite_capabilities();
+/// println!("{:?}", capabilities);
+/// ```
+///
+/// # Returns
+///
+/// - `CapabilitiesResponse`: A struct representing the capabilities of the Calcite system.
 // ANCHOR: calcite_capabilities
 pub fn calcite_capabilities() -> CapabilitiesResponse {
     CapabilitiesResponse {

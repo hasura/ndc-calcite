@@ -9,12 +9,45 @@ use crate::configuration::CalciteConfiguration;
 
 static JVM: OnceCell<Mutex<JavaVM>> = OnceCell::new();
 
+/// Returns a reference to the global JVM instance.
+///
+/// # Panics
+///
+/// This function will panic if the JVM instance is not set up.
+///
+/// # Examples
+///
+/// ```
+/// use std::sync::Mutex;
+///
+/// static JVM: once_cell::sync::OnceCell<Mutex<JavaVM>> = once_cell::sync::OnceCell::new();
+///
+/// pub fn get_jvm() -> &'static Mutex<JavaVM> {
+///     JVM.get().expect("JVM is not set up.")
+/// }
+/// ```
 // ANCHOR: get_jvm
 pub fn get_jvm() -> &'static Mutex<JavaVM> {
     JVM.get().expect("JVM is not set up.")
 }
 // ANCHOR_END: get_jvm
 
+/// This function initializes the Java Virtual Machine (JVM) with the given Calcite configuration.
+/// It sets up the necessary JAR dependencies and JVM options based on environment variables.
+///
+/// # Arguments
+///
+/// * `calcite_configuration` - A reference to the `CalciteConfiguration` struct containing
+///                             the configuration options for Calcite.
+///
+/// # Example
+///
+/// ```rust
+/// use crate::CalciteConfiguration;
+///
+/// let config = CalciteConfiguration { ... };
+/// init_jvm(&config);
+/// ```
 // ANCHOR: init_jvm
 #[tracing::instrument]
 pub fn init_jvm(calcite_configuration: &CalciteConfiguration) {

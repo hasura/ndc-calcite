@@ -4,6 +4,22 @@ use std::error::Error;
 use ndc_models::{CollectionInfo, ObjectField, ObjectType, ScalarType, SchemaResponse};
 use ndc_models::Type::{Named, Nullable};
 
+/// Extracts information from data models and scalar types to generate object types and collection information.
+///
+/// # Arguments
+///
+/// * `data_models` - A reference to a hashmap containing data models, where the key is the table name and the value is a hashmap of column names and their types.
+/// * `scalar_types` - A reference to a BTreeMap containing scalar types, where the key is the type name and the value is the scalar type definition.
+///
+/// # Returns
+///
+/// A Result that contains either a tuple with the generated object types and collection information, or an error indicating an issue with the input data.
+///
+/// The generated object types are stored in a BTreeMap, where the key is the table name and the value is an ObjectType struct.
+///
+/// The collection information is stored in a vector of CollectionInfo structs.
+///
+/// An inner Result can also be returned, which contains an error indicating an issue with the input data.
 // ANCHOR: collections
 #[tracing::instrument]
 pub fn collections(

@@ -4,6 +4,64 @@ use ndc_models::{ComparisonOperatorDefinition, ScalarType, TypeRepresentation};
 
 use crate::{aggregates, comparators};
 
+/// Retrieves a mapping of scalar types with their respective properties.
+///
+/// # Example
+///
+/// ```
+/// use std::collections::BTreeMap;
+///
+/// #[derive(Debug)]
+/// pub struct ScalarType {
+///     representation: Option<TypeRepresentation>,
+///     aggregate_functions: BTreeMap<String, AggregateFunction>,
+///     comparison_operators: BTreeMap<String, ComparisonOperatorDefinition>,
+/// }
+///
+/// #[derive(Debug)]
+/// pub enum TypeRepresentation {
+///     String,
+///     JSON,
+///     Int32,
+///     Float32,
+///     Float64,
+///     Boolean,
+///     Bytes,
+///     Date,
+///     Timestamp,
+///     TimestampTZ,
+/// }
+///
+/// #[derive(Debug)]
+/// pub enum AggregateFunction {
+///     // definition of aggregate functions
+/// }
+///
+/// #[derive(Debug)]
+/// pub enum ComparisonOperatorDefinition {
+///     Equal,
+///     // definition of other comparison operators
+/// }
+///
+/// /// Retrieves a mapping of scalar types with their respective properties.
+/// #[tracing::instrument]
+/// pub fn scalars() -> BTreeMap<String, ScalarType> {
+///     let string_comparison_operators =
+///         comparators::string_comparators(&comparators::numeric_comparators("VARCHAR".into()));
+///     let scalar_types = BTreeMap::from_iter([
+///         (
+///             "CHAR".into(),
+///             ScalarType {
+///                 representation: Some(TypeRepresentation::String),
+///                 aggregate_functions: BTreeMap::new(),
+///                 comparison_operators: string_comparison_operators.clone(),
+///             },
+///         ),
+///         // ... all other scalar types ...
+///     ]);
+///     scalar_types
+/// }
+/// ```
 // ANCHOR: scalars
 #[tracing::instrument]
 pub fn scalars() -> BTreeMap<String, ScalarType> {

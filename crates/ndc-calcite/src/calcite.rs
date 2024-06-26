@@ -44,6 +44,39 @@ fn create_calcite_connection<'a>(
     }
 }
 
+/// Creates a Calcite query engine.
+///
+/// This function creates an instance of the `CalciteQuery` class and initializes
+/// it with the given configuration. It also creates a Calcite connection using
+/// the provided configuration.
+///
+/// # Arguments
+///
+/// * `configuration` - A reference to the `CalciteConfiguration` object containing the configuration details.
+/// * `env` - A mutable reference to the Java environment.
+///
+/// # Returns
+///
+/// Returns a `JObject` representing the created `CalciteQuery` instance.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use jni::JNIEnv;
+/// use jni::objects::JObject;
+/// use tracing::Level;
+///
+/// # fn create_calcite_connection(configuration: &CalciteConfiguration, instance: &JObject, env: &mut JNIEnv) { unimplemented!() }
+///
+/// #[tracing::instrument]
+/// pub fn create_calcite_query_engine<'a>(configuration: &CalciteConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
+///     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
+///     let instance = env.new_object(class, "()V", &[]).unwrap();
+///     let _ = create_calcite_connection(configuration, &instance, env);
+///     event!(Level::INFO, "Instantiated Calcite Query Engine");
+///     return instance;
+/// }
+/// ```
 #[tracing::instrument]
 pub fn create_calcite_query_engine<'a>(configuration: &CalciteConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
@@ -53,6 +86,16 @@ pub fn create_calcite_query_engine<'a>(configuration: &CalciteConfiguration, env
     return instance;
 }
 
+/// Retrieves models from Calcite.
+///
+/// # Arguments
+///
+/// * `calcite_ref` - A reference to the Calcite instance.
+///
+/// # Return
+///
+/// A `HashMap` containing the retrieved models. The outer `HashMap` maps model names
+/// to inner `HashMap`s, where each inner `HashMap` represents a model with its properties.
 #[tracing::instrument]
 pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, HashMap<String, String>> {
     let jvm = get_jvm().lock().unwrap();
@@ -75,8 +118,50 @@ pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, HashMap<String, Str
     return map;
 }
 
-//noinspection RsExternalLinter
-//noinspection RsExternalLinter
+/// Executes a query using the Calcite Java library.
+///
+/// # Arguments
+///
+/// * `configuration` - The configuration for the Calcite query.
+/// * `calcite_ref` - The global reference to the Calcite instance.
+/// * `query` - The query string to be executed.
+/// * `query_metadata` - Metadata for the query.
+///
+/// # Returns
+///
+/// Returns a `Result` containing a vector of `Row` if successful, or a `QueryError` if an error occurred.
+///
+/// # Tracing
+///
+/// This function is instrumented with the `tracing` library, which logs an `INFO` level message with the query before executing it.
+///
+/// # Errors
+///
+/// The function may return a `QueryError` if an error occurs during the execution of the query.
+/// This includes issues with the Calcite adapters, null value dropping, errors caused by sending a SQL command with no fields, and issues with JSON serialization or deserialization.
+///
+/// # Example
+///
+/// ```rust
+/// use models::Query;
+///
+/// let configuration = CalciteConfiguration::default();
+/// let calcite_ref = GlobalRef::new();
+/// let query = "SELECT * FROM table";
+/// let query_metadata = Query::new();
+///
+/// let result = calcite_query(&configuration, calcite_ref, query, &query_metadata);
+/// match result {
+///     Ok(rows) => {
+///         for row in rows {
+///             println!("{:?}", row);
+///         }
+///     }
+///     Err(error) => {
+///         eprintln!("An error occurred: {:?}", error);
+///     }
+/// }
+/// ```
 // ANCHOR: calcite_query
 #[tracing::instrument]
 pub fn calcite_query(
