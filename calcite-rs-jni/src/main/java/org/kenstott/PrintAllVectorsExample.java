@@ -14,7 +14,16 @@ import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Map;
 
+/**
+ * The PrintAllVectorsExample class demonstrates how to read and print all vectors from an Arrow file.
+ */
 public class PrintAllVectorsExample {
+    /**
+     * Prints all vectors from an Arrow file.
+     *
+     * @param pathname the file path of the Arrow file
+     * @throws IOException if an I/O error occurs while reading the file
+     */
     public static void printFile(String pathname) throws IOException {
 
         File arrowFile = new File(pathname);

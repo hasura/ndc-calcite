@@ -13,6 +13,9 @@ import java.sql.*;
 import java.util.*;
 import static java.util.Map.entry;
 
+/**
+ * Represents a class that interacts with a Calcite database using JDBC.
+ */
 public class CalciteQuery {
 
     private static final Logger logger = LogManager.getLogger(CalciteQuery.class);
@@ -21,6 +24,12 @@ public class CalciteQuery {
     private static final Tracer tracer = openTelemetry.getTracer("calcite-driver");
     private static final Gson gson = new Gson();
 
+    /**
+     * Creates a Calcite connection using the provided model file.
+     *
+     * @param modelPath The path to the model file.
+     * @return The created Calcite connection.
+     */
     public Connection createCalciteConnection(String modelPath) {
         Span span = tracer.spanBuilder("createCalciteConnection").startSpan();
         span.addEvent(modelPath);
@@ -113,6 +122,18 @@ public class CalciteQuery {
         return columns;
     }
 
+    /**
+     * Retrieves the models.
+     *
+     * Note it maps all known column types from all adapters into a simplified
+     * list of data types. Specifically, it does not distinguish NOT NULL types.
+     * That maybe a useful improvement in a future version. In addition,
+     * it's based on a dictionary of known data types - and unknown types default
+     * to VARCHAR. Using a fuzzy algorithm to determine the data type could be
+     * a future improvement.
+     *
+     * @return A JSON string representing the models.
+     */
     public String getModels() {
         Span span = tracer.spanBuilder("getModels").startSpan();
         Map<String, Map<String, String>> result = new HashMap<>();
@@ -126,6 +147,12 @@ public class CalciteQuery {
     }
 
 
+    /**
+     * Executes a SQL query on the database and returns the result as a JSON string.
+     *
+     * @param query The SQL query to execute.
+     * @return A JSON string representing the result of the query.
+     */
     public String queryModels(String query) {
         Span span = tracer.spanBuilder("queryModels").startSpan();
         try {

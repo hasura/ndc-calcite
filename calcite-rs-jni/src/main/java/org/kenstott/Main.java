@@ -6,6 +6,11 @@ import java.sql.Connection;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * The Main class is the entry point of the application.
+ * It demonstrates the usage of the CalciteQuery class to create a Calcite connection
+ * and perform queries on the models.
+ */
 public class Main {
     public static void main(String[] args) {
         String modelPath = "../adapters/jdbc/model.json";

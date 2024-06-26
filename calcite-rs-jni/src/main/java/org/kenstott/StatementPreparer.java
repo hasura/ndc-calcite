@@ -8,11 +8,23 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * The StatementPreparer class is responsible for preparing a SQL statement by replacing
+ * marked up strings and indexed question marks with the actual values.
+ */
 class StatementPreparer {
 
     static String STRING_MARKER = "__UTF8__";
     static String PARAM_MARKER = "?";
 
+    /**
+     * Prepares a SQL statement by replacing marked up strings and indexed question marks with the actual values.
+     *
+     * @param input      The SQL statement to prepare.
+     * @param connection The database connection.
+     * @return A PreparedStatement object representing the prepared SQL statement.
+     * @throws SQLException If an error occurs while preparing the statement.
+     */
     public static PreparedStatement prepare(String input, Connection connection) throws SQLException {
         String[] extractedStrings = extractMarkedUpStrings(input);
         String modifiedInput = replaceWithIndexedQuestionMarks(input, extractedStrings);
@@ -56,7 +68,7 @@ class StatementPreparer {
         return extractedList.toArray(new String[0]);
     }
 
-    public static String replaceWithIndexedQuestionMarks(String input, String[] extractedStrings) {
+    private static String replaceWithIndexedQuestionMarks(String input, String[] extractedStrings) {
         for (int i = 0; i < extractedStrings.length; i++) {
             input = input.replace(
                     STRING_MARKER + extractedStrings[i] + STRING_MARKER,

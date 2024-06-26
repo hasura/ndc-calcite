@@ -14,6 +14,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.sql.DatabaseMetaData;
 import java.util.Objects;
 
+/**
+ * A factory for creating a SQLite SQL dialect.
+ */
 public class SQLiteSqlDialectFactory implements SqlDialectFactory {
 
     private record ContextImpl(SqlDialect.DatabaseProduct databaseProduct, @Nullable String databaseProductName,
