@@ -14,6 +14,7 @@ use tracing::{event, Level};
 use crate::calcite::{calcite_query, Row};
 use crate::configuration::CalciteConfiguration;
 use crate::connector::calcite::CalciteState;
+use crate::metadata::TableMetadata;
 
 #[derive(Debug)]
 struct VariableNotFoundError;
@@ -104,7 +105,7 @@ fn pagination(query: &models::Query) -> Vec<String> {
 }
 
 #[tracing::instrument]
-fn create_column_name(name: &str, field_path: &Option<Vec<String>>) -> String {
+fn create_column_name(calcite_configuration: &CalciteConfiguration, name: &str, field_path: &Option<Vec<String>>) -> String {
     match field_path {
         None => name.into(),
         Some(f) => {
@@ -114,7 +115,7 @@ fn create_column_name(name: &str, field_path: &Option<Vec<String>>) -> String {
 }
 
 #[tracing::instrument]
-fn aggregates(query: &models::Query) -> Vec<String> {
+fn aggregates(configuration: &CalciteConfiguration, query: &models::Query) -> Vec<String> {
     let mut aggregates: Vec<String> = Vec::new();
     match &query.aggregates {
         None => {}
@@ -129,7 +130,7 @@ fn aggregates(query: &models::Query) -> Vec<String> {
                         format!(
                             "COUNT({}\"{}\") AS \"{}\"",
                             if *distinct { "DISTINCT " } else { "" },
-                            create_column_name(column, field_path),
+                            create_column_name(configuration, column, field_path),
                             name
                         )
                     }
@@ -141,7 +142,7 @@ fn aggregates(query: &models::Query) -> Vec<String> {
                         format!(
                             "{}(\"{}\") AS \"{}\"",
                             function,
-                            create_column_name(column, field_path),
+                            create_column_name(configuration, column, field_path),
                             name
                         )
                     }
@@ -158,22 +159,24 @@ fn aggregates(query: &models::Query) -> Vec<String> {
 
 #[tracing::instrument]
 fn predicates(
+    configuration: &CalciteConfiguration,
     collection: &str,
     variables: &BTreeMap<String, Value>,
     query: &models::Query,
 ) -> Result<String, Box<dyn Error>> {
-    process_expression_option(collection, variables, query.clone().predicate)
+    process_expression_option(configuration, collection, variables, query.clone().predicate)
 }
 
 #[tracing::instrument]
 fn process_expression_option(
+    configuration: &CalciteConfiguration,
     collection: &str,
     variables: &BTreeMap<String, Value>,
     predicate: Option<Expression>,
 ) -> Result<String, Box<dyn Error>> {
     match predicate {
         None => Ok("".into()),
-        Some(expr) => process_sql_expression(collection, variables, &expr),
+        Some(expr) => process_sql_expression(configuration, collection, variables, &expr),
     }
 }
 
@@ -195,6 +198,7 @@ fn sql_quotes(input: &str) -> String {
 
 #[tracing::instrument]
 fn process_sql_expression(
+    configuration: &CalciteConfiguration,
     collection: &str,
     variables: &BTreeMap<String, Value>,
     expr: &Expression,
@@ -214,7 +218,7 @@ fn process_sql_expression(
             let processed_expressions: Vec<String> = expressions
                 .iter()
                 .filter_map(|expression| {
-                    process_sql_expression(collection, variables, expression).ok()
+                    process_sql_expression(configuration, collection, variables, expression).ok()
                 })
                 .collect();
             Ok(format!("({})", processed_expressions.join(" AND ")))
@@ -223,20 +227,20 @@ fn process_sql_expression(
             let processed_expressions: Vec<String> = expressions
                 .iter()
                 .filter_map(|expression| {
-                    process_sql_expression(collection, variables, expression).ok()
+                    process_sql_expression(configuration, collection, variables, expression).ok()
                 })
                 .collect();
             Ok(format!("({})", processed_expressions.join(" OR ")))
         }
         Expression::Not { expression } => Ok(format!(
             "(NOT {:?})",
-            process_sql_expression(collection, variables, expression)
+            process_sql_expression(configuration, collection, variables, expression)
         )),
         Expression::UnaryComparisonOperator { operator, column } => match operator {
             UnaryComparisonOperator::IsNull => {
                 match column {
                     ComparisonTarget::Column { name, field_path, .. } => {
-                        Ok(format!("{:?} IS NULL", create_column_name(name, field_path)))
+                        Ok(format!("{:?} IS NULL", create_column_name(&configuration, name, field_path)))
                     }
                     ComparisonTarget::RootCollectionColumn { .. } => todo!()
                 }
@@ -254,7 +258,7 @@ fn process_sql_expression(
                 ComparisonTarget::Column {
                     name, field_path, ..
                 } => {
-                    format!("\"{}\"", create_column_name(name, field_path))
+                    format!("\"{}\"", create_column_name(&configuration, name, field_path))
                 }
                 ComparisonTarget::RootCollectionColumn { .. } => todo!(),
             };
@@ -262,13 +266,16 @@ fn process_sql_expression(
                 ComparisonValue::Column { column } => match column {
                     ComparisonTarget::Column {
                         name, field_path, ..
-                    } => create_column_name(name, field_path),
+                    } => create_column_name(&configuration, name, field_path),
                     ComparisonTarget::RootCollectionColumn { .. } => todo!(),
                 },
                 ComparisonValue::Scalar { value } => {
                     let sql_value = sql_quotes(&sql_brackets(&value.to_string()));
                     if sql_value == "()" {
-                        format!("(SELECT {} FROM \"{}\" WHERE FALSE)", left_side, collection)
+                        let table = create_qualified_table_name(
+                            configuration.clone().metadata.unwrap().get(collection).unwrap()
+                        );
+                        format!("(SELECT {} FROM {} WHERE FALSE)", left_side, table)
                     } else {
                         if value.is_string() {
                             sql_value
@@ -289,13 +296,28 @@ fn process_sql_expression(
         }
         Expression::Exists { predicate, .. } => {
             if let Some(pred_expression) = predicate {
-                let expression = process_sql_expression(collection, variables, pred_expression);
+                let expression = process_sql_expression(configuration, collection, variables, pred_expression);
                 Ok(format!("EXISTS ({:?})", expression))
             } else {
                 Ok("".into())
             }
         }
     }
+}
+
+fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
+    let mut path: Vec<String> = Vec::new();
+    let catalog = table_metadata.clone().catalog.unwrap_or_default();
+    let schema = table_metadata.clone().schema.unwrap_or_default();
+    let name = table_metadata.clone().name;
+    if !catalog.is_empty() {
+        path.push(format!("\"{}\"", catalog));
+    }
+    if !schema.is_empty() {
+        path.push(format!("\"{}\"", schema));
+    }
+    path.push(format!("\"{}\"", name));
+    path.join(".")
 }
 
 #[tracing::instrument]
@@ -354,9 +376,13 @@ fn query_collection(
         }
     };
 
+    let table = create_qualified_table_name(
+        configuration.clone().metadata.unwrap().get(collection_name).unwrap()
+    );
+
     let query = format!(
-        "SELECT {} FROM \"{}\"{}{}{}",
-        select_clause, collection_name, expanded_where_clause, order_by_clause, pagination_clause
+        "SELECT {} FROM {}{}{}{}",
+        select_clause, table, expanded_where_clause, order_by_clause, pagination_clause
     );
     event!(Level::INFO, message = format!("Generated query {}", query));
     calcite_query(configuration, state.calcite_ref.clone(), &query, &query_metadata)
@@ -430,8 +456,8 @@ pub fn query_with_variables(
     let select = Some(select(query, None).join(", "));
     let order_by = Some(order_by(query).join(", "));
     let pagination = Some(pagination(query).join(" "));
-    let aggregates = Some(aggregates(query).join(", "));
-    let predicates = predicates(collection, variables, query);
+    let aggregates = Some(aggregates(configuration, query).join(", "));
+    let predicates = predicates(&configuration, collection, variables, query);
     let predicates: Option<String> = match predicates {
         Ok(p) => Some(p),
         Err(e) => {

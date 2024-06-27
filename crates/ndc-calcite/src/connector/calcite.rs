@@ -1,5 +1,5 @@
-use std::collections::BTreeMap;
-use std::fs;
+use std::collections::{BTreeMap};
+use std::{fs};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -96,6 +96,14 @@ impl ConnectorSetup for Calcite {
                 file.write_all(serialized_json.as_bytes())
                     .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
                 json_object.model_file_path = Some("./model.json".to_string());
+                match json_object.metadata {
+                    None => {
+                        init_state(&json_object).expect("TODO: panic message");
+                        Self::get_schema(&json_object).await.expect("TODO: panic message");
+                        return Self::parse_configuration(self, configuration_dir).await;
+                    }
+                    Some(_) => {}
+                }
                 Ok(json_object)
             }
             Err(err) => Err(ParseError::Other(Box::from(err.to_string()))),
@@ -107,19 +115,9 @@ impl ConnectorSetup for Calcite {
         configuration: &<Self as Connector>::Configuration,
         _metrics: &mut prometheus::Registry,
     ) -> Result<<Self as Connector>::State, InitializationError> {
-        dotenv::dotenv().ok();
-        init_jvm(configuration);
-        let java_vm = jvm::get_jvm().lock().unwrap();
-        let calcite;
-        let calcite_ref;
-        {
-            let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_calcite_query_engine(configuration, &mut env);
-            let env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite_ref = env.new_global_ref(calcite).unwrap();
-        }
-        Ok(CalciteState { calcite_ref })
+        init_state(configuration)
     }
+
 }
 
 #[async_trait]
@@ -164,7 +162,7 @@ impl Connector for Calcite {
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }
 
-        let schema = schema::get_schema(calcite_ref.clone());
+        let schema = schema::get_schema(configuration, calcite_ref.clone());
         match schema {
             Ok(schema) => Ok(schema.into()),
             Err(e) => Err(SchemaError::Other(e.to_string().into())),
@@ -219,6 +217,22 @@ impl Connector for Calcite {
     }
 }
 
+fn init_state(
+    configuration: &CalciteConfiguration,
+) -> Result<CalciteState, InitializationError> {
+    dotenv::dotenv().ok();
+    init_jvm(configuration);
+    let java_vm = jvm::get_jvm().lock().unwrap();
+        let calcite;
+        let calcite_ref;
+        {
+            let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
+            calcite = calcite::create_calcite_query_engine(configuration, &mut env);
+            let env = java_vm.attach_current_thread_as_daemon().unwrap();
+            calcite_ref = env.new_global_ref(calcite).unwrap();
+        }
+        Ok(CalciteState { calcite_ref })
+}
 #[cfg(test)]
 mod tests {
     use std::error::Error;

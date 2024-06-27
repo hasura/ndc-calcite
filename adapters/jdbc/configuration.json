@@ -1,17 +1,17 @@
 {
-  "version": "4",
-  "$schema": "schema.json",
-  "model": {
-    "version": "1.0",
-    "defaultSchema": "test",
-    "schemas": [
-      {
-        "type": "jdbc",
+  "version": "1.0",
+  "defaultSchema": "test",
+  "schemas": [
+    {
+      "type": "jdbc",
+      "name": "test",
+      "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
+      "jdbcUrl": "jdbc:sqlite:./chinook.db",
+      "tables": [{
         "name": "test",
-        "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
-        "jdbcUrl": "jdbc:sqlite:./chinook.db"
-      }
-    ]
-  },
-  "fixes": true
+        "type": "view",
+        "sql": "SELECT\n    c.CustomerId,\n    c.FirstName || ' ' || c.LastName AS CustomerName,\n    SUM(i.Total) AS TotalSales\nFROM\n    customers c\nJOIN\n    invoices i ON c.CustomerId = i.CustomerId\nGROUP BY\n    c.CustomerId, CustomerName;"
+      }]
+    }
+  ]
 }

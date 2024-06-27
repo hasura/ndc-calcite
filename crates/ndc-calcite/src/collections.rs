@@ -3,6 +3,7 @@ use std::error::Error;
 
 use ndc_models::{CollectionInfo, ObjectField, ObjectType, ScalarType, SchemaResponse};
 use ndc_models::Type::{Named, Nullable};
+use crate::metadata::TableMetadata;
 
 /// Extracts information from data models and scalar types to generate object types and collection information.
 ///
@@ -23,7 +24,7 @@ use ndc_models::Type::{Named, Nullable};
 // ANCHOR: collections
 #[tracing::instrument]
 pub fn collections(
-    data_models: &HashMap<String, HashMap<String, String>>,
+    data_models: &HashMap<String, TableMetadata>,
     scalar_types: &BTreeMap<String, ScalarType>,
 ) -> Result<
     (BTreeMap<String, ObjectType>, Vec<CollectionInfo>),
@@ -31,34 +32,37 @@ pub fn collections(
 > {
     let mut object_types: BTreeMap<String, ObjectType> = BTreeMap::new();
     let mut collections: Vec<CollectionInfo> = Vec::new();
-    for (table_name, columns) in data_models {
+    for (table, table_metadata) in data_models {
         let mut fields: BTreeMap<String, ObjectField> = BTreeMap::new();
-        for (column_name, column_type) in columns {
+        for (column_name, column_metadata) in &table_metadata.columns {
+            let scalar_type = column_metadata.clone().scalar_type;
+            let nullable = column_metadata.clone().nullable;
+            let final_type: ndc_models::Type = if nullable {
+                Nullable { underlying_type: Box::new(Named { name: scalar_type, }) }
+            } else {
+                Named { name: scalar_type, }
+            };
             fields.insert(
                 column_name.into(),
                 ObjectField {
-                    description: Some("".into()),
-                    r#type: Nullable {
-                        underlying_type: Box::new(Named {
-                            name: column_type.into(),
-                        }),
-                    },
+                    description: Some(column_metadata.clone().description.unwrap_or_default()),
+                    r#type: final_type,
                     arguments: BTreeMap::new(),
                 },
             );
         }
-        if !scalar_types.contains_key(table_name) {
+        if !scalar_types.contains_key(&table_metadata.name) {
             object_types.insert(
-                table_name.into(),
+                table.clone(),
                 ObjectType {
-                    description: Some("".into()),
+                    description: table_metadata.description.clone(),
                     fields: fields.clone(),
                 },
             );
             collections.push(CollectionInfo {
-                name: table_name.into(),
-                description: Some(format!("A collection of {}", table_name)),
-                collection_type: table_name.into(),
+                name: table_metadata.name.clone(),
+                description: Some(format!("A collection of {}", table)),
+                collection_type: table_metadata.name.clone(),
                 arguments: BTreeMap::from_iter([]),
                 foreign_keys: BTreeMap::from_iter([]),
                 uniqueness_constraints: BTreeMap::from_iter([]),
@@ -68,7 +72,7 @@ pub fn collections(
                 std::io::ErrorKind::Other,
                 format!(
                     "Table names cannot be same as a scalar type name: {}",
-                    table_name
+                    table_metadata.name
                 ),
             ))));
         }

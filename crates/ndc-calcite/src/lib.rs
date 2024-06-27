@@ -65,6 +65,7 @@ pub mod scalars;
 pub mod schema;
 pub mod sql;
 pub mod configuration;
+pub mod metadata;
 
 pub mod connector {
     pub mod calcite;

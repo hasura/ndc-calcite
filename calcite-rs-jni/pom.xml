@@ -198,6 +198,16 @@
             <version>449</version>
         </dependency>
         <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.6.3.jre11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <version>0.6.0-patch4</version>
+        </dependency>
+        <dependency>
             <groupId>com.ibm.db2</groupId>
             <artifactId>jcc</artifactId>
             <version>11.5.9.0</version>
@@ -218,6 +228,34 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.36.0.3</version>
         </dependency>
+        <!-- H2 -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.200</version>
+        </dependency>
+
+        <!-- HIVE -->
+        <dependency>
+            <groupId>org.apache.hive</groupId>
+            <artifactId>hive-jdbc</artifactId>
+            <version>3.1.2</version>
+        </dependency>
+
+        <!-- HSQLDB -->
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.amazon.redshift</groupId>
+            <artifactId>redshift-jdbc42</artifactId>
+            <version>2.1.0.29</version>
+        </dependency>
+
     </dependencies>
     <build>
         <extensions>
@@ -234,7 +272,7 @@
                 <version>2.22.2</version>
                 <configuration>
                     <argLine>
-                        --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED
+                        --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED -Dotel.java.global-autoconfigure.enabled=true
                     </argLine>
                 </configuration>
             </plugin>

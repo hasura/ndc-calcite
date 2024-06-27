@@ -12,6 +12,7 @@ use tracing::{event, Level};
 
 use crate::configuration::CalciteConfiguration;
 use crate::jvm::get_jvm;
+use crate::metadata::TableMetadata;
 
 pub type Row = IndexMap<String, RowFieldValue>;
 
@@ -97,7 +98,7 @@ pub fn create_calcite_query_engine<'a>(configuration: &CalciteConfiguration, env
 /// A `HashMap` containing the retrieved models. The outer `HashMap` maps model names
 /// to inner `HashMap`s, where each inner `HashMap` represents a model with its properties.
 #[tracing::instrument]
-pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, HashMap<String, String>> {
+pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, TableMetadata> {
     let jvm = get_jvm().lock().unwrap();
     let env = jvm.attach_current_thread().unwrap();
     let calcite_query = env.new_local_ref(calcite_ref).unwrap();
@@ -105,15 +106,15 @@ pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, HashMap<String, Str
     let args: &[JValueGen<&JObject<'_>>] = &[];
     let method_signature = "()Ljava/lang/String;";
     let result = env.call_method(calcite_query, "getModels", method_signature, args);
-    let map: HashMap<String, HashMap<String, String>>;
-    match result.unwrap() {
+    let map= match result.unwrap() {
         Object(obj) => {
             let j_string = JString::from(obj);
             let json_string: String = env.get_string(&j_string).unwrap().into();
-            map = serde_json::from_str(&json_string).unwrap();
+            let map: HashMap<String, TableMetadata> = serde_json::from_str(&json_string).unwrap();
+            map
         }
         _ => todo!(),
-    }
+    };
     event!(Level::INFO, "Retrieved models from Calcite");
     return map;
 }

@@ -1,4 +1,7 @@
 use std::error::Error;
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 
 use jni::objects::GlobalRef;
 use ndc_models as models;
@@ -6,6 +9,8 @@ use ndc_models::SchemaResponse;
 use tracing::{event, Level};
 
 use crate::{calcite, collections, scalars};
+use crate::configuration::CalciteConfiguration;
+use crate::connector::calcite::{CONFIG_FILE_NAME, DEV_CONFIG_FILE_NAME, is_running_in_container};
 
 /// Get the schema information from the given `calcite_ref`.
 ///
@@ -51,7 +56,7 @@ use crate::{calcite, collections, scalars};
 /// ```
 // ANCHOR: get_schema
 #[tracing::instrument]
-pub fn get_schema(calcite_ref: GlobalRef) -> Result<SchemaResponse, Box<dyn Error>> {
+pub fn get_schema(configuration: &CalciteConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse, Box<dyn Error>> {
     let data_models = calcite::get_models(calcite_ref);
     let scalar_types = scalars::scalars();
     let (object_types, collections) = match collections::collections(&data_models, &scalar_types) {
@@ -67,7 +72,16 @@ pub fn get_schema(calcite_ref: GlobalRef) -> Result<SchemaResponse, Box<dyn Erro
         functions,
         procedures,
     };
-
+    let file_path = if is_running_in_container() {
+        Path::new(".").join(CONFIG_FILE_NAME)
+    } else {
+        Path::new(".").join(DEV_CONFIG_FILE_NAME)
+    };
+    let mut new_configuration = configuration.clone();
+    new_configuration.metadata = Some(data_models.clone());
+    let mut file = File::create(file_path)?;
+    let serialized_json = serde_json::to_string_pretty(&new_configuration)?;
+    file.write_all(serialized_json.as_bytes())?;
     event!(
         Level::INFO,
         schema = serde_json::to_string(&schema).unwrap()
