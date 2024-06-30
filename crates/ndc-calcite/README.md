@@ -8,7 +8,7 @@ change the underlying Calcite data source.
 ### With Cargo
 
 ```sh
-(cd ndc-calcite; cargo buildl cd ..; cd ..; cd adapters/csv; cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration .)
+(cd ndc-calcite; cargo build; cd ..; cd ..; cd adapters/csv; cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration .)
 ```
 
 ### With Docker
