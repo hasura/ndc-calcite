@@ -1,27 +1,26 @@
-# NDC Reference Connector
+# NDC Calcite Connector
 
-The reference connector implements the features in the NDC specification against an in-memory database. It is intended
-to illustrate the concepts involved, and should be complete, in the sense that every specification feature is covered.
-It is not optimized and is not intended for production use, but might be useful for testing.
+The Calcite connector implements a generic connector for ALL Calcite data sources. You modify the configuration.json/model to
+change the underlying Calcite data source.
 
 ## Getting Started
 
 ### With Cargo
 
 ```sh
-(cd ndc-reference; cargo run)
+(cd ndc-calcite; cargo run)
 ```
 
 ### With Docker
 
 ```sh
-docker build -t reference_connector .
-docker run -it --rm -p 8080:8080 reference_connector
+docker build -t calcite_connector .
+docker run -it --rm -p 8080:8080 calcite_connector
 ```
 
 ## Using the reference connector
 
-The reference connector runs on http://localhost:8080 by default:
+The calcite_connector connector runs on http://localhost:8080 by default:
 
 ```sh
 curl http://localhost:8080/schema | jq .
