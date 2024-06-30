@@ -13,6 +13,14 @@ We can build a file connector (creates schemas for one or directories of JSON an
 (cd crates/ndc-calcite; cargo build; cd ..; cd ..; cd adapters/file; cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration .)
 ```
 
+### Rust Docs
+
+```sh
+cd crates/ndc-calcite
+cargo doc
+open "../../target/doc/calcite/index.html"
+```
+
 ### With Docker
 
 ```sh
