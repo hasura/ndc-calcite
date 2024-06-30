@@ -14,13 +14,14 @@ change the underlying Calcite data source.
 ### With Docker
 
 ```sh
-docker build -t calcite_connector .
-docker run -it --rm -p 8080:8080 calcite_connector
+cd adapters/csv
+docker build -t csv_connector .
+docker run -it --rm -p 8080:8080 csv_connector
 ```
 
 ## Using the reference connector
 
-The calcite_connector connector runs on http://localhost:8080 by default:
+The csv_connector connector runs on http://localhost:8080 by default:
 
 ```sh
 curl http://localhost:8080/schema | jq .
