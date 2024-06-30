@@ -1,2 +1,2 @@
 cd ../..
-docker build . -t file_connector
+docker build . -t jdbc_connector
