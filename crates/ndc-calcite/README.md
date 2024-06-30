@@ -20,6 +20,8 @@ cd crates/ndc-calcite
 cargo doc
 open "../../target/doc/calcite/index.html"
 ```
+![RustDocs](./docs/rust_docs.png)
+
 
 ### With Docker
 
