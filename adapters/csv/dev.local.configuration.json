@@ -1,0 +1,116 @@
+{
+  "version": "4",
+  "$schema": "schema.json",
+  "model": {
+    "version": "1.0",
+    "defaultSchema": "SALES",
+    "schemas": [
+      {
+        "type": "custom",
+        "name": "SALES",
+        "factory": "org.apache.calcite.adapter.csv.CsvSchemaFactory",
+        "operand": {
+          "directory": "./resources/test/sales"
+        }
+      }
+    ]
+  },
+  "model_file_path": "./model.json",
+  "fixes": true,
+  "metadata": {
+    "DEPTS": {
+      "schema": "SALES",
+      "name": "DEPTS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "SDEPTS": {
+      "schema": "SALES",
+      "name": "SDEPTS",
+      "columns": {
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "EMPS": {
+      "schema": "SALES",
+      "name": "EMPS",
+      "columns": {
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "GENDER": {
+          "name": "GENDER",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
+}
