@@ -5,23 +5,25 @@ change the underlying Calcite data source.
 
 ## Getting Started
 
+We can build a file connector (creates schemas for one or directories of JSON and CSV files). Of course, you can build all types of connectors for data sources that Calcite supports.
+
 ### With Cargo
 
 ```sh
-(cd crates/ndc-calcite; cargo build; cd ..; cd ..; cd adapters/csv; cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration .)
+(cd crates/ndc-calcite; cargo build; cd ..; cd ..; cd adapters/file; cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration .)
 ```
 
 ### With Docker
 
 ```sh
-cd adapters/csv
-docker build -t csv_connector .
-docker run -it --rm -p 8080:8080 csv_connector
+cd adapters/file
+docker build -t file_connector .
+docker run -it --rm -p 8080:8080 file_connector
 ```
 
 ## Using the reference connector
 
-The csv_connector connector runs on http://localhost:8080 by default:
+The file_connector connector runs on http://localhost:8080 by default:
 
 ```sh
 curl http://localhost:8080/schema | jq .
