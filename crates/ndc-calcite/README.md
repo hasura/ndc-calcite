@@ -27,11 +27,11 @@ open "../../target/doc/calcite/index.html"
 
 ```sh
 cd adapters/file
-docker build -t file_connector .
-docker run -it --rm -p 8080:8080 file_connector
+./build.sh
+docker compose -f dev.docker-compose.calcite.yaml up
 ```
 
-## Using the reference connector
+## Using the calcite connector
 
 The file_connector connector runs on http://localhost:8080 by default:
 
