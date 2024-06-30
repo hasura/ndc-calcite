@@ -1,4 +1,10 @@
+//! # Calcite Query Handler
+//!
+//! Takes a Calcite query, passes it to Calcite Query Engine
+//! and then transforms it into a Vec<Row>.
+//!
 use std::collections::HashMap;
+use std::fmt;
 
 use indexmap::IndexMap;
 use jni::JNIEnv;
@@ -12,7 +18,7 @@ use tracing::{event, Level};
 
 use crate::configuration::CalciteConfiguration;
 use crate::jvm::get_jvm;
-use crate::metadata::TableMetadata;
+use crate::configuration::TableMetadata;
 
 pub type Row = IndexMap<String, RowFieldValue>;
 
@@ -119,6 +125,15 @@ pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, TableMetadata> {
     return map;
 }
 
+fn parse_to_row(data: Vec<String>) -> Vec<Row> {
+    let mut rows: Vec<Row> = Vec::new();
+    for item in data {
+        let row: Row = serde_json::from_str(&item).unwrap();
+        rows.push(row);
+    }
+    rows
+}
+
 /// Executes a query using the Calcite Java library.
 ///
 /// # Arguments
@@ -166,107 +181,91 @@ pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, TableMetadata> {
 // ANCHOR: calcite_query
 #[tracing::instrument]
 pub fn calcite_query(
-    configuration: &CalciteConfiguration,
-    calcite_ref: GlobalRef,
-    query: &str,
+    config: &CalciteConfiguration,
+    calcite_reference: GlobalRef,
+    sql_query: &str,
     query_metadata: &models::Query,
 ) -> Result<Vec<Row>, QueryError> {
-    event!(
-        Level::INFO,
-        message = format!("Attempting this query: {}", query)
-    );
-    let _jvm = get_jvm().lock().unwrap();
-    let env = _jvm.attach_current_thread().unwrap();
-    let calcite_query = env.new_local_ref(calcite_ref).unwrap();
-    let arg0: JObject = env.new_string(query).unwrap().into();
-    let args: &[JValueGen<&JObject<'_>>] = &[Object(&arg0)];
-    let method_signature = "(Ljava/lang/String;)Ljava/lang/String;";
-    let mut env = _jvm.attach_current_thread().unwrap();
-    let result = env.call_method(calcite_query, "queryModels", method_signature, args);
+    log_event(Level::INFO, &format!("Attempting this query: {}", sql_query));
+    let jvm = get_jvm().lock().unwrap();
+    let mut java_env = jvm.attach_current_thread().unwrap();
+    let calcite_query = java_env.new_local_ref(calcite_reference).unwrap();
+
+    let temp_string = java_env.new_string(sql_query).unwrap().into();
+    let query_args: &[JValueGen<&JObject<'_>>] = &[Object(&temp_string)];
+    let result = java_env.call_method(calcite_query, "queryModels", "(Ljava/lang/String;)Ljava/lang/String;", query_args);
+
     match result.unwrap() {
         Object(obj) => {
-            let j_string = JString::from(obj);
-            let json_string: String = env.get_string(&j_string).unwrap().into();
-            let json_array: Result<Vec<Row>, serde_json::Error> =
-                serde_json::from_str(&json_string);
-            let fix = configuration.fixes.unwrap_or(false);
-            match json_array {
-                //  TODO: These are attempts to deal with 2 Calcite issues
-                // related to Calcite adapters. I have found that
-                // they may drop a null value from a row. But the
-                // the reasons are not clear.
-                // Plus, it is an error to send in a SQL command
-                // with no fields - so I have to send in a dummy
-                // field and then remove it.
-                // It would be better to find a more performant
-                // way then converting all to JSON and making these
-                // fixes in memory.
-                Ok(rows) => {
-                    if fix {
-                        let fields = query_metadata.clone().fields.unwrap_or_default();
-                        let aggregates = query_metadata.clone().aggregates.unwrap_or_default();
-                        let max_keys = fields.len() + aggregates.len();
-                        let mut key_sample: Vec<String> = vec![];
-                        for (key, _) in fields {
-                            key_sample.push(key)
-                        }
-                        for (key, _) in aggregates {
-                            key_sample.push(key)
-                        }
+            let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
+            let json_rows: Vec<String> = serde_json::from_str(&json_string).unwrap();
+            let rows = parse_to_row(json_rows);
+            let rows = if config.fixes.unwrap_or(false) {
+                fix_rows(rows, query_metadata)
+            } else {
+                rows
+            };
+            log_event(Level::INFO, &format!("Completed Query. Retrieved {} rows. Result: {}", rows.len().to_string(), serde_json::to_string(&rows).unwrap()));
+            Ok(rows)
+        },
+        _ => Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")})))
+    }
+}
 
-                        let new_rows: Vec<Row> = rows
-                            .into_iter()
-                            .map(|mut row| {
-                                if fix && max_keys > row.len() {
-                                    for key in &key_sample {
-                                        if !row.contains_key(key) {
-                                            row.insert(key.into(), RowFieldValue(Value::Null));
-                                        }
-                                    }
-                                }
-                                for (_key, value) in &mut row {
-                                    if let RowFieldValue(val) = value {
-                                        if val == "null" {
-                                            *value = RowFieldValue(Value::Null);
-                                        }
-                                    }
-                                }
-                                row.swap_remove("CONSTANT");
-                                row
-                            })
-                            .collect();
-                        event!(
-                            Level::INFO,
-                            message = format!(
-                                "Completed Query. Retrieved {} rows. Result: {}",
-                                new_rows.len().to_string(),
-                                serde_json::to_string(&new_rows).unwrap()
-                            )
-                        );
-                        Ok(new_rows)
-                    } else {
-                        event!(
-                            Level::INFO,
-                            message = format!(
-                                "Completed Query. Retrieved {} rows. Result: {}",
-                                rows.len().to_string(),
-                                serde_json::to_string(&rows).unwrap()
-                            )
-                        );
-                        Ok(rows)
-                    }
-                }
-                Err(e) => {
-                    eprintln!("An error occurred: {:?} / {}", e, query);
-                    event!(
-                        Level::ERROR,
-                        message = format!("An error occurred: {:?}", e)
-                    );
-                    Err(QueryError::Other(Box::new(e)))
+fn log_event(level: Level, message: &str) {
+    match level {
+        Level::ERROR => tracing::error!("{}", message),
+        Level::WARN => tracing::warn!("{}", message),
+        Level::INFO => tracing::info!("{}", message),
+        Level::DEBUG => tracing::debug!("{}", message),
+        Level::TRACE => tracing::trace!("{}", message),
+    }
+}
+
+fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
+    let fields = query_metadata.clone().fields.unwrap_or_default();
+    let aggregates = query_metadata.clone().aggregates.unwrap_or_default();
+    let max_keys = fields.len() + aggregates.len();
+    let mut key_sample: Vec<String> = vec![];
+
+    for (key, _) in fields {
+        key_sample.push(key);
+    }
+
+    for (key, _) in aggregates {
+        key_sample.push(key);
+    }
+
+    rows.into_iter().map(|mut row| {
+        if max_keys > row.len() {
+            for key in &key_sample {
+                if !row.contains_key(key) {
+                    row.insert(key.into(), RowFieldValue(Value::Null));
                 }
             }
         }
-        _ => todo!(),
-    }
+        for (_key, value) in &mut row {
+            if let RowFieldValue(val) = value {
+                if val == "null" {
+                    *value = RowFieldValue(Value::Null);
+                }
+            }
+        }
+        row.swap_remove("CONSTANT");
+        row
+    }).collect()
 }
 // ANCHOR_END: calcite_query
+
+#[derive(Debug)]
+struct CalciteError {
+    message: String,
+}
+
+impl fmt::Display for CalciteError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.message)
+    }
+}
+
+impl std::error::Error for CalciteError {}

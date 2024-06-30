@@ -52,6 +52,7 @@ tracing-subscriber = { version = "0.3", default-features = false, features = ["a
 url = "2.5.0"
 dotenv = "0.15.0"
 once_cell = "1.19.0"
+anyhow = "1.0.86"
 
 [dev-dependencies]
 axum-test-helper = "0.3.0"

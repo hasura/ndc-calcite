@@ -1,3 +1,7 @@
+//! # Comparison functions.
+//!
+//! You can create new comparison functions here.
+//!
 use std::collections::BTreeMap;
 
 use ndc_models::{ComparisonOperatorDefinition, Type};

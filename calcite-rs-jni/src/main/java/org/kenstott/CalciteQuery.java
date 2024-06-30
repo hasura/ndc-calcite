@@ -111,7 +111,7 @@ public class CalciteQuery {
         Properties info = new Properties();
         info.setProperty("model", modelPath);
         try {
-            connection = DriverManager.getConnection("jdbc:calcite:", info);
+            connection = DriverManager.getConnection("jdbc:calcite:conformance=ORACLE_12", info);
             rootSchema = connection.unwrap(CalciteConnection.class).getRootSchema().unwrap(CalciteSchema.class);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -288,73 +288,86 @@ public class CalciteQuery {
             Statement statement = connection.createStatement();
             PreparedStatement preparedStatement = StatementPreparer.prepare(query, connection);
             ResultSet resultSet = preparedStatement.executeQuery();
-            JsonArray jsonArray = new JsonArray();
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
-
-            while (resultSet.next()) {
-                JsonObject jsonObject = new JsonObject();
-                for (int i = 1; i <= columnCount; i++) {
-                    String label = metaData.getColumnLabel(i);
-                    int columnType = metaData.getColumnType(i);
-                    switch (columnType) {
-                        case Types.CHAR:
-                        case Types.LONGNVARCHAR:
-                        case Types.VARCHAR:
-                        case Types.LONGVARBINARY:
-                        case Types.VARBINARY:
-                        case Types.BIGINT:
-                        case Types.DECIMAL:
-                        case Types.BINARY:
-                            jsonObject.addProperty(label, resultSet.getString(i));
-                            break;
-                        case Types.INTEGER:
-                        case Types.SMALLINT:
-                        case Types.TINYINT:
-                        case Types.BIT:
-                            jsonObject.addProperty(label, resultSet.getInt(i));
-                            break;
-                        case Types.BOOLEAN:
-                            jsonObject.addProperty(label, resultSet.getBoolean(i));
-                            break;
-                        case Types.REAL:
-                        case Types.FLOAT:
-                            jsonObject.addProperty(label, resultSet.getFloat(i));
-                            break;
-                        case Types.NUMERIC:
-                        case Types.DOUBLE:
-                            jsonObject.addProperty(label, resultSet.getDouble(i));
-                            break;
-                        case Types.DATE:
-                        case Types.TIMESTAMP:
-                            jsonObject.addProperty(label, String.valueOf(resultSet.getDate(i)));
-                            break;
-                        default:
-                            Object columnValue = resultSet.getObject(i);
-                            boolean isArrayList = columnValue instanceof ArrayList;
-                            boolean isHashMap = columnValue instanceof HashMap;
-                            if (columnValue == null) {
-                                jsonObject.addProperty(label, (String) null);
-                            } else if (isArrayList) {
-                                JsonArray nestedArray = gson.toJsonTree(columnValue).getAsJsonArray();
-                                jsonObject.add(label, nestedArray);
-                            } else if (isHashMap) {
-                                JsonObject nestedJsonObject = JsonParser.parseString(gson.toJson(columnValue)).getAsJsonObject();
-                                jsonObject.add(label, nestedJsonObject);
-                            } else {
-                                jsonObject.addProperty(label, columnValue.toString());
-                            }
-                            break;
-                    }
+            if (query.toLowerCase().startsWith("select json_object(")) {
+                ArrayList<String> rows = new ArrayList<>();
+                while (resultSet.next()) {
+                    rows.add(resultSet.getString(1));
                 }
-                jsonArray.add(jsonObject);
+                resultSet.close();
+                statement.close();
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String result = gson.toJson(rows);
+                span.setStatus(StatusCode.OK);
+                return result;
+            } else {
+                JsonArray jsonArray = new JsonArray();
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                int columnCount = metaData.getColumnCount();
+                ArrayList<String> results = new ArrayList<>();
+                while (resultSet.next()) {
+                    JsonObject jsonObject = new JsonObject();
+                    for (int i = 1; i <= columnCount; i++) {
+                        String label = metaData.getColumnLabel(i);
+                        int columnType = metaData.getColumnType(i);
+                        switch (columnType) {
+                            case Types.CHAR:
+                            case Types.LONGNVARCHAR:
+                            case Types.VARCHAR:
+                            case Types.LONGVARBINARY:
+                            case Types.VARBINARY:
+                            case Types.BIGINT:
+                            case Types.DECIMAL:
+                            case Types.BINARY:
+                                jsonObject.addProperty(label, resultSet.getString(i));
+                                break;
+                            case Types.INTEGER:
+                            case Types.SMALLINT:
+                            case Types.TINYINT:
+                            case Types.BIT:
+                                jsonObject.addProperty(label, resultSet.getInt(i));
+                                break;
+                            case Types.BOOLEAN:
+                                jsonObject.addProperty(label, resultSet.getBoolean(i));
+                                break;
+                            case Types.REAL:
+                            case Types.FLOAT:
+                                jsonObject.addProperty(label, resultSet.getFloat(i));
+                                break;
+                            case Types.NUMERIC:
+                            case Types.DOUBLE:
+                                jsonObject.addProperty(label, resultSet.getDouble(i));
+                                break;
+                            case Types.DATE:
+                            case Types.TIMESTAMP:
+                                jsonObject.addProperty(label, String.valueOf(resultSet.getDate(i)));
+                                break;
+                            default:
+                                Object columnValue = resultSet.getObject(i);
+                                boolean isArrayList = columnValue instanceof ArrayList;
+                                boolean isHashMap = columnValue instanceof HashMap;
+                                if (columnValue == null) {
+                                    jsonObject.addProperty(label, (String) null);
+                                } else if (isArrayList) {
+                                    JsonArray nestedArray = gson.toJsonTree(columnValue).getAsJsonArray();
+                                    jsonObject.add(label, nestedArray);
+                                } else if (isHashMap) {
+                                    JsonObject nestedJsonObject = JsonParser.parseString(gson.toJson(columnValue)).getAsJsonObject();
+                                    jsonObject.add(label, nestedJsonObject);
+                                } else {
+                                    jsonObject.addProperty(label, columnValue.toString());
+                                }
+                                break;
+                        }
+                    }
+                    jsonArray.add(jsonObject);
+                }
+                resultSet.close();
+                statement.close();
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                String result = gson.toJson(jsonArray);
+                span.setStatus(StatusCode.OK);
+                return result;
             }
-            resultSet.close();
-            statement.close();
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String result = gson.toJson(jsonArray);
-            span.setStatus(StatusCode.OK);
-            return result;
         } catch (Exception e) {
             span.setStatus(StatusCode.ERROR);
             span.setAttribute("Error", e.toString());

@@ -1,3 +1,8 @@
+//! # Get Schema
+//!
+//! Introspects Calcite metadata and generates a new schema. Updates
+//! the config file with the new schema.
+//!
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;

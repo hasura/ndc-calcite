@@ -1,9 +1,14 @@
+//! # Generate NDC Collection metadata
+//!
+//! Introspect Calcite metadata and then reinterprets it into Calcite metadata.
+//!
 use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 
-use ndc_models::{CollectionInfo, ObjectField, ObjectType, ScalarType, SchemaResponse};
+use ndc_models::{CollectionInfo, ForeignKeyConstraint, ObjectField, ObjectType, ScalarType, SchemaResponse, Type, UniquenessConstraint};
 use ndc_models::Type::{Named, Nullable};
-use crate::metadata::TableMetadata;
+
+use crate::configuration::{ColumnMetadata, TableMetadata};
 
 /// Extracts information from data models and scalar types to generate object types and collection information.
 ///
@@ -22,50 +27,30 @@ use crate::metadata::TableMetadata;
 ///
 /// An inner Result can also be returned, which contains an error indicating an issue with the input data.
 // ANCHOR: collections
-#[tracing::instrument]
 pub fn collections(
     data_models: &HashMap<String, TableMetadata>,
     scalar_types: &BTreeMap<String, ScalarType>,
-) -> Result<
-    (BTreeMap<String, ObjectType>, Vec<CollectionInfo>),
-    Result<SchemaResponse, Box<dyn Error>>,
-> {
+) -> Result<(BTreeMap<String, ObjectType>, Vec<CollectionInfo>), Result<SchemaResponse, Box<dyn Error>>, > {
     let mut object_types: BTreeMap<String, ObjectType> = BTreeMap::new();
-    let mut collections: Vec<CollectionInfo> = Vec::new();
+    let mut collection_infos: Vec<CollectionInfo> = Vec::new();
+
     for (table, table_metadata) in data_models {
-        let mut fields: BTreeMap<String, ObjectField> = BTreeMap::new();
-        for (column_name, column_metadata) in &table_metadata.columns {
-            let scalar_type = column_metadata.clone().scalar_type;
-            let nullable = column_metadata.clone().nullable;
-            let final_type: ndc_models::Type = if nullable {
-                Nullable { underlying_type: Box::new(Named { name: scalar_type, }) }
-            } else {
-                Named { name: scalar_type, }
-            };
-            fields.insert(
-                column_name.into(),
-                ObjectField {
-                    description: Some(column_metadata.clone().description.unwrap_or_default()),
-                    r#type: final_type,
-                    arguments: BTreeMap::new(),
-                },
-            );
-        }
+        let fields = build_fields(&table_metadata.columns);
+
         if !scalar_types.contains_key(&table_metadata.name) {
-            object_types.insert(
-                table.clone(),
-                ObjectType {
-                    description: table_metadata.description.clone(),
-                    fields: fields.clone(),
-                },
-            );
-            collections.push(CollectionInfo {
+            object_types.insert(table.clone(), ObjectType {
+                description: table_metadata.description.clone(),
+                fields,
+            }, );
+            let uniqueness_constraints = build_uniqueness_constraints(&table_metadata);
+            let foreign_keys = build_foreign_keys(&table_metadata);
+            collection_infos.push(CollectionInfo {
                 name: table_metadata.name.clone(),
                 description: Some(format!("A collection of {}", table)),
                 collection_type: table_metadata.name.clone(),
-                arguments: BTreeMap::from_iter([]),
-                foreign_keys: BTreeMap::from_iter([]),
-                uniqueness_constraints: BTreeMap::from_iter([]),
+                arguments: BTreeMap::new(),
+                foreign_keys,
+                uniqueness_constraints,
             })
         } else {
             return Err(Err(Box::new(std::io::Error::new(
@@ -77,6 +62,46 @@ pub fn collections(
             ))));
         }
     }
-    Ok((object_types, collections))
+    Ok((object_types, collection_infos))
 }
+
+#[tracing::instrument]
+fn build_fields(column_metadata: &HashMap<String, ColumnMetadata>) -> BTreeMap<String, ObjectField> {
+    column_metadata.iter().map(|(column_name, column_metadata)| {
+        let scalar_type = column_metadata.scalar_type.clone();
+        let nullable = column_metadata.nullable.clone();
+        let final_type: Type = if nullable {
+            Nullable { underlying_type: Box::new(Named { name: scalar_type }) }
+        } else {
+            Named { name: scalar_type }
+        };
+        (column_name.into(),
+         ObjectField {
+             description: column_metadata.description.clone(),
+             r#type: final_type,
+             arguments: BTreeMap::new(),
+         })
+    }).collect()
+}
+
+fn build_uniqueness_constraints(tb_metadata: &TableMetadata) -> BTreeMap<String, UniquenessConstraint> {
+    let mut uc = BTreeMap::new();
+    uc.insert("PK".into(), UniquenessConstraint {
+        unique_columns: tb_metadata.primary_keys.clone().unwrap()
+    });
+    uc
+}
+
+fn build_foreign_keys(tb_metadata: &TableMetadata) -> BTreeMap<String, ForeignKeyConstraint> {
+    tb_metadata.exported_keys.clone().unwrap_or_default().into_iter().map(|key| {
+        let mut constraint = ForeignKeyConstraint {
+            foreign_collection: key.fk_table_name.clone(),
+            column_mapping: BTreeMap::new(),
+        };
+        constraint.column_mapping.insert(key.pk_column_name, key.fk_column_name);
+        (key.fk_table_name, constraint)
+    }).collect()
+}
+
+
 // ANCHOR_END: collections

@@ -1,5 +1,10 @@
-use std::collections::{BTreeMap};
-use std::{fs};
+//! # Connector Definition
+//!
+//! Provides HTTP server paths for required NDC functions. Connecting
+//! the request to the underlying code and providing the result.
+//!
+use std::collections::BTreeMap;
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
@@ -7,6 +12,7 @@ use std::path::Path;
 use async_trait::async_trait;
 use dotenv;
 use jni::objects::GlobalRef;
+use ndc_models::{Argument, RelationshipArgument};
 use ndc_sdk::connector::{
     Connector, ConnectorSetup, ExplainError, FetchMetricsError, HealthError, InitializationError,
     MutationError, ParseError, QueryError, SchemaError,
@@ -17,10 +23,11 @@ use serde_json::to_string_pretty;
 use tracing::info_span;
 use tracing::Instrument;
 
-use crate::{calcite, jvm, schema, sql};
+use crate::{calcite, jvm, query, schema};
 use crate::capabilities::calcite_capabilities;
 use crate::configuration::CalciteConfiguration;
 use crate::jvm::init_jvm;
+use crate::query::QueryParams;
 
 pub const CONFIG_FILE_NAME: &str = "configuration.json";
 pub const DEV_CONFIG_FILE_NAME: &str = "dev.local.configuration.json";
@@ -60,15 +67,15 @@ pub fn is_running_in_container() -> bool {
 
 #[tracing::instrument]
 fn execute_query_with_variables(
-    configuration: &CalciteConfiguration,
-    collection: &str,
-    arguments: &BTreeMap<String, models::Argument>,
-    _collection_relationships: &BTreeMap<String, models::Relationship>,
+    config: &CalciteConfiguration,
+    coll: &str,
+    args: &BTreeMap<String, models::RelationshipArgument>,
+    coll_rel: &BTreeMap<String, models::Relationship>,
     query: &models::Query,
-    variables: &BTreeMap<String, serde_json::Value>,
+    vars: &BTreeMap<String, serde_json::Value>,
     state: &CalciteState,
 ) -> Result<models::RowSet, QueryError> {
-    sql::query_with_variables(configuration, collection, arguments, query, variables, state)
+    query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state})
 }
 
 #[async_trait]
@@ -200,11 +207,20 @@ impl Connector for Calcite {
     ) -> Result<JsonResponse<models::QueryResponse>, QueryError> {
         let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
         let mut row_sets = vec![];
+        let input_map: BTreeMap<String, Argument> = request.arguments.clone();
+        let relationship_arguments : BTreeMap<String, models::RelationshipArgument> =
+            input_map.iter()
+                .map(|(key, value)|
+                // Assuming we have a function `convert_to_relationship_argument`
+                // that takes an argument and returns a relationship argument
+                (key.clone(), convert_to_relationship_argument(value))
+                )
+                .collect();
         for variables in &variable_sets {
             let row_set = execute_query_with_variables(
                 configuration,
                 &request.collection,
-                &request.arguments,
+                &relationship_arguments,
                 &request.collection_relationships,
                 &request.query,
                 variables,
@@ -212,8 +228,14 @@ impl Connector for Calcite {
             )?;
             row_sets.push(row_set);
         }
-
         Ok(models::QueryResponse(row_sets).into())
+    }
+}
+
+fn convert_to_relationship_argument(p0: &Argument) -> RelationshipArgument {
+    match p0 {
+        Argument::Variable { name } => RelationshipArgument::Variable { name: name.to_string() },
+        Argument::Literal { value } => RelationshipArgument::Literal { value: value.clone() }
     }
 }
 

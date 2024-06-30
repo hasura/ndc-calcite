@@ -7,6 +7,7 @@ import org.apache.calcite.rel.type.RelDataTypeSystemImpl;
 import org.apache.calcite.sql.SqlDialect;
 import org.apache.calcite.sql.SqlDialectFactory;
 import org.apache.calcite.sql.dialect.JethroDataSqlDialect;
+import org.apache.calcite.sql.fun.SqlLibrary;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -112,7 +113,7 @@ public class SQLiteSqlDialectFactory implements SqlDialectFactory {
         }
 
     private static SqlDialect.Context context() {
-        return new ContextImpl(SqlDialect.DatabaseProduct.UNKNOWN, null, null, -1, -1, "'", "''", null, null, Casing.UNCHANGED, Casing.TO_UPPER, true, SqlConformanceEnum.DEFAULT, NullCollation.HIGH, RelDataTypeSystemImpl.DEFAULT, JethroDataSqlDialect.JethroInfo.EMPTY);
+        return new ContextImpl(SqlDialect.DatabaseProduct.UNKNOWN, null, null, -1, -1, "'", "''", "\"", null, Casing.UNCHANGED, Casing.TO_UPPER, true, SqlConformanceEnum.DEFAULT, NullCollation.HIGH, RelDataTypeSystemImpl.DEFAULT, JethroDataSqlDialect.JethroInfo.EMPTY);
     }
 
     @Override

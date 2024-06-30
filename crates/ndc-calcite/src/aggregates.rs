@@ -1,3 +1,17 @@
+//! ## Aggregate Function definitions are managed here.
+//!
+//! - Numerics
+//!   * min
+//!   * max
+//!   * average
+//!   * sum
+//!
+//! - Strings
+//!   * min
+//!   * max
+//!
+//! Aggregates could be extended here.
+
 use std::collections::BTreeMap;
 
 use ndc_models::{AggregateFunctionDefinition, Type};

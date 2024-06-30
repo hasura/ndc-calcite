@@ -1,9 +1,16 @@
+//! # Configuration File Structure
+//!
+//! A call to get_schema will update the configuration files.
+//! Subsequent calls will use these data structures rather than
+//! introspecting data source.
+//!
+//! If metadata is not in the configuration file on first run it will
+//! call get_schema first to populate the config file.
 extern crate serde_json;
 
 use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use crate::metadata::TableMetadata;
 
 /// The type of the schema.
 // ANCHOR: Schema
@@ -220,5 +227,76 @@ pub struct CalciteConfiguration {
     pub jars: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub metadata: Option<HashMap<String, TableMetadata>>
+}
+
+/// Represents an exported key between two tables in a database.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ExportedKey {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pkTableCatalog")]
+    pub pk_table_catalog: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pkTableSchema")]
+    pub pk_table_schema: Option<String>,
+    #[serde(rename = "pkTableName")]
+    pub pk_table_name: String,
+    #[serde(rename = "pkColumnName")]
+    pub pk_column_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pkName")]
+    pub pk_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "fkTableCatalog")]
+    pub fk_table_catalog: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "fkTableSchema")]
+    pub fk_table_schema: Option<String>,
+    #[serde(rename = "fkTableName")]
+    pub fk_table_name: String,
+    #[serde(rename = "fkColumnName")]
+    pub fk_column_name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "fkName")]
+    pub fk_name: Option<String>,
+}
+
+/// Represents metadata for a database table.
+///
+/// # Fields
+///
+/// - `catalog` - The catalog of the table.
+/// - `schema` - The schema of the table.
+/// - `name` - The name of the table.
+/// - `description` - The description of the table.
+/// - `columns` - A `HashMap` containing the columns of the table.
+/// - `primary_keys` - An optional `Vec` of primary key column names.
+/// - `exported_keys` - An optional `Vec` of exported keys to other tables.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct TableMetadata {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub catalog: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub schema: Option<String>,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    pub columns: HashMap<String, ColumnMetadata>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "primaryKeys")]
+    pub primary_keys: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "exportedKeys")]
+    pub exported_keys: Option<Vec<ExportedKey>>
+}
+
+/// Represents the metadata of a column in a database table.
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct ColumnMetadata {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(rename = "scalarType")]
+    pub scalar_type: String,
+    pub nullable: bool
 }
 

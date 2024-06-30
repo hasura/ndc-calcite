@@ -1,4 +1,6 @@
-//! Fast and easy method to support many around 40 datasource types from a single Hasura NDC.
+//! # Hasura Calcite Native Data Connector
+//!
+//! Fast and easy method to support around 40 datasource types from a single Hasura NDC.
 //!
 //! Uses [`Apache Calcite`](https://calcite.apache.org/) as an-line query engine.
 //!
@@ -54,6 +56,21 @@
 //!
 //! There is also a Dockerfile which will compile the rust binaries, the java jars and package them
 //! in a docker container.
+//!
+//! ## Benefits
+//!
+//! - Include multiple data sources in a connection
+//! - Define cross-data source views in the connection configuration
+//! - Define star-schema aggregate views in the connection configuration
+//! - Caching
+//! - Query planner and optimizer
+//!
+//! ## Limitations
+//!
+//! - Mutations are not supported
+//! - Path'ed where-predicates (you can only use the root in List arguments)
+//! - Nested objects are not supported
+//! - Explain is not supported
 
 pub mod aggregates;
 pub mod calcite;
@@ -65,7 +82,7 @@ pub mod scalars;
 pub mod schema;
 pub mod sql;
 pub mod configuration;
-pub mod metadata;
+pub mod query;
 
 pub mod connector {
     pub mod calcite;

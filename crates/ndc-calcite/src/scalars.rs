@@ -1,3 +1,7 @@
+//! # Scalar definitions
+//!
+//! Make additional changes to scalar definitions here.
+//!
 use std::collections::BTreeMap;
 
 use ndc_models::{ComparisonOperatorDefinition, ScalarType, TypeRepresentation};

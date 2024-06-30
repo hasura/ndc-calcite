@@ -15,7 +15,7 @@ public class Main {
     public static void main(String[] args) {
         String modelPath = "../adapters/jdbc/model.json";
         String username = "<username>";
-        String password ="<password>";
+        String password = "<password>";
 
         try {
             CalciteQuery query = new CalciteQuery();
@@ -24,7 +24,29 @@ public class Main {
                 query.getModels();
                 String x = query.getModels();
                 System.out.println(x);
-                String z1 = query.queryModels("SELECT \"Address\" AS \"Address\", \"City\" AS \"City\", \"Company\" AS \"Company\", \"Country\" AS \"Country\", \"CustomerId\" AS \"CustomerId\", \"Email\" AS \"Email\", \"Fax\" AS \"Fax\", \"FirstName\" AS \"FirstName\", \"LastName\" AS \"LastName\", \"Phone\" AS \"Phone\", \"PostalCode\" AS \"PostalCode\", \"State\" AS \"State\", \"SupportRepId\" AS \"SupportRepId\" FROM \"customers\" WHERE \"FirstName\" IN (__UTF8__Luís__UTF8__,__UTF8__Helena__UTF8__)  LIMIT 10");
+                String z1 = query.queryModels("""
+ SELECT
+               g."GenreId",
+               g."Name",
+               '[' || (
+                   SELECT COALESCE(
+         '{' ||
+        '"AlbumId": ' || t."AlbumId" || ', ' ||
+        '"Bytes": ' || t."Bytes" || ', ' ||
+        '"Composer": ' || t."Composer" || ', ' ||
+        '"GenreId": ' || t."GenreId" || ', ' ||
+        '"MediaTypeId": ' || t."MediaTypeId" || ', ' ||
+        '"Milliseconds": ' || t."Milliseconds" || ', ' ||
+        '"Name": ' || t."Name" || ', ' ||
+        '"TrackId": ' || t."TrackId" || ', ' ||
+        '"UnitPrice": ' || t."UnitPrice" ||
+        '}', '' )
+              FROM "TEST"."tracks" AS t
+              WHERE t."GenreId" = g."GenreId"
+           ) || ']' AS "tracks"
+           FROM "TEST"."genres" AS g
+           LIMIT 10
+""");
                 String z2 = query.queryModels("SELECT * FROM WACKY_COLUMN_NAMES LIMIT 10");
                 String z3 = query.queryModels("SELECT \"object\", \"g\" from  \"ARCHERS\"  LIMIT 10");
                 System.out.println(z1);

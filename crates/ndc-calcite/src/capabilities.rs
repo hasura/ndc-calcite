@@ -1,3 +1,11 @@
+//! ## Capability response handled here.
+//!
+//! Does not have:
+//! - Relationship comparisons
+//! - Order by aggregates
+//! - Nested fields
+//! - Explain
+
 use ndc_models::{
     Capabilities, CapabilitiesResponse, LeafCapability, MutationCapabilities,
     NestedFieldCapabilities, QueryCapabilities, RelationshipCapabilities,

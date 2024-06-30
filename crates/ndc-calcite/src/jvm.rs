@@ -1,3 +1,8 @@
+//! # JVM interface
+//!
+//! Uses a singleton to initialize and re-use.
+//!
+//! TODO: Add logic to determine that JVM died and reinitialize.
 use std::{env, fs};
 use std::sync::Mutex;
 
