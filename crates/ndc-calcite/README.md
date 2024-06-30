@@ -26,8 +26,8 @@ open "../../target/doc/calcite/index.html"
 ### With Docker
 
 ```sh
-cd adapters/file
 docker build . -t file_connector .
+cd adapters/file
 docker run -it --rm -p 8080:8080 file_connector
 ```
 
