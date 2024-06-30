@@ -31,7 +31,7 @@ docker build -t file_connector .
 docker run -it --rm -p 8080:8080 file_connector
 ```
 
-## Using the reference connector
+## Using the calcite connector
 
 The file_connector connector runs on http://localhost:8080 by default:
 
