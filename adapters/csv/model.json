@@ -1,11 +1,10 @@
-
 {
   "version": "1.0",
   "defaultSchema": "SALES",
   "schemas": [
     {
-      "name": "SALES",
       "type": "custom",
+      "name": "SALES",
       "factory": "org.apache.calcite.adapter.csv.CsvSchemaFactory",
       "operand": {
         "directory": "./resources/test/sales"
