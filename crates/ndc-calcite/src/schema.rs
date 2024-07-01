@@ -62,6 +62,7 @@ use crate::connector::calcite::{CONFIG_FILE_NAME, DEV_CONFIG_FILE_NAME, is_runni
 // ANCHOR: get_schema
 #[tracing::instrument]
 pub fn get_schema(configuration: &CalciteConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse, Box<dyn Error>> {
+    event!(Level::INFO, "in get_schema");
     let data_models = calcite::get_models(calcite_ref);
     let scalar_types = scalars::scalars();
     let (object_types, collections) = match collections::collections(&data_models, &scalar_types) {
@@ -78,10 +79,11 @@ pub fn get_schema(configuration: &CalciteConfiguration, calcite_ref: GlobalRef) 
         procedures,
     };
     let file_path = if is_running_in_container() {
-        Path::new(".").join(CONFIG_FILE_NAME)
+        Path::new("/update/connector").join(CONFIG_FILE_NAME)
     } else {
         Path::new(".").join(DEV_CONFIG_FILE_NAME)
     };
+    event!(Level::INFO, config_path = format!("Configuration file path: {}", file_path.display()));
     let mut new_configuration = configuration.clone();
     new_configuration.metadata = Some(data_models.clone());
     let mut file = File::create(file_path)?;

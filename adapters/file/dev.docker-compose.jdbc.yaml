@@ -1,5 +1,5 @@
 services:
-  my_subgraph_calcite:
+  test_file:
     build:
       context: .
       dockerfile_inline: |-
@@ -11,7 +11,7 @@ services:
           action: sync+restart
           target: /etc/connector
     env_file:
-      - .env
+      - .env.local
     extra_hosts:
       - local.hasura.dev=host-gateway
     ports:
@@ -20,5 +20,5 @@ services:
         published: "8084"
         protocol: tcp
     volumes:
-      - /Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/file/resources/test/sales:/data
-      - /Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/file/configuration.json:/app/configuration.json
+      - ./resources/test/sales:/data
+      - ./:/update/connector

@@ -85,7 +85,7 @@ pub fn orchestrate_query(
     params: QueryParams
 ) -> Result<models::RowSet, QueryError> {
     let components = sql::parse_query(&params.config, params.coll, params.coll_rel, params.args, params.query, params.vars)?;
-    let rows: Option<Vec<Row>> = process_rows(params, &components)?;
+    let mut rows: Option<Vec<Row>> = process_rows(params, &components)?;
     let aggregates: Option<IndexMap<String, Value>> = process_aggregates(params, &components)?;
     let fields = params.query.clone().fields.unwrap_or_default();
     for (field_name, field) in &fields {
@@ -101,12 +101,11 @@ pub fn orchestrate_query(
                         let predicate = generate_predicate(&pks, value)?;
                         let revised_query = revise_query(query.clone(), predicate, &pks)?;
                         let fk_rows = execute_query(params.clone(), arguments, &sub_relationship, &revised_query)?;
-                        let modified_rows = if let RelationshipType::Object = relationship_type {
-                            process_object_relationship(rows.unwrap(), &field_name, &fk_rows, &pks, &fks)?
+                        if RelationshipType::Object == relationship_type {
+                            rows = process_object_relationship(rows.unwrap(), &field_name, &fk_rows, &pks, &fks)?
                         } else {
-                            process_array_relationship(rows, &field_name, &fk_rows, &pks, &fks, &query)?
-                        };
-                        return Ok(models::RowSet { aggregates, rows: modified_rows });
+                            rows = process_array_relationship(rows, &field_name, &fk_rows, &pks, &fks, &query)?
+                        }
                     }
                 }
             }

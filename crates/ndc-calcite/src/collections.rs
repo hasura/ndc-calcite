@@ -43,7 +43,7 @@ pub fn collections(
                 fields,
             }, );
             let uniqueness_constraints = build_uniqueness_constraints(&table_metadata);
-            let foreign_keys = build_foreign_keys(&table_metadata);
+            let foreign_keys = build_foreign_keys(&table_metadata, data_models);
             collection_infos.push(CollectionInfo {
                 name: table_metadata.name.clone(),
                 description: Some(format!("A collection of {}", table)),
@@ -92,15 +92,29 @@ fn build_uniqueness_constraints(tb_metadata: &TableMetadata) -> BTreeMap<String,
     uc
 }
 
-fn build_foreign_keys(tb_metadata: &TableMetadata) -> BTreeMap<String, ForeignKeyConstraint> {
-    tb_metadata.exported_keys.clone().unwrap_or_default().into_iter().map(|key| {
-        let mut constraint = ForeignKeyConstraint {
-            foreign_collection: key.fk_table_name.clone(),
-            column_mapping: BTreeMap::new(),
-        };
-        constraint.column_mapping.insert(key.pk_column_name, key.fk_column_name);
-        (key.fk_table_name, constraint)
-    }).collect()
+fn build_foreign_keys(tb_metadata: &TableMetadata, data_models: &HashMap<String, TableMetadata>) -> BTreeMap<String, ForeignKeyConstraint> {
+    let mut constraints: BTreeMap<String, ForeignKeyConstraint> = Default::default();
+    for (foreign_table_name, foreign_table_metadata) in data_models {
+        for ft in foreign_table_metadata.clone().exported_keys.unwrap_or_default() {
+            if ft.fk_table_catalog == tb_metadata.catalog && ft.fk_table_schema == tb_metadata.schema && ft.fk_table_name == tb_metadata.name {
+                let pk_table_name = ft.pk_table_name.clone();
+                match constraints.get_mut(&pk_table_name) {
+                    None => {
+                        let mut constraint = ForeignKeyConstraint {
+                            column_mapping: Default::default(),
+                            foreign_collection: pk_table_name.clone()
+                        };
+                        constraint.column_mapping.insert(ft.fk_column_name, ft.pk_column_name);
+                        constraints.insert(pk_table_name.clone(), constraint);
+                    }
+                    Some(value) => {
+                        value.column_mapping.insert(ft.fk_column_name, ft.pk_column_name);
+                    }
+                }
+            }
+        }
+    }
+    constraints
 }
 
 

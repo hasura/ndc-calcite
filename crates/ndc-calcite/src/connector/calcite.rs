@@ -3,7 +3,7 @@
 //! Provides HTTP server paths for required NDC functions. Connecting
 //! the request to the underlying code and providing the result.
 //!
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -20,19 +20,19 @@ use ndc_sdk::connector::{
 use ndc_sdk::json_response::JsonResponse;
 use ndc_sdk::models;
 use serde_json::to_string_pretty;
-use tracing::info_span;
+use tracing::{event, info_span, Level};
 use tracing::Instrument;
 
 use crate::{calcite, jvm, query, schema};
 use crate::capabilities::calcite_capabilities;
-use crate::configuration::CalciteConfiguration;
+use crate::configuration::{CalciteConfiguration, TableMetadata};
 use crate::jvm::init_jvm;
 use crate::query::QueryParams;
 
 pub const CONFIG_FILE_NAME: &str = "configuration.json";
 pub const DEV_CONFIG_FILE_NAME: &str = "dev.local.configuration.json";
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Calcite {}
 
 #[derive(Clone, Debug)]
@@ -86,12 +86,18 @@ impl ConnectorSetup for Calcite {
         &self,
         configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<<Self as Connector>::Configuration, ParseError> {
+        async {
+            info_span!("inside parsing configuration");
+        }
+            .instrument(info_span!("parsing configuration"))
+            .await;
         dotenv::dotenv().ok();
         let file_path = if is_running_in_container() {
             configuration_dir.as_ref().join(CONFIG_FILE_NAME)
         } else {
             configuration_dir.as_ref().join(DEV_CONFIG_FILE_NAME)
         };
+        println!("Configuration file path: {:?}", configuration_dir.as_ref().display());
         match fs::read_to_string(file_path) {
             Ok(file_content) => {
                 let mut json_object: CalciteConfiguration = serde_json::from_str(&file_content)
@@ -105,9 +111,8 @@ impl ConnectorSetup for Calcite {
                 json_object.model_file_path = Some("./model.json".to_string());
                 match json_object.metadata {
                     None => {
-                        init_state(&json_object).expect("TODO: panic message");
-                        Self::get_schema(&json_object).await.expect("TODO: panic message");
-                        return Self::parse_configuration(self, configuration_dir).await;
+                        let state = init_state(&json_object).expect("TODO: panic message");
+                        json_object.metadata = Some(calcite::get_models(state.calcite_ref));
                     }
                     Some(_) => {}
                 }

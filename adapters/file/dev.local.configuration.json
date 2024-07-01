@@ -6,8 +6,8 @@
     "defaultSchema": "sales",
     "schemas": [
       {
-        "name": "sales",
         "type": "custom",
+        "name": "sales",
         "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
         "operand": {
           "directory": "/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/file/resources/test/sales"
@@ -15,5 +15,102 @@
       }
     ]
   },
-  "fixes": true
+  "model_file_path": "./model.json",
+  "fixes": true,
+  "metadata": {
+    "DEPTS": {
+      "schema": "sales",
+      "name": "DEPTS",
+      "columns": {
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "SDEPTS": {
+      "schema": "sales",
+      "name": "SDEPTS",
+      "columns": {
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "EMPS": {
+      "schema": "sales",
+      "name": "EMPS",
+      "columns": {
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "GENDER": {
+          "name": "GENDER",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
 }

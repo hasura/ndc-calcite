@@ -3,11 +3,11 @@
   "$schema": "schema.json",
   "model": {
     "version": "1.0",
-    "defaultSchema": "sales",
+    "defaultSchema": "DEFAULT",
     "schemas": [
       {
-        "name": "sales",
         "type": "custom",
+        "name": "DEFAULT",
         "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
         "operand": {
           "directory": "/data"

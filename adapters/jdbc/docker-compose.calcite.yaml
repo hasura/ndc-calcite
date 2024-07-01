@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile_inline: |-
-        FROM ndc-calcite:latest
+        FROM jdbc_connector:latest
         COPY ./ /etc/connector
     develop:
       watch:
@@ -11,7 +11,7 @@ services:
           action: sync+restart
           target: /etc/connector
     env_file:
-      - .env
+      - .env.local
     extra_hosts:
       - local.hasura.dev=host-gateway
     ports:

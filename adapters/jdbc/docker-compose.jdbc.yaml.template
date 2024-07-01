@@ -1,5 +1,5 @@
 services:
-  test_jdbc:
+  ${SUBGRAPH}_${CONNECTOR}:
     build:
       context: .
       dockerfile_inline: |-
@@ -17,8 +17,8 @@ services:
     ports:
       - mode: ingress
         target: 8080
-        published: "8084"
+        published: "${PORT}"
         protocol: tcp
     volumes:
-      - ./chinook.db:/data.db
-      - ./:/update/connector
+      - ${DATA}:/data.db
+      - ./configuration.json:/update/connector/configuration.json

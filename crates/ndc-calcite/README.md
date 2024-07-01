@@ -28,7 +28,7 @@ open "../../target/doc/calcite/index.html"
 ```sh
 cd adapters/file
 ./build.sh
-docker compose -f dev.docker-compose.calcite.yaml up
+docker compose -f dev.docker-compose.file.yaml up
 ```
 
 ## Using the calcite connector
