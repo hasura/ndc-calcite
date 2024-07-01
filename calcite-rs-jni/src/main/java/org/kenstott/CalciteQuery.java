@@ -98,6 +98,10 @@ public class CalciteQuery {
     private static final Tracer tracer = openTelemetry.getTracer("calcite-driver");
     private static final Gson gson = new Gson();
 
+    public static void noOpMethod() {
+        // No-op method
+    }
+
     /**
      * Creates a Calcite connection using the provided model file.
      *

@@ -94,7 +94,7 @@ fn build_uniqueness_constraints(tb_metadata: &TableMetadata) -> BTreeMap<String,
 
 fn build_foreign_keys(tb_metadata: &TableMetadata, data_models: &HashMap<String, TableMetadata>) -> BTreeMap<String, ForeignKeyConstraint> {
     let mut constraints: BTreeMap<String, ForeignKeyConstraint> = Default::default();
-    for (foreign_table_name, foreign_table_metadata) in data_models {
+    for (_, foreign_table_metadata) in data_models {
         for ft in foreign_table_metadata.clone().exported_keys.unwrap_or_default() {
             if ft.fk_table_catalog == tb_metadata.catalog && ft.fk_table_schema == tb_metadata.schema && ft.fk_table_name == tb_metadata.name {
                 let pk_table_name = ft.pk_table_name.clone();

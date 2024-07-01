@@ -3,7 +3,7 @@
 //! Provides HTTP server paths for required NDC functions. Connecting
 //! the request to the underlying code and providing the result.
 //!
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap};
 use std::fs;
 use std::fs::File;
 use std::io::Write;
@@ -20,12 +20,12 @@ use ndc_sdk::connector::{
 use ndc_sdk::json_response::JsonResponse;
 use ndc_sdk::models;
 use serde_json::to_string_pretty;
-use tracing::{event, info_span, Level};
+use tracing::{info_span};
 use tracing::Instrument;
 
 use crate::{calcite, jvm, query, schema};
 use crate::capabilities::calcite_capabilities;
-use crate::configuration::{CalciteConfiguration, TableMetadata};
+use crate::configuration::{CalciteConfiguration};
 use crate::jvm::init_jvm;
 use crate::query::QueryParams;
 
