@@ -27,31 +27,21 @@ public class Main {
                 String z1 = query.queryModels("""
  SELECT
                g."GenreId",
-               g."Name",
-               '[' || (
-                   SELECT COALESCE(
-         '{' ||
-        '"AlbumId": ' || t."AlbumId" || ', ' ||
-        '"Bytes": ' || t."Bytes" || ', ' ||
-        '"Composer": ' || t."Composer" || ', ' ||
-        '"GenreId": ' || t."GenreId" || ', ' ||
-        '"MediaTypeId": ' || t."MediaTypeId" || ', ' ||
-        '"Milliseconds": ' || t."Milliseconds" || ', ' ||
-        '"Name": ' || t."Name" || ', ' ||
-        '"TrackId": ' || t."TrackId" || ', ' ||
-        '"UnitPrice": ' || t."UnitPrice" ||
-        '}', '' )
-              FROM "TEST"."tracks" AS t
-              WHERE t."GenreId" = g."GenreId"
-           ) || ']' AS "tracks"
+               g."Name"
            FROM "TEST"."genres" AS g
            LIMIT 10
 """);
-                String z2 = query.queryModels("SELECT * FROM WACKY_COLUMN_NAMES LIMIT 10");
-                String z3 = query.queryModels("SELECT \"object\", \"g\" from  \"ARCHERS\"  LIMIT 10");
+                String z2 = query.queryPlanModels("""
+ SELECT
+               g."GenreId",
+               g."Name"
+           FROM "TEST"."genres" AS g
+           LIMIT 10
+""");
+
                 System.out.println(z1);
                 System.out.println(z2);
-                System.out.println(z3);
+
             }
             // You can now use 'calciteConnection' which is an instance of CalciteQuery
         } catch (Exception e) {

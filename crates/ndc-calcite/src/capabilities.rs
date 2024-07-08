@@ -38,7 +38,7 @@ pub fn calcite_capabilities() -> CapabilitiesResponse {
             query: QueryCapabilities {
                 aggregates: Some(LeafCapability {}),
                 variables: Some(LeafCapability {}),
-                explain: None,
+                explain: Some(LeafCapability {}),
                 nested_fields: NestedFieldCapabilities {
                     filter_by: None,
                     order_by: None,

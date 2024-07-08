@@ -12,14 +12,14 @@ use std::path::Path;
 use async_trait::async_trait;
 use dotenv;
 use jni::objects::GlobalRef;
-use ndc_models::{Argument, RelationshipArgument};
+use ndc_models::{Argument, ExplainResponse, RelationshipArgument};
 use ndc_sdk::connector::{
     Connector, ConnectorSetup, ExplainError, FetchMetricsError, HealthError, InitializationError,
     MutationError, ParseError, QueryError, SchemaError,
 };
 use ndc_sdk::json_response::JsonResponse;
 use ndc_sdk::models;
-use serde_json::to_string_pretty;
+use serde_json::{to_string_pretty};
 use tracing::{info_span};
 use tracing::Instrument;
 
@@ -74,8 +74,9 @@ fn execute_query_with_variables(
     query: &models::Query,
     vars: &BTreeMap<String, serde_json::Value>,
     state: &CalciteState,
+    explain: &bool
 ) -> Result<models::RowSet, QueryError> {
-    query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state})
+    query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state, explain})
 }
 
 #[async_trait]
@@ -182,11 +183,55 @@ impl Connector for Calcite {
     }
 
     async fn query_explain(
-        _configuration: &Self::Configuration,
-        _state: &Self::State,
-        _request: models::QueryRequest,
+        configuration: &Self::Configuration,
+        state: &Self::State,
+        request: models::QueryRequest,
     ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError> {
-        todo!()
+        let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
+        let mut map: BTreeMap<String, String> = BTreeMap::new();
+        let input_map: BTreeMap<String, Argument> = request.arguments.clone();
+        let relationship_arguments : BTreeMap<String, models::RelationshipArgument> =
+            input_map.iter()
+                .map(|(key, value)|
+                (key.clone(), convert_to_relationship_argument(value))
+                )
+                .collect();
+        for variables in &variable_sets {
+            let row_set = execute_query_with_variables(
+                configuration,
+                &request.collection,
+                &relationship_arguments,
+                &request.collection_relationships,
+                &request.query,
+                variables,
+                &state,
+                &true
+            ).map_err(|error| ExplainError::Other(Box::new(error)))?;
+            match row_set.aggregates {
+                None => {}
+                Some(map_index) => {
+                    let map_btree: BTreeMap<String, String> = map_index.iter()
+                        .map(|(key, value)| (key.clone(), value.to_string()))
+                        .collect();
+                    map.extend(map_btree);
+                }
+            };
+            match row_set.rows {
+                None => {}
+                Some(r) => {
+                    for map_index in r {
+                        let map_btree: BTreeMap<String, String> = map_index.iter()
+                            .map(|(key, value)| (key.clone(), value.0.to_string()))
+                            .collect();
+                        map.extend(map_btree);
+                    }
+                }
+            }
+        }
+        let explain_response = ExplainResponse {
+            details: map,
+        };
+        Ok(JsonResponse::from(explain_response))
     }
 
     async fn mutation_explain(
@@ -230,6 +275,7 @@ impl Connector for Calcite {
                 &request.query,
                 variables,
                 &state,
+                &false
             )?;
             row_sets.push(row_set);
         }

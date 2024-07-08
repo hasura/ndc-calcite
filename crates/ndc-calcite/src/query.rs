@@ -36,6 +36,7 @@ pub struct QueryParams<'a> {
     pub query: &'a models::Query,
     pub vars: &'a BTreeMap<String, Value>,
     pub state: &'a CalciteState,
+    pub explain: &'a bool
 }
 
 /// A struct representing the components of a query.
@@ -157,7 +158,7 @@ fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Resu
             query_components.predicates.clone(),
             query_components.join.clone(),
         );
-        match calcite_query(params.config, params.state.clone().calcite_ref, &q, params.query) {
+        match calcite_query(params.config, params.state.clone().calcite_ref, &q, params.query, params.explain) {
             Ok(value) => Ok(Some(value)),
             Err(e) => Err(e)
         }
@@ -182,7 +183,7 @@ fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -
             query_components.predicates.clone(),
             query_components.join.clone(),
         );
-        match calcite_query(params.config, params.state.clone().calcite_ref, &q, params.query) {
+        match calcite_query(params.config, params.state.clone().calcite_ref, &q, params.query, params.explain) {
             Ok(collection) => {
                 let mut row = collection
                     .first()
@@ -246,6 +247,7 @@ fn execute_query(params: QueryParams, arguments: &BTreeMap<String, RelationshipA
         query: revised_query,
         vars: params.vars,
         state: params.state,
+        explain: params.explain
     })?;
     Ok(fk_rows.rows.unwrap())
 }

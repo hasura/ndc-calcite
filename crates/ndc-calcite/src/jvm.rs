@@ -6,7 +6,7 @@
 use std::{env, fs};
 use std::sync::Mutex;
 
-use jni::{InitArgsBuilder, JavaVM, JNIEnv, JNIVersion};
+use jni::{InitArgsBuilder, JavaVM, JNIVersion};
 use once_cell::sync::OnceCell;
 use tracing::{event, Level};
 

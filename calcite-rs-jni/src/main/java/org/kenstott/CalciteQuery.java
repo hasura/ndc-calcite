@@ -77,6 +77,7 @@ class TableMetadata {
         this.primaryKeys = primaryKeys;
         this.exportedKeys = exportedKeys;
     }
+
     String catalog;
     String schema;
     String name;
@@ -143,7 +144,7 @@ public class CalciteQuery {
                             } else {
                                 metaData1 = metaData;
                             }
-                            for( String tableType: new String[]{"TABLE", "VIEW"}) {
+                            for (String tableType : new String[]{"TABLE", "VIEW"}) {
                                 try (ResultSet tables = metaData.getTables(catalog, schemaName, null, new String[]{tableType})) {
                                     while (tables.next()) {
                                         String tableName = tables.getString("TABLE_NAME");
@@ -269,7 +270,7 @@ public class CalciteQuery {
     public String getModels() throws SQLException {
         Gson gson = new Gson();
         Span span = tracer.spanBuilder("getModels").startSpan();
-        Map<String,TableMetadata> result = new HashMap<>();
+        Map<String, TableMetadata> result = new HashMap<>();
         Collection<TableMetadata> tables = getTables();
         for (TableMetadata table : tables) {
             table.columns = getTableColumnInfo(table);
@@ -372,6 +373,43 @@ public class CalciteQuery {
                 span.setStatus(StatusCode.OK);
                 return result;
             }
+        } catch (Exception e) {
+            span.setStatus(StatusCode.ERROR);
+            span.setAttribute("Error", e.toString());
+            return "{\"error\":\"" + e + "\"}";
+        } finally {
+            span.end();
+        }
+    }
+
+    public String queryPlanModels(String query) {
+        Span span = tracer.spanBuilder("queryModels").startSpan();
+        try {
+            Statement statement = connection.createStatement();
+            PreparedStatement preparedStatement = StatementPreparer.prepare("explain plan for " + query, connection);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            JsonArray jsonArray = new JsonArray();
+            JsonObject jsonObject = new JsonObject();
+            int j = 1;
+            while (resultSet.next()) {
+                j++;
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                int columnCount = metaData.getColumnCount();
+                for (int i = 1; i <= columnCount; i++) {
+                    if (i > 1) {
+                        jsonObject.addProperty(query + j + "." + "." + i, resultSet.getObject(i).toString());
+                    } else {
+                        jsonObject.addProperty(query, resultSet.getObject(i).toString());
+                    }
+                }
+            }
+            resultSet.close();
+            statement.close();
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            jsonArray.add(gson.toJson(jsonObject));
+            String result = gson.toJson(jsonArray);
+            span.setStatus(StatusCode.OK);
+            return result;
         } catch (Exception e) {
             span.setStatus(StatusCode.ERROR);
             span.setAttribute("Error", e.toString());

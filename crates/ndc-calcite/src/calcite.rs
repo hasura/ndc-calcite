@@ -185,6 +185,7 @@ pub fn calcite_query(
     calcite_reference: GlobalRef,
     sql_query: &str,
     query_metadata: &models::Query,
+    explain: &bool
 ) -> Result<Vec<Row>, QueryError> {
     log_event(Level::INFO, &format!("Attempting this query: {}", sql_query));
     let jvm = get_jvm().lock().unwrap();
@@ -193,14 +194,18 @@ pub fn calcite_query(
 
     let temp_string = java_env.new_string(sql_query).unwrap().into();
     let query_args: &[JValueGen<&JObject<'_>>] = &[Object(&temp_string)];
-    let result = java_env.call_method(calcite_query, "queryModels", "(Ljava/lang/String;)Ljava/lang/String;", query_args);
+    let result = java_env.call_method(
+        calcite_query,
+        if *explain { "queryPlanModels" } else {"queryModels"},
+        "(Ljava/lang/String;)Ljava/lang/String;",
+        query_args);
 
     match result.unwrap() {
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
             let json_rows: Vec<String> = serde_json::from_str(&json_string).unwrap();
             let rows = parse_to_row(json_rows);
-            let rows = if config.fixes.unwrap_or(false) {
+            let rows = if config.fixes.unwrap_or(false) && !*explain {
                 fix_rows(rows, query_metadata)
             } else {
                 rows
