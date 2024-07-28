@@ -25,18 +25,11 @@ public class Main {
                 String x = query.getModels();
                 System.out.println(x);
                String zz = query.queryPlanModels("""
- SELECT COUNT(*) as "count", JSON_ARRAYAGG("TrackId") as "tracks", "c"."FirstName", "c"."LastName" FROM "TEST"."invoice_items"
- JOIN "TEST"."invoices" as "i" USING("InvoiceId")
- JOIN "TEST"."customers" as "c" USING("CustomerId")
- GROUP BY "c"."FirstName", "c"."LastName", "i"."InvoiceId"
  
  """);
                 System.out.println(zz);
                 String z1 = query.queryModels("""
- SELECT COUNT(*) as "count", JSON_ARRAYAGG("TrackId") as "tracks", "c"."FirstName", "c"."LastName" FROM "TEST"."invoice_items"
- JOIN "TEST"."invoices" as "i" USING("InvoiceId")
- JOIN "TEST"."customers" as "c" USING("CustomerId")
- GROUP BY "c"."FirstName", "c"."LastName", "i"."InvoiceId"
+ SELECT * from "DEFAULT"."orders" LIMIT 10
  
  """
                );

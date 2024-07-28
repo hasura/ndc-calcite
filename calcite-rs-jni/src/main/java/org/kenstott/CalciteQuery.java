@@ -253,11 +253,24 @@ public class CalciteQuery {
                         entry("TIMESTAMP(3) NOT NULL", "TIMESTAMP"),
                         entry("TIMESTAMP(3)", "TIMESTAMP"),
                         entry("TIMESTAMP NOT NULL", "TIMESTAMPTZ"),
-                        entry("TIMESTAMP", "TIMESTAMPTZ")
+                        entry("TIMESTAMP", "TIMESTAMPTZ"),
+                        entry("DECIMAL(10,2)", "FLOAT"),
+                        entry("DECIMAL(12,2)", "FLOAT")
                 );
                 String mappedType = remapTypes.get(dataTypeName);
                 if (mappedType == null) {
-                    mappedType = "VARCHAR";
+                    if (dataTypeName.toLowerCase().contains("varchar")) {
+                        mappedType = "VARCHAR";
+                    }
+                    else if (dataTypeName.toLowerCase().contains("timestamp")) {
+                        mappedType = "TIMESTAMP";
+                    }
+                    else if (dataTypeName.toLowerCase().contains("decimal")) {
+                        mappedType = "FLOAT";
+                    }
+                    else {
+                        mappedType = "VARCHAR";
+                    }
                 }
                 if (dataTypeName.startsWith("VARCHAR(65536)") && sqliteFlag) {
                     if (columnName.toLowerCase().contains("date")) {
