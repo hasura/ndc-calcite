@@ -21,22 +21,24 @@ RUN cargo build --locked --profile release --package ndc-calcite
 
 FROM ubuntu:latest AS runtime
 RUN apt-get update && apt-get install -y ca-certificates openjdk-21-jdk maven
-
 # Set JAVA_HOME based on the platform
 ENV JAVA_HOME_ARM64=/usr/lib/jvm/java-21-openjdk-arm64 \
-    JAVA_HOME_X86=/usr/lib/jvm/java-21-openjdk-amd64
+    JAVA_HOME_AMD64=/usr/lib/jvm/java-21-openjdk-amd64
 
-RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ] || [ "$(uname -m)" = "aarch64" ]; then \
         echo "Setting JAVA_HOME for ARM64"; \
         ln -s ${JAVA_HOME_ARM64} /usr/local/java_home; \
     else \
-        echo "Setting JAVA_HOME for x86"; \
-        ln -s ${JAVA_HOME_X86} /usr/local/java_home; \
+        echo "Setting JAVA_HOME for AMD64"; \
+        ln -s ${JAVA_HOME_AMD64} /usr/local/java_home; \
     fi
 
 ENV JAVA_HOME=/usr/local/java_home
 ENV MAVEN_HOME=/usr/share/maven
 ENV PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
+
+# Verify Java installation
+RUN java -version && echo $JAVA_HOME
 
 # Your other instructions here (e.g., copying your Rust code)
 
