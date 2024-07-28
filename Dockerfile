@@ -1,5 +1,5 @@
 # https://github.com/LukeMathWalker/cargo-chef
-FROM rust:1.75.0 as chef
+FROM rust:1.75.0 AS chef
 RUN cargo install cargo-chef
 WORKDIR /app
 
@@ -20,16 +20,23 @@ RUN cargo build --locked --profile release --package ndc-calcite
 
 
 FROM ubuntu:latest AS runtime
-RUN apt-get update && apt-get install -y ca-certificates
+RUN apt-get update && apt-get install -y ca-certificates openjdk-21-jdk maven
 
-# Install Java (OpenJDK) first
-RUN apt-get update && apt-get install -y openjdk-21-jdk
-ENV JAVA_HOME /usr/lib/jvm/java-21-openjdk-arm64
+# Set JAVA_HOME based on the platform
+ENV JAVA_HOME_ARM64=/usr/lib/jvm/java-21-openjdk-arm64 \
+    JAVA_HOME_X86=/usr/lib/jvm/java-21-openjdk-amd64
 
-# Install Maven
-RUN apt-get update && apt-get install -y maven
-ENV MAVEN_HOME /usr/share/maven
-ENV PATH $JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
+RUN if [ "${TARGETPLATFORM}" = "linux/arm64" ]; then \
+        echo "Setting JAVA_HOME for ARM64"; \
+        ln -s ${JAVA_HOME_ARM64} /usr/local/java_home; \
+    else \
+        echo "Setting JAVA_HOME for x86"; \
+        ln -s ${JAVA_HOME_X86} /usr/local/java_home; \
+    fi
+
+ENV JAVA_HOME=/usr/local/java_home
+ENV MAVEN_HOME=/usr/share/maven
+ENV PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
 
 # Your other instructions here (e.g., copying your Rust code)
 
@@ -49,8 +56,6 @@ RUN mvn clean install
 RUN mvn dependency:copy-dependencies
 
 WORKDIR /app
-#ENTRYPOINT ["mvn", "-version"]
-#ENTRYPOINT ["tail", "-f", "/dev/null"]
 ENTRYPOINT ["ndc-calcite"]
 CMD ["serve"]
 
