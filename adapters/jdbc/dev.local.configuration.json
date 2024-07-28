@@ -7,49 +7,8 @@
     "schemas": [
       {
         "type": "jdbc",
-        "name": "TEST",
-        "jdbcUrl": "jdbc:postgresql://ep-yellow-salad-961725.us-west-2.aws.neon.tech/chinook?user=kenstott&password=rN8qOh6AEMCP&sslmode=require"
-      },
-      {
-        "type": "map",
-        "name": "AGG",
-        "tables": [
-          {
-            "name": "myview",
-            "type": "view",
-            "sql": "SELECT \"FirstName\" FROM TEST.\"customers\""
-          }
-        ]
-      },
-      {
-        "name": "adhoc",
-        "lattices": [
-          {
-            "name": "star",
-            "sql": [
-              "SELECT 1 \"TEST\".\"invoice_items\" as \"ii\"",
-              "JOIN \"TEST\".\"invoices\" as \"i\" USING (\"invoice_id\")",
-              "JOIN \"TEST\".\"customers\" as \"c\" USING (\"customer_id\")"
-            ],
-            "auto": true,
-            "algorithm": true,
-            "rowCountEstimate": 86837,
-            "defaultMeasures": [
-              {
-                "agg": "count"
-              }
-            ],
-            "tiles": [ {
-              "dimensions": [ ["c","customer_id"], [ "i", "invoice_id"] ],
-              "measures": [ {
-                "agg": "sum",
-                "args": "quantity"
-              }, {
-                "agg": "count"
-              } ]
-            } ]
-          }
-        ]
+        "name": "DEFAULT",
+        "jdbcUrl": "jdbc:redshift://default-workgroup.528956693660.us-east-2.redshift-serverless.amazonaws.com:5439/dev?user=redshiftdev&password=#Hasura2024!"
       }
     ]
   },

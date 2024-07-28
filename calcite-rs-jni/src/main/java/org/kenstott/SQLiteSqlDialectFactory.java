@@ -113,7 +113,7 @@ public class SQLiteSqlDialectFactory implements SqlDialectFactory {
         }
 
     private static SqlDialect.Context context() {
-        return new ContextImpl(SqlDialect.DatabaseProduct.UNKNOWN, null, null, -1, -1, "'", "''", "\"", null, Casing.UNCHANGED, Casing.TO_UPPER, true, SqlConformanceEnum.DEFAULT, NullCollation.HIGH, RelDataTypeSystemImpl.DEFAULT, JethroDataSqlDialect.JethroInfo.EMPTY);
+        return new ContextImpl(SqlDialect.DatabaseProduct.MYSQL, null, null, -1, -1, "'", "''", "\"", null, Casing.UNCHANGED, Casing.TO_UPPER, true, SqlConformanceEnum.DEFAULT, NullCollation.HIGH, RelDataTypeSystemImpl.DEFAULT, JethroDataSqlDialect.JethroInfo.EMPTY);
     }
 
     @Override

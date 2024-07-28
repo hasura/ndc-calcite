@@ -196,6 +196,14 @@ pub fn scalars() -> BTreeMap<String, ScalarType> {
             },
         ),
         (
+            "DATETIME".into(),
+            ScalarType {
+                representation: Some(TypeRepresentation::Timestamp),
+                aggregate_functions: BTreeMap::new(),
+                comparison_operators: string_comparison_operators.clone(),
+            },
+        ),
+        (
             "TIMESTAMP".into(),
             ScalarType {
                 representation: Some(TypeRepresentation::Timestamp),

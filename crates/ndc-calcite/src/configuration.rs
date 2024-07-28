@@ -16,8 +16,9 @@ use serde_json::Value;
 // ANCHOR: Schema
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Schema {
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "type")]
-    pub r#type: String,
+    pub r#type: Option<String>,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache: Option<bool>,

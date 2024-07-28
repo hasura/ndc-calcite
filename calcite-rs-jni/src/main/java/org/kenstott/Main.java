@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class Main {
     public static void main(String[] args) {
-        String modelPath = "../adapters/jdbc/model_test.json";
+        String modelPath = "../adapters/jdbc/model.json";
         String username = "<username>";
         String password = "<password>";
 

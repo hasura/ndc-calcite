@@ -139,6 +139,7 @@ public class CalciteQuery {
                             CalciteSchema schemaPlus = rootSchema.getSubSchema(schemaName, true);
                             Schema schema = schemaPlus.schema;
                             DatabaseMetaData metaData1;
+
                             if (schema instanceof JdbcSchema) {
                                 metaData1 = ((JdbcSchema) schema).getDataSource().getConnection().getMetaData();
                             } else {
@@ -202,6 +203,13 @@ public class CalciteQuery {
         ResultSet columnsSet;
         try {
             DatabaseMetaData metaData = connection.getMetaData();
+            String schemaName = table.schema;
+            CalciteSchema schemaPlus = rootSchema.getSubSchema(schemaName, true);
+            Schema schema = schemaPlus.schema;
+            boolean sqliteFlag = false;
+            if (schema instanceof JdbcSchema) {
+                sqliteFlag = ((JdbcSchema) schema).dialect instanceof SQLiteSqlDialect;
+            }
             columnsSet = metaData.getColumns(table.catalog, table.schema, table.name, null);
             while (columnsSet.next()) {
                 String columnName = columnsSet.getString("COLUMN_NAME");
@@ -251,12 +259,19 @@ public class CalciteQuery {
                 if (mappedType == null) {
                     mappedType = "VARCHAR";
                 }
+                if (dataTypeName.startsWith("VARCHAR(65536)") && sqliteFlag) {
+                    if (columnName.toLowerCase().contains("date")) {
+                        mappedType = "TIMESTAMP";
+                    }
+                }
                 columns.put(columnName, new ColumnMetadata(
                         columnName,
                         mappedType,
                         nullable,
                         description
                 ));
+
+
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
