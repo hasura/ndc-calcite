@@ -15,4 +15,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ndc_calcite:$(date +%s)
+      run: docker build . --platform linux/amd64,linux/arm64 --file Dockerfile --tag ndc_calcite:$(date +%s)
