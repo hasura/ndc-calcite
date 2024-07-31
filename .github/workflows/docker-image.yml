@@ -19,6 +19,7 @@ jobs:
     - uses: docker/build-push-action@v5
       with:
         context: .
+        target: ndc-meta
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
