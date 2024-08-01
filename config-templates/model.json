@@ -5,9 +5,9 @@
       {
         "type": "jdbc",
         "name": "test",
-        "jdbcUser": "kenstott",
-        "jdbcPassword": "rN8qOh6AEMCP",
-        "jdbcUrl": "jdbc:postgresql://ep-yellow-salad-961725.us-west-2.aws.neon.tech/crisp-sheepdog-47_db_3216533?sslmode=require",
+        "jdbcUser": "<username>",
+        "jdbcPassword": "<password>",
+        "jdbcUrl": "jdbc:postgresql://<server>/<database>?sslmode=require",
         "jdbcCatalog": "public"
       }
     ]

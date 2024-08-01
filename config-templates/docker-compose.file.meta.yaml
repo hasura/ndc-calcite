@@ -20,4 +20,4 @@ services:
         protocol: tcp
     volumes:
       - .:/etc/connector
-      - ${MODEL_FILE:-./models/model.json}:/etc/connector/model.json
+      - ${MODEL_FILE:-./models/model.json}:/etc/connector/models/model.json

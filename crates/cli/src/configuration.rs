@@ -9,18 +9,7 @@ use crate::error::{
     MakeRuntimeConfigurationError, MultiError, ParseConfigurationError,
     WriteParsedConfigurationError,
 };
-// use crate::values::{IsolationLevel, PoolSettings};
-// use crate::version3;
-// use crate::version4;
-// use crate::version5;
-// use crate::VersionTag;
-// use schemars::{gen::SchemaSettings, schema::RootSchema};
 
-// pub fn generate_latest_schema() -> RootSchema {
-//     SchemaSettings::openapi3()
-//         .into_generator()
-//         .into_root_schema_for::<version4::ParsedConfiguration>()
-// }
 
 pub const DEFAULT_CONNECTION_URI_VARIABLE: &str = "CONNECTION_URI";
 
@@ -30,7 +19,7 @@ pub const DEFAULT_CONNECTION_URI_VARIABLE: &str = "CONNECTION_URI";
 /// Introducing a breaking configuration format change involves adding a new case to this type.
 ///
 /// 'ParsedConfiguration' is used to support serialization and deserialization of an NDC
-/// configuration. It retains all the salient information that constitues an instance of an NDC
+/// configuration. It retains all the salient information that constitutes an instance of an NDC
 /// deployment, such that 'c = parse_configuration(dir) => { write_parsed_configuration(c, dir2) ;
 /// assert(c == parse_configuration(dir2))}'.
 ///
@@ -38,24 +27,20 @@ pub const DEFAULT_CONNECTION_URI_VARIABLE: &str = "CONNECTION_URI";
 /// 'ParsedConfiguration' as well.
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub enum ParsedConfiguration {
-    Version3,
-    Version4,
-    Version5,
+    Version1
 }
 
 #[derive(Debug, Copy, Clone)]
 pub enum VersionTag {
-    Version3,
-    Version4,
-    Version5,
+    Version1
 }
 
 impl ParsedConfiguration {
     pub fn initial() -> Self {
-        ParsedConfiguration::Version3
+        ParsedConfiguration::Version1
     }
     pub fn version(&self) -> VersionTag {
-        VersionTag::Version3
+        VersionTag::Version1
     }
 }
 
@@ -78,16 +63,16 @@ pub async fn introspect(
     input: ParsedConfiguration,
     environment: impl Environment,
 ) -> anyhow::Result<ParsedConfiguration> {
-    Ok(ParsedConfiguration::Version4)
+    Ok(ParsedConfiguration::Version1)
 }
 
 pub async fn parse_configuration(
     configuration_dir: impl AsRef<Path> + Send,
 ) -> Result<ParsedConfiguration, ParseConfigurationError> {
-    Ok(ParsedConfiguration::Version3)
+    Ok(ParsedConfiguration::Version1)
 }
 
-/// Turn a 'ParsedConfiguration' into a into a 'Configuration', such that it may be used in main
+/// Turn a 'ParsedConfiguration' into a 'Configuration', such that it may be used in main
 /// NDC business logic.
 ///
 /// Each concrete supported version implementation is responsible for interpretation its format
@@ -112,5 +97,5 @@ pub async fn write_parsed_configuration(
 /// This is part of the configuration crate API to enable users to upgrade their configurations
 /// mechanically, using the ndc-calcite cli, when new versions are released..
 pub fn upgrade_to_latest_version(parsed_config: ParsedConfiguration) -> ParsedConfiguration {
-    ParsedConfiguration::Version3
+    ParsedConfiguration::Version1
 }
