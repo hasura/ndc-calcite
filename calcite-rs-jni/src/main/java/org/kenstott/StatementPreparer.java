@@ -26,7 +26,7 @@ class StatementPreparer {
      * @throws SQLException If an error occurs while preparing the statement.
      */
     public static PreparedStatement prepare(String input, Connection connection) throws SQLException {
-        String[] extractedStrings = extractMarkedUpStrings(input);
+        ArrayList<String> extractedStrings = extractMarkedUpStrings(input);
         String modifiedInput = replaceWithIndexedQuestionMarks(input, extractedStrings);
         ArrayList<Object> extractedStringParams = new ArrayList<>();
         modifiedInput = findParams(modifiedInput, extractedStrings, extractedStringParams);
@@ -40,20 +40,20 @@ class StatementPreparer {
         return preparedStatement;
     }
 
-    private static String findParams(String input, String[] extractedStrings, ArrayList<Object> params) {
+    private static String findParams(String input, ArrayList<String> extractedStrings, ArrayList<Object> params) {
         Pattern pattern = Pattern.compile("\\?(\\d+)\\?");
         Matcher matcher = pattern.matcher(input);
         return matcher.replaceAll(match -> {
             String value = match.group().replaceAll("\\?", "");
             int index = Integer.parseInt(value);
-            params.add(extractedStrings[index]);
+            params.add(extractedStrings.get(index));
             return PARAM_MARKER;
         });
     }
 
-    private static String[] extractMarkedUpStrings(String input) {
+    private static ArrayList<String> extractMarkedUpStrings(String input) {
         String marker = STRING_MARKER;
-        List<String> extractedList = new ArrayList<>();
+        ArrayList<String> extractedList = new ArrayList<>();
 
         int startIndex = input.indexOf(marker);
         while (startIndex != -1) {
@@ -64,16 +64,27 @@ class StatementPreparer {
             }
             startIndex = input.indexOf(marker, endIndex + marker.length());
         }
-
-        return extractedList.toArray(new String[0]);
+        return extractedList;
     }
 
-    private static String replaceWithIndexedQuestionMarks(String input, String[] extractedStrings) {
-        for (int i = 0; i < extractedStrings.length; i++) {
-            input = input.replace(
-                    STRING_MARKER + extractedStrings[i] + STRING_MARKER,
-                    PARAM_MARKER + i + PARAM_MARKER
-            );
+    private static String replaceWithIndexedQuestionMarks(String input, ArrayList<String> extractedStrings) {
+        Pattern pattern = Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2}([T\\s]\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?)?([Zz]|([+\\-]\\d{2}:\\d{2}))?$");
+
+        for (int i = 0; i < extractedStrings.size(); ++i) {
+            Matcher matcher = pattern.matcher(extractedStrings.get(i));
+            if (matcher.matches()) {
+                input = input.replace(
+                        STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                        "'"+ extractedStrings.get(i) + "'"
+                );
+                extractedStrings.remove(i);
+                --i;
+            } else {
+                input = input.replace(
+                        STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                        PARAM_MARKER + i + PARAM_MARKER
+                );
+            }
         }
         return input;
     }

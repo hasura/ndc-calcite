@@ -9,7 +9,7 @@ services:
       watch:
         - path: ./
           action: sync+restart
-          target: /etc/connector
+          target: /etc/ndc-calcite
     env_file:
       - .env.local.local.local
     extra_hosts:

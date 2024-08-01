@@ -79,20 +79,26 @@ pub fn get_schema(configuration: &CalciteConfiguration, calcite_ref: GlobalRef) 
         procedures,
     };
     let file_path = if is_running_in_container() {
-        Path::new("/update/connector").join(CONFIG_FILE_NAME)
+        Path::new("/update/ndc-calcite").join(CONFIG_FILE_NAME)
     } else {
         Path::new(".").join(DEV_CONFIG_FILE_NAME)
     };
     event!(Level::INFO, config_path = format!("Configuration file path: {}", file_path.display()));
     let mut new_configuration = configuration.clone();
     new_configuration.metadata = Some(data_models.clone());
-    let mut file = File::create(file_path)?;
-    let serialized_json = serde_json::to_string_pretty(&new_configuration)?;
-    file.write_all(serialized_json.as_bytes())?;
-    event!(
+    let mut file = File::create(file_path);
+    match file {
+        Ok(mut file) => {
+            let serialized_json = serde_json::to_string_pretty(&new_configuration)?;
+            file.write_all(serialized_json.as_bytes())?;
+            event!(
         Level::INFO,
         schema = serde_json::to_string(&schema).unwrap()
     );
+        }
+        Err(_) => {}
+    }
+
     Ok(schema)
 }
 // ANCHOR_END: get_schema

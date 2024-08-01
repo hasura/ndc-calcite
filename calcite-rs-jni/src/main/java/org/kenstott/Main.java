@@ -3,6 +3,7 @@ package org.kenstott;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.util.Collection;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import java.util.Map;
  */
 public class Main {
     public static void main(String[] args) {
+
         String modelPath = "../adapters/jdbc/model.json";
         String username = "<username>";
         String password = "<password>";
@@ -24,14 +26,13 @@ public class Main {
                 query.getModels();
                 String x = query.getModels();
                 System.out.println(x);
-               String zz = query.queryPlanModels("""
- 
- """);
-                System.out.println(zz);
+//               String zz = query.queryPlanModels("""
+//
+// """);
+//                System.out.println(zz);
                 String z1 = query.queryModels("""
- SELECT * from "DEFAULT"."orders" LIMIT 10
- 
- """
+SELECT JSON_OBJECT('currency', "test"."ExchangeRates"."currency",'date', "test"."ExchangeRates"."date",'exchange', "test"."ExchangeRates"."exchange") FROM "test"."ExchangeRates" WHERE "date" = __UTF8__2015-01-02T00:00:00__UTF8__  LIMIT 10
+"""
                );
 
                 System.out.println(z1);

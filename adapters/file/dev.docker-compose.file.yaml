@@ -1,9 +1,9 @@
 services:
-  my_subgraph_calcite:
+  test_file:
     build:
       context: .
       dockerfile_inline: |-
-        FROM csv_connector:latest
+        FROM file_connector:latest
         COPY ./ /etc/connector
     develop:
       watch:
@@ -11,11 +11,14 @@ services:
           action: sync+restart
           target: /etc/ndc-calcite
     env_file:
-      - .env.local.local.local
+      - .env.local
     extra_hosts:
       - local.hasura.dev=host-gateway
     ports:
       - mode: ingress
         target: 8080
-        published: "8083"
+        published: "8084"
         protocol: tcp
+    volumes:
+      - ${DATA_FOLDER}:/data
+      - ./:/update/ndc-calcite

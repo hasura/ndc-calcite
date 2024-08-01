@@ -116,7 +116,7 @@ public class CalciteQuery {
         Properties info = new Properties();
         info.setProperty("model", modelPath);
         try {
-            connection = DriverManager.getConnection("jdbc:calcite:conformance=ORACLE_12", info);
+            connection = DriverManager.getConnection("jdbc:calcite:", info);
             rootSchema = connection.unwrap(CalciteConnection.class).getRootSchema().unwrap(CalciteSchema.class);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -330,7 +330,7 @@ public class CalciteQuery {
             Statement statement = connection.createStatement();
             PreparedStatement preparedStatement = StatementPreparer.prepare(query, connection);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (query.toLowerCase().startsWith("select json_object(")) {
+            if (query.toLowerCase().trim().startsWith("select json_object(")) {
                 ArrayList<String> rows = new ArrayList<>();
                 while (resultSet.next()) {
                     rows.add(resultSet.getString(1));

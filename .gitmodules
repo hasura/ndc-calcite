@@ -1,0 +1,3 @@
+[submodule "calcite-rs-jni/calcite"]
+	path = calcite-rs-jni/calcite
+	url = https://github.com/kenstott/calcite

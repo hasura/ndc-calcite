@@ -4,7 +4,7 @@ use ndc_sdk::default_main::default_main;
 
 use calcite::connector::calcite::Calcite;
 
-/// Run the [`Calcite`] connector using the [`default_main`]
+/// Run the [`Calcite`] ndc-calcite using the [`default_main`]
 /// function, which accepts standard configuration options
 /// via the command line, configures metrics and trace
 /// collection, and starts a server.

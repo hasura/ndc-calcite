@@ -45,14 +45,16 @@ RUN java -version && echo $JAVA_HOME
 WORKDIR /app
 COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
 
-RUN mkdir -p /etc/connector
+RUN mkdir -p /etc/ndc-calcite
 ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
 ENV RUST_BACKTRACE=full
 
 COPY calcite-rs-jni/ /calcite-rs-jni/
 
+WORKDIR /calcite-rs-jni/calcite
+RUN ./gradlew assemble
+
 WORKDIR /calcite-rs-jni
-RUN echo "The current working directory: $PWD"
 RUN mvn -version
 RUN mvn clean install
 RUN mvn dependency:copy-dependencies

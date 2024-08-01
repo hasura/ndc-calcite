@@ -1,17 +1,6 @@
 {
   "version": "4",
   "$schema": "schema.json",
-  "model": {
-    "version": "1.0",
-    "defaultSchema": "DEFAULT",
-    "schemas": [
-      {
-        "type": "jdbc",
-        "name": "DEFAULT",
-        "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
-        "jdbcUrl": "jdbc:sqlite:/data.db"
-      }
-    ]
-  },
-  "fixes": true
+  "fixes": true,
+  "model_file": "./model"
 }

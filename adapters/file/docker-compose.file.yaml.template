@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile_inline: |-
-        FROM file_connector:latest
+        FROM kstott/file_connector:latest
         COPY ./ /etc/connector
     develop:
       watch:

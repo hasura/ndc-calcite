@@ -36,7 +36,8 @@ static CONFIG: OnceCell<Mutex<CalciteConfiguration>> = OnceCell::new();
 pub fn get_jvm() -> &'static Mutex<JavaVM> {
     let jvm = JVM.get().expect("JVM is not set up.");
     let binding = jvm.lock().unwrap();
-    let mut env = binding.attach_current_thread().unwrap();    let _ = env.call_static_method("org/kenstott/CalciteQuery", "noOpMethod", "()V", &[]);
+    let mut env = binding.attach_current_thread().unwrap();
+    let _ = env.call_static_method("org/kenstott/CalciteQuery", "noOpMethod", "()V", &[]);
     if let Err(_) = env.exception_occurred() {
         env.exception_describe().expect("TODO: panic message");
         env.exception_clear().expect("TODO: panic message");
@@ -103,7 +104,7 @@ pub fn init_jvm(calcite_configuration: &CalciteConfiguration) {
             None => { /* handle None case if necessary */ }
         }
 
-        let otel_exporter_otlp_traces_endpoint = env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").unwrap_or("".to_string());
+        let otel_exporter_otlp_endpoint = env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or("".to_string());
         let otel_service_name = env::var("OTEL_SERVICE_NAME").unwrap_or("".to_string());
         let otel_logs_exported = env::var("OTEL_LOGS_EXPORTER").unwrap_or("".to_string());
         let otel_log_level = env::var("OTEL_LOG_LEVEL").unwrap_or("".to_string());
@@ -114,9 +115,9 @@ pub fn init_jvm(calcite_configuration: &CalciteConfiguration) {
             .option("--add-opens=java.base/java.nio=ALL-UNNAMED")
             .option("-Dotel.java.global-autoconfigure.enabled=true")
             .option(format!("-Dlog4j.configurationFile={}", log4j_configuration_file));
-        if !otel_exporter_otlp_traces_endpoint.is_empty() {
+        if !otel_exporter_otlp_endpoint.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_EXPORTER_OTLP_TRACES_ENDPOINT={}", otel_exporter_otlp_traces_endpoint)
+                format!("-DOTEL_EXPORTER_OTLP_ENDPOINT={}", otel_exporter_otlp_endpoint)
             );
         }
         if !otel_service_name.is_empty() {

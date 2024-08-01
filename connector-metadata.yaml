@@ -1,0 +1,15 @@
+packagingDefinition:
+  type: PrebuiltDockerImage
+  dockerImage: "docker.io/kstott/calcite_connector:latest"
+supportedEnvironmentVariables:
+  - name: MODEL_FILE
+    description: The location of the calcite model file
+commands:
+  update:  hasura-calcite update
+cliPlugin:
+  name:  ndc-calcite-cli
+  version: "v0.1.0"
+dockerComposeWatch:
+  - path: ./
+    target: /etc/connector
+    action: sync+restart

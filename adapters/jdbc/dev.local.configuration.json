@@ -3,15 +3,281 @@
   "$schema": "schema.json",
   "model": {
     "version": "1.0",
-    "defaultSchema": "TEST",
+    "defaultSchema": "test",
     "schemas": [
       {
         "type": "jdbc",
-        "name": "DEFAULT",
-        "jdbcUrl": "jdbc:redshift://default-workgroup.528956693660.us-east-2.redshift-serverless.amazonaws.com:5439/dev?user=redshiftdev&password=#Hasura2024!&currentSchema=crm"
+        "name": "test",
+        "jdbcUser": "kenstott",
+        "jdbcPassword": "rN8qOh6AEMCP",
+        "jdbcUrl": "jdbc:postgresql://ep-yellow-salad-961725.us-west-2.aws.neon.tech/crisp-sheepdog-47_db_3216533?sslmode=require",
+        "jdbcCatalog": "public"
       }
     ]
   },
   "model_file_path": "./model.json",
-  "fixes": true
+  "fixes": true,
+  "metadata": {
+    "Customers": {
+      "schema": "test",
+      "name": "Customers",
+      "columns": {
+        "customerKey": {
+          "name": "customerKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "country": {
+          "name": "country",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "city": {
+          "name": "city",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "state": {
+          "name": "state",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "name": {
+          "name": "name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "stateCode": {
+          "name": "stateCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "continent": {
+          "name": "continent",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "gender": {
+          "name": "gender",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "zipCode": {
+          "name": "zipCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "birthday": {
+          "name": "birthday",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Products": {
+      "schema": "test",
+      "name": "Products",
+      "columns": {
+        "brand": {
+          "name": "brand",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "category": {
+          "name": "category",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "subcategory": {
+          "name": "subcategory",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "productKey": {
+          "name": "productKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "productName": {
+          "name": "productName",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "categoryKey": {
+          "name": "categoryKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "subcategoryKey": {
+          "name": "subcategoryKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "unitCostUSD": {
+          "name": "unitCostUSD",
+          "scalarType": "DOUBLE",
+          "nullable": true
+        },
+        "unitPriceUSD": {
+          "name": "unitPriceUSD",
+          "scalarType": "DOUBLE",
+          "nullable": true
+        },
+        "color": {
+          "name": "color",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Sales": {
+      "schema": "test",
+      "name": "Sales",
+      "columns": {
+        "customerKey": {
+          "name": "customerKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "lineItem": {
+          "name": "lineItem",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "orderNumber": {
+          "name": "orderNumber",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "storeKey": {
+          "name": "storeKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "orderDate": {
+          "name": "orderDate",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "deliveryDate": {
+          "name": "deliveryDate",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "currencyCode": {
+          "name": "currencyCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "productKey": {
+          "name": "productKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "z": {
+      "schema": "test",
+      "name": "z",
+      "columns": {
+        "z": {
+          "name": "z",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Stores": {
+      "schema": "test",
+      "name": "Stores",
+      "columns": {
+        "storeKey": {
+          "name": "storeKey",
+          "scalarType": "BIGINT",
+          "nullable": true
+        },
+        "country": {
+          "name": "country",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "openDate": {
+          "name": "openDate",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "squareMeters": {
+          "name": "squareMeters",
+          "scalarType": "DOUBLE",
+          "nullable": true
+        },
+        "state": {
+          "name": "state",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "DataDictionary": {
+      "schema": "test",
+      "name": "DataDictionary",
+      "columns": {
+        "table": {
+          "name": "table",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "field": {
+          "name": "field",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "description": {
+          "name": "description",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "ExchangeRates": {
+      "schema": "test",
+      "name": "ExchangeRates",
+      "columns": {
+        "date": {
+          "name": "date",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "exchange": {
+          "name": "exchange",
+          "scalarType": "DOUBLE",
+          "nullable": true
+        },
+        "currency": {
+          "name": "currency",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
 }

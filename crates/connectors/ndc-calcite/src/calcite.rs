@@ -13,7 +13,7 @@ use jni::objects::JValueGen::Object;
 use ndc_models as models;
 use ndc_models::RowFieldValue;
 use ndc_sdk::connector::{InitializationError, QueryError};
-use serde_json::Value;
+use serde_json::{Error, Value};
 use tracing::{event, Level};
 
 use crate::configuration::CalciteConfiguration;
@@ -203,7 +203,14 @@ pub fn calcite_query(
     match result.unwrap() {
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
-            let json_rows: Vec<String> = serde_json::from_str(&json_string).unwrap();
+            let json_rows: Result<Vec<String>, _> = serde_json::from_str(&json_string);
+            let json_rows = match json_rows {
+                Ok(rows) => rows,
+                Err(_) => {
+                    println!("{:?}", json_string);
+                    return Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")})))
+                }
+            };
             let rows = parse_to_row(json_rows);
             let rows = if config.fixes.unwrap_or(false) && !*explain {
                 fix_rows(rows, query_metadata)

@@ -213,7 +213,7 @@ pub struct CalciteConfiguration {
     pub _schema: String,
     /// The Calcite Model - somewhat dependent on type of calcite adapter being used.
     /// Better documentation can be found [here](https://calcite.apache.org/docs/model.html).
-    pub model: Model,
+    pub model: Option<Model>,
     /// Used internally
     pub model_file_path: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

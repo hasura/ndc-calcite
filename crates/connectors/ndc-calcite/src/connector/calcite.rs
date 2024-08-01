@@ -19,13 +19,14 @@ use ndc_sdk::connector::{
 };
 use ndc_sdk::json_response::JsonResponse;
 use ndc_sdk::models;
+use serde::de::Unexpected::Option;
 use serde_json::{to_string_pretty};
 use tracing::{info_span};
 use tracing::Instrument;
 
 use crate::{calcite, jvm, query, schema};
 use crate::capabilities::calcite_capabilities;
-use crate::configuration::{CalciteConfiguration};
+use crate::configuration::{CalciteConfiguration, Model};
 use crate::jvm::init_jvm;
 use crate::query::QueryParams;
 
@@ -101,19 +102,33 @@ impl ConnectorSetup for Calcite {
         println!("Configuration file path: {:?}", configuration_dir.as_ref().display());
         match fs::read_to_string(file_path) {
             Ok(file_content) => {
+                println!("Configuration file content: {:?}", file_content);
                 let mut json_object: CalciteConfiguration = serde_json::from_str(&file_content)
                     .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
-                let serialized_json = to_string_pretty(&json_object.model)
-                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
-                let mut file = File::create("model.json")
-                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
-                file.write_all(serialized_json.as_bytes())
-                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
-                json_object.model_file_path = Some("./model.json".to_string());
+                match json_object.model_file_path {
+                    None => {
+                        match json_object.model {
+                            None => {}
+                            Some(_) => {}
+                        }
+                    }
+                    Some(ref model_file_path) => {
+                        match fs::read_to_string(model_file_path) {
+                            Ok(models) => {
+                                println!("Configuration model content: {:?}", models);
+                                let mut model_object: Model = serde_json::from_str(&models)
+                                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+                                json_object.model = Some(model_object)
+                            },
+                            Err(_err) => {}
+                        }
+                    }
+                }
                 match json_object.metadata {
                     None => {
                         let state = init_state(&json_object).expect("TODO: panic message");
                         json_object.metadata = Some(calcite::get_models(state.calcite_ref));
+                        println!("metadata: {:?}",  serde_json::to_string_pretty(&json_object.metadata));
                     }
                     Some(_) => {}
                 }
