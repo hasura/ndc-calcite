@@ -104,7 +104,7 @@ pub fn init_jvm(calcite_configuration: &CalciteConfiguration) {
             None => { /* handle None case if necessary */ }
         }
 
-        let otel_exporter_otlp_endpoint = env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or("".to_string());
+        let otel_exporter_otlp_endpoint = env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or("http://local.hasura.dev:4317".to_string());
         let otel_service_name = env::var("OTEL_SERVICE_NAME").unwrap_or("".to_string());
         let otel_logs_exported = env::var("OTEL_LOGS_EXPORTER").unwrap_or("".to_string());
         let otel_log_level = env::var("OTEL_LOG_LEVEL").unwrap_or("".to_string());
@@ -119,24 +119,31 @@ pub fn init_jvm(calcite_configuration: &CalciteConfiguration) {
             jvm_args = jvm_args.option(
                 format!("-DOTEL_EXPORTER_OTLP_ENDPOINT={}", otel_exporter_otlp_endpoint)
             );
+            println!("Added {} to JVM", format!("-DOTEL_EXPORTER_OTLP_ENDPOINT={}", otel_exporter_otlp_endpoint))
         }
         if !otel_service_name.is_empty() {
             jvm_args = jvm_args.option(
                 format!("-DOTEL_SERVICE_NAME={}", otel_service_name)
             );
+            println!("Added {} to JVM", format!("-DOTEL_SERVICE_NAME={}", otel_service_name));
         }
         if !otel_logs_exported.is_empty() {
             jvm_args = jvm_args.option(
                 format!("-DOTEL_LOGS_EXPORTED={}", otel_logs_exported)
             );
+            println!("Added {} to JVM", format!("-DOTEL_LOGS_EXPORTED={}", otel_logs_exported));
         }
         if !otel_log_level.is_empty() {
             jvm_args = jvm_args.option(
                 format!("-DOTEL_LOG_LEVEL={}", otel_log_level)
             );
+            println!("Added {} to JVM", format!("-DOTEL_LOG_LEVEL={}", otel_log_level));
         }
         if !expanded_paths.is_empty() {
-            jvm_args = jvm_args.option(["-Djava.class.path=", &expanded_paths].join(""))
+            jvm_args = jvm_args.option(
+                format!("-Djava.class.path={}", &expanded_paths)
+            );
+            println!("Added {} to JVM", format!("-Djava.class.path={}", &expanded_paths));
         }
         let jvm_args = jvm_args.build().unwrap();
         let jvm = JavaVM::new(jvm_args).unwrap();

@@ -13,7 +13,7 @@ use jni::objects::JValueGen::Object;
 use ndc_models as models;
 use ndc_models::RowFieldValue;
 use ndc_sdk::connector::{InitializationError, QueryError};
-use serde_json::{Error, Value};
+use serde_json::{Value};
 use tracing::{event, Level};
 
 use crate::configuration::CalciteConfiguration;

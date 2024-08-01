@@ -1,10 +1,9 @@
 services:
-  ${SUBGRAPH}_${CONNECTOR}:
+  meta_connector:
     build:
       context: .
       dockerfile_inline: |-
-        FROM kstott/calcite_connector:latest
-        COPY ./ /etc/connector
+        FROM docker.io/kstott/meta_connector:latest
     develop:
       watch:
         - path: ./
@@ -20,5 +19,5 @@ services:
         published: ${HASURA_CONNECTOR_PORT:8080}
         protocol: tcp
     volumes:
-      - ${MODEL}:/model.json
-      - ./configuration.json:/update/connector/configuration.json
+      - .:/etc/connector
+      - ${MODEL_FILE:-./models/model.json}:/etc/connector/model.json

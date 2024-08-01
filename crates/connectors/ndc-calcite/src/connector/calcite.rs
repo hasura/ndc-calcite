@@ -3,10 +3,8 @@
 //! Provides HTTP server paths for required NDC functions. Connecting
 //! the request to the underlying code and providing the result.
 //!
-use std::collections::{BTreeMap};
-use std::fs;
-use std::fs::File;
-use std::io::Write;
+use std::collections::BTreeMap;
+use std::{env, fs};
 use std::path::Path;
 
 use async_trait::async_trait;
@@ -19,9 +17,7 @@ use ndc_sdk::connector::{
 };
 use ndc_sdk::json_response::JsonResponse;
 use ndc_sdk::models;
-use serde::de::Unexpected::Option;
-use serde_json::{to_string_pretty};
-use tracing::{info_span};
+use tracing::info_span;
 use tracing::Instrument;
 
 use crate::{calcite, jvm, query, schema};
@@ -63,7 +59,7 @@ pub struct CalciteState {
 /// Returns `true` if the code is running inside a container, `false` otherwise.
 #[tracing::instrument]
 pub fn is_running_in_container() -> bool {
-    Path::new("/.dockerenv").exists()
+    Path::new("/.dockerenv").exists() || env::var("KUBERNETES_SERVICE_HOST").is_ok()
 }
 
 #[tracing::instrument]
@@ -116,7 +112,7 @@ impl ConnectorSetup for Calcite {
                         match fs::read_to_string(model_file_path) {
                             Ok(models) => {
                                 println!("Configuration model content: {:?}", models);
-                                let mut model_object: Model = serde_json::from_str(&models)
+                                let model_object: Model = serde_json::from_str(&models)
                                     .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
                                 json_object.model = Some(model_object)
                             },

@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultSchema": "sales",
+  "schemas": [
+    {
+      "type": "custom",
+      "name": "sales",
+      "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
+      "operand": {
+        "directory": "/etc/connector/data/files"
+      }
+    }
+  ]
+}

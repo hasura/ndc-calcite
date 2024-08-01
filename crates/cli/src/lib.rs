@@ -9,7 +9,8 @@ pub mod configuration;
 pub mod error;
 
 
-use std::path::PathBuf;
+use std::{env, io};
+use std::path::{Path, PathBuf};
 
 use clap::Subcommand;
 use tokio::fs;
@@ -62,6 +63,33 @@ pub async fn run(command: Command, context: Context<impl Environment>) -> anyhow
     Ok(())
 }
 
+fn copy_files(input_dir: &str, output_dir: &str) -> io::Result<()> {
+    let input_path = Path::new(input_dir);
+    let output_path = Path::new(output_dir);
+
+    if !output_path.exists() {
+        std::fs::create_dir_all(&output_path)?;
+    }
+
+    if input_path.is_dir() {
+        for entry in std::fs::read_dir(input_path)? {
+            let entry = entry?;
+            let entry_path = entry.path();
+            let output_file_path = output_path.join(entry_path.file_name().unwrap());
+            if entry_path.is_dir() {
+                copy_files(entry_path.to_str().unwrap(), output_file_path.to_str().unwrap())?;
+            } else if entry_path.is_file() {
+                std::fs::copy(entry_path, output_file_path)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn is_running_in_container() -> bool {
+    Path::new("/.dockerenv").exists() || env::var("KUBERNETES_SERVICE_HOST").is_ok()
+}
+
 /// Initialize an empty directory with an empty ndc-calcite configuration.
 ///
 /// An empty configuration contains default settings and options, and is expected to be filled with
@@ -76,6 +104,15 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
     if items_in_dir.next_entry().await?.is_some() {
         Err(Error::DirectoryIsNotEmpty)?;
     }
+
+    let config_path = if is_running_in_container() {
+        Path::new("/config-templates")
+    } else {
+        Path::new("../config-templates")
+    };
+    let context_path_str = context.context_path.to_str().ok_or(anyhow::anyhow!("Failed to convert PathBuf to &str"))?;
+    let config_path_str = config_path.to_str().ok_or(anyhow::anyhow!("Failed to convert PathBuf to &str"))?;
+    let _ = copy_files(config_path_str, context_path_str);
 
     configuration::write_parsed_configuration(
         configuration::ParsedConfiguration::initial(),
@@ -92,7 +129,7 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
             packaging_definition: metadata::PackagingDefinition::PrebuiltDockerImage(
                 metadata::PrebuiltDockerImagePackaging {
                     docker_image: format!(
-                        "ghcr.io/hasura/ndc-calcite:{}",
+                        "docker.io/kstott/meta-connector:{}",
                         context.release_version.unwrap_or("latest")
                     ),
                 },
@@ -100,7 +137,7 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
             supported_environment_variables: vec![metadata::EnvironmentVariableDefinition {
                 name: "MODEL_FILE".to_string(),
                 description: "The Calcite connection model".to_string(),
-                default_value: Some("./model.json".to_string()),
+                default_value: Some("/etc/connection/models/model.json".to_string()),
             }],
             commands: metadata::Commands {
                 update: Some("hasura-ndc-calcite update".to_string()),
@@ -112,7 +149,7 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
             }),
             docker_compose_watch: vec![metadata::DockerComposeWatchItem {
                 path: "./".to_string(),
-                target: Some("/etc/ndc-calcite".to_string()),
+                target: Some(".".to_string()),
                 action: metadata::DockerComposeWatchAction::SyncAndRestart,
                 ignore: vec![],
             }],

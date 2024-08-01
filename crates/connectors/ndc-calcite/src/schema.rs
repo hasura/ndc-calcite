@@ -79,14 +79,15 @@ pub fn get_schema(configuration: &CalciteConfiguration, calcite_ref: GlobalRef) 
         procedures,
     };
     let file_path = if is_running_in_container() {
-        Path::new("/update/ndc-calcite").join(CONFIG_FILE_NAME)
+        Path::new("/etc/connector").join(CONFIG_FILE_NAME)
     } else {
         Path::new(".").join(DEV_CONFIG_FILE_NAME)
     };
     event!(Level::INFO, config_path = format!("Configuration file path: {}", file_path.display()));
     let mut new_configuration = configuration.clone();
     new_configuration.metadata = Some(data_models.clone());
-    let mut file = File::create(file_path);
+    let file_path_clone = file_path.clone();
+    let file = File::create(file_path);
     match file {
         Ok(mut file) => {
             let serialized_json = serde_json::to_string_pretty(&new_configuration)?;
@@ -96,7 +97,9 @@ pub fn get_schema(configuration: &CalciteConfiguration, calcite_ref: GlobalRef) 
         schema = serde_json::to_string(&schema).unwrap()
     );
         }
-        Err(_) => {}
+        Err(_err) => {
+            println!("Unable to create config file: {:?}", file_path_clone)
+        }
     }
 
     Ok(schema)

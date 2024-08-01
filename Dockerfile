@@ -50,6 +50,7 @@ ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
 ENV RUST_BACKTRACE=full
 
 COPY calcite-rs-jni/ /calcite-rs-jni/
+COPY config-templates/ /config-templates/
 
 WORKDIR /calcite-rs-jni/calcite
 RUN ./gradlew assemble

@@ -1,0 +1,14 @@
+{
+    "version": "1.0",
+    "defaultSchema": "test",
+    "schemas": [
+      {
+        "type": "jdbc",
+        "name": "test",
+        "jdbcUser": "<username>",
+        "jdbcPassword": "<password>",
+        "jdbcUrl": "jdbc:postgresql://<server>/<database>?sslmode=require",
+        "jdbcCatalog": "public"
+      }
+    ]
+  }

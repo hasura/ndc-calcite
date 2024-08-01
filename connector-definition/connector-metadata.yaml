@@ -1,9 +1,9 @@
 packagingDefinition:
   type: PrebuiltDockerImage
-  dockerImage: "docker.io/kstott/calcite_connector:latest"
+  dockerImage: "docker.io/kstott/meta_connector:latest"
 supportedEnvironmentVariables:
   - name: MODEL_FILE
-    description: The location of the calcite model file
+    description: The location of the calcite model file defaults to /etc/connector/models/model.json
 commands:
   update:  hasura-calcite update
 cliPlugin:

@@ -1,0 +1,12 @@
+{
+    "version": "1.0",
+    "defaultSchema": "test",
+    "schemas": [
+      {
+        "type": "jdbc",
+        "name": "test",
+        "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
+        "jdbcUrl": "jdbc:sqlite:/etc/connector/data/chinook.db"
+      }
+    ]
+  }
