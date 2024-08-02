@@ -20,6 +20,9 @@ public class Main {
         String password = "<password>";
 
         try {
+//            String classpath = System.getProperty("java.class.path");
+//            System.out.println(classpath);
+//            AthenaRowCountExample.test();
             CalciteQuery query = new CalciteQuery();
             try (Connection calciteConnection = query.createCalciteConnection(modelPath)) {
                 System.out.println("Got connection");
@@ -31,7 +34,7 @@ public class Main {
 // """);
 //                System.out.println(zz);
                 String z1 = query.queryModels("""
-SELECT JSON_OBJECT('currency', "test"."ExchangeRates"."currency",'date', "test"."ExchangeRates"."date",'exchange', "test"."ExchangeRates"."exchange") FROM "test"."ExchangeRates" WHERE "date" = __UTF8__2015-01-02T00:00:00__UTF8__  LIMIT 10
+SELECT COUNT(*) AS "count" FROM "test"."DataDictionary"  LIMIT 10
 """
                );
 

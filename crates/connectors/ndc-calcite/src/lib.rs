@@ -70,7 +70,6 @@
 //! - Mutations are not supported
 //! - Path'ed where-predicates (you can only use the root in List arguments)
 //! - Nested objects are not supported
-//! - Explain is not supported
 
 pub mod aggregates;
 pub mod calcite;

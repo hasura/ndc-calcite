@@ -232,8 +232,8 @@ public class CalciteQuery {
                         entry("SMALLINT", "INTEGER"),
                         entry("TINYINT NOT NULL", "INTEGER"),
                         entry("TINYINT", "INTEGER"),
-                        entry("BIGINT NOT NULL", "BIGINT"),
-                        entry("BIGINT", "BIGINT"),
+                        entry("BIGINT NOT NULL", "INTEGER"),
+                        entry("BIGINT", "INTEGER"),
                         entry("FLOAT NOT NULL", "FLOAT"),
                         entry("FLOAT", "FLOAT"),
                         entry("DOUBLE NOT NULL", "DOUBLE"),
@@ -317,7 +317,6 @@ public class CalciteQuery {
         return gson.toJson(result);
     }
 
-
     /**
      * Executes a SQL query on the database and returns the result as a JSON string.
      *
@@ -357,11 +356,11 @@ public class CalciteQuery {
                             case Types.VARCHAR:
                             case Types.LONGVARBINARY:
                             case Types.VARBINARY:
-                            case Types.BIGINT:
                             case Types.DECIMAL:
                             case Types.BINARY:
                                 jsonObject.addProperty(label, resultSet.getString(i));
                                 break;
+                            case Types.BIGINT:
                             case Types.INTEGER:
                             case Types.SMALLINT:
                             case Types.TINYINT:
@@ -401,7 +400,7 @@ public class CalciteQuery {
                                 break;
                         }
                     }
-                    jsonArray.add(jsonObject);
+                    jsonArray.add(jsonObject.toString());
                 }
                 resultSet.close();
                 statement.close();

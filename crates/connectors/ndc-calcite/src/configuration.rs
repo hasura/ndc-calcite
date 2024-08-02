@@ -222,6 +222,9 @@ pub struct CalciteConfiguration {
     /// tests. You can set the value to false in order to improve performance.
     pub fixes: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "supportJsonObject")]
+    pub supports_json_object: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     /// Many common JDBC jars are included by default. Some are not you can
     /// create a directory with additional required JARS and point to that
     /// directory here.

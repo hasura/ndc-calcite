@@ -59,8 +59,13 @@ fn select(
     for (key, field) in fields {
         match field {
             Field::Column { column, .. } => {
-                let field_statement = format!("'{}', {}.\"{}\"", key, table, column, );
-                field_statements.push(field_statement);
+                if configuration.supports_json_object.unwrap_or_else(|| false) {
+                    let field_statement = format!("'{}', {}.\"{}\"", key, table, column, );
+                    field_statements.push(field_statement);
+                } else {
+                    let field_statement = format!("{}.\"{}\"", table, column, );
+                    field_statements.push(field_statement);
+                }
                 // TODO: use nested fields???
             }
             Field::Relationship { relationship, .. } => {
@@ -70,9 +75,16 @@ fn select(
                     None => {}
                     Some(r) => {
                         for (pk, _) in &r.column_mapping {
-                            let field_statement = format!("'{}', {}.\"{}\"", pk, table, pk, );
-                            if !field_statements.contains(&field_statement) {
-                                field_statements.push(field_statement);
+                            if configuration.supports_json_object.unwrap_or_else(|| false) {
+                                let field_statement = format!("'{}', {}.\"{}\"", pk, table, pk, );
+                                if !field_statements.contains(&field_statement) {
+                                    field_statements.push(field_statement);
+                                }
+                            } else {
+                                let field_statement = format!("{}.\"{}\"", table, pk, );
+                                if !field_statements.contains(&field_statement) {
+                                    field_statements.push(field_statement);
+                                }
                             }
                         }
                     }
@@ -151,27 +163,49 @@ fn aggregates(configuration: &CalciteConfiguration, query: &models::Query) -> Ve
                         distinct,
                         field_path,
                     } => {
-                        format!(
-                            "'{}', COUNT({}\"{}\")",
-                            name,
-                            if *distinct { "DISTINCT " } else { "" },
-                            create_column_name(configuration, column, field_path),
-                        )
+                        if configuration.supports_json_object.unwrap_or_else(||false) {
+                            format!(
+                                "'{}', COUNT({}\"{}\")",
+                                name,
+                                if *distinct { "DISTINCT " } else { "" },
+                                create_column_name(configuration, column, field_path),
+                            )
+                        } else {
+                            format!(
+                                "COUNT({}\"{}\") AS \"{}\"",
+                                if *distinct { "DISTINCT " } else { "" },
+                                create_column_name(configuration, column, field_path),
+                                name
+                            )
+                        }
                     }
                     Aggregate::SingleColumn {
                         column,
                         field_path,
                         function,
                     } => {
-                        format!(
-                            "'{}', {}(\"{}\")",
-                            name,
-                            function,
-                            create_column_name(configuration, column, field_path),
-                        )
+                        if configuration.supports_json_object.unwrap_or_else(||false) {
+                            format!(
+                                "'{}', {}(\"{}\")",
+                                name,
+                                function,
+                                create_column_name(configuration, column, field_path),
+                            )
+                        } else {
+                            format!(
+                                "{}(\"{}\") AS \"{}\"",
+                                function,
+                                create_column_name(configuration, column, field_path),
+                                name,
+                            )
+                        }
                     }
                     Aggregate::StarCount {} => {
-                        format!("'{}', COUNT(*)", name)
+                        if configuration.supports_json_object.unwrap_or_else(||false) {
+                            format!("'{}', COUNT(*)", name)
+                        } else {
+                            format!("COUNT(*) AS \"{}\"", name)
+                        }
                     }
                 };
                 aggregates.push(aggregate_phrase);
@@ -421,7 +455,11 @@ pub fn query_collection(
         None => "".into(),
         Some(select) => {
             if select.is_empty() {
-                "'CONSTANT', 1".into()
+                if configuration.supports_json_object.unwrap_or_else(|| false) {
+                    "'CONSTANT', 1".into()
+                } else {
+                    "1 AS \"CONSTANT\"".into()
+                }
             } else {
                 select.to_string()
             }
@@ -476,12 +514,21 @@ pub fn query_collection(
         configuration.clone().metadata.unwrap().get(collection_name).unwrap()
     );
 
-    let query = format!(
-        "SELECT JSON_OBJECT({}) FROM {}{}{}{}{}",
-        select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
-    );
-    event!(Level::INFO, message = format!("Generated query {}", query));
-    query
+    if configuration.supports_json_object.unwrap_or_else(|| false) {
+        let query = format!(
+            "SELECT JSON_OBJECT({}) FROM {}{}{}{}{}",
+            select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
+        );
+        event!(Level::INFO, message = format!("Generated query {}", query));
+        query
+    } else {
+        let query = format!(
+            "SELECT {} FROM {}{}{}{}{}",
+            select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
+        );
+        event!(Level::INFO, message = format!("Generated query {}", query));
+        query
+    }
 }
 
 pub(crate) fn parse_query<'a>(configuration: &'a CalciteConfiguration, collection: &'a str, collection_relationships: &'a BTreeMap<String, Relationship>, arguments: &'a BTreeMap<String, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<String, Value>) -> Result<QueryComponents, QueryError> {

@@ -16,7 +16,7 @@ services:
     ports:
       - mode: ingress
         target: 8080
-        published: ${HASURA_CONNECTOR_PORT:8080}
+        published: ${HASURA_CONNECTOR_PORT:-8080}
         protocol: tcp
     volumes:
       - .:/etc/connector
