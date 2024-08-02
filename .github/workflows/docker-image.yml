@@ -19,7 +19,6 @@ jobs:
     - uses: docker/build-push-action@v5
       with:
         context: .
-        target: runtime
         tags: kstott/meta_connector:latest
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
