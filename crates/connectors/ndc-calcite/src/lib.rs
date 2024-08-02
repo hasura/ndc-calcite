@@ -48,6 +48,7 @@
 //! - HSQLDB
 //! - HIVE (JDBC)
 //! - H2
+//! - DB2
 //! - PostreSQL
 //!
 //! This NDC cannot run independently. Calcite is a JVM-based library. There is a companion java
