@@ -1,10 +1,10 @@
 {
     "version": "1.0",
-    "defaultSchema": "test",
+    "defaultSchema": "default",
     "schemas": [
       {
+        "name": "default",
         "type": "jdbc",
-        "name": "test",
         "jdbcUser": "<username>",
         "jdbcPassword": "<password>",
         "jdbcUrl": "jdbc:postgresql://<server>/<database>?sslmode=require",

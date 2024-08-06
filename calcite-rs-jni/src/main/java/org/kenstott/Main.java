@@ -15,7 +15,7 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/jdbc/model.json";
+        String modelPath = "../adapters/arrow/model.json";
         String username = "<username>";
         String password = "<password>";
 
@@ -26,7 +26,6 @@ public class Main {
             CalciteQuery query = new CalciteQuery();
             try (Connection calciteConnection = query.createCalciteConnection(modelPath)) {
                 System.out.println("Got connection");
-                query.getModels();
                 String x = query.getModels();
                 System.out.println(x);
 //               String zz = query.queryPlanModels("""
@@ -34,7 +33,7 @@ public class Main {
 // """);
 //                System.out.println(zz);
                 String z1 = query.queryModels("""
-SELECT COUNT(*) AS "count" FROM "test"."DataDictionary"  LIMIT 10
+SELECT * FROM "ARROW"."ALBUMS"  LIMIT 10
 """
                );
 

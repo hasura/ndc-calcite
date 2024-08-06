@@ -12,27 +12,8 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <arrow.version>16.1.0</arrow.version>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.opentelemetry</groupId>
-                <artifactId>opentelemetry-bom</artifactId>
-                <version>1.40.0</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.arrow</groupId>
-                <artifactId>arrow-bom</artifactId>
-                <version>${arrow.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -227,17 +208,29 @@
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>arrow-vector</artifactId>
-            <version>${arrow.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>arrow-format</artifactId>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.arrow</groupId>-->
+<!--            <artifactId>arrow-memory</artifactId>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.arrow.gandiva</groupId>
+            <artifactId>arrow-gandiva</artifactId>
+            <version>17.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.arrow</groupId>
             <artifactId>arrow-memory-netty</artifactId>
-            <version>${arrow.version}</version>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.arrow</groupId>
-            <artifactId>flight-core</artifactId>
-            <version>${arrow.version}</version>
+            <artifactId>arrow-compression</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
@@ -269,11 +262,6 @@
             <artifactId>mssql-jdbc</artifactId>
             <version>12.6.3.jre11</version>
         </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>athena-jdbc</artifactId>
-            <version>2024.25.1</version>
-        </dependency>
         <!--        <dependency>-->
         <!--            <groupId>com.clickhouse</groupId>-->
         <!--            <artifactId>clickhouse-jdbc</artifactId>-->
@@ -289,7 +277,6 @@
         <!--            <artifactId>derby</artifactId>-->
         <!--            <version>10.16.1.1</version>-->
         <!--        </dependency>-->
-
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -335,6 +322,25 @@
         </dependency>
 
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>1.40.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.arrow</groupId>
+                <artifactId>arrow-bom</artifactId>
+                <version>17.0.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
     <build>
         <extensions>
             <extension>

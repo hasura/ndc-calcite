@@ -5,9 +5,9 @@
     {
       "name": "default",
       "type": "custom",
-      "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
+      "factory": "org.apache.calcite.adapter.arrow.ArrowSchemaFactory",
       "operand": {
-        "directory": "/etc/connector/data/files"
+        "directory": "data/arrow"
       }
     }
   ]
