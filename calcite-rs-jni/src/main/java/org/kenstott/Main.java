@@ -15,7 +15,7 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/arrow/model.json";
+        String modelPath = "../adapters/kafka/model.json";
         String username = "<username>";
         String password = "<password>";
 
@@ -33,12 +33,16 @@ public class Main {
 // """);
 //                System.out.println(zz);
                 String z1 = query.queryModels("""
-SELECT * FROM "ARROW"."ALBUMS"  LIMIT 10
+SELECT STREAM * FROM "KAFKA"."TABLE_NAME"
 """
                );
-
                 System.out.println(z1);
-//                System.out.println(z2);
+
+                String z2 = query.queryModels("""
+SELECT STREAM * FROM "KAFKA"."TABLE_NAME" LIMIT 2
+"""
+                );
+                System.out.println(z2);
 
             }
             // You can now use 'calciteConnection' which is an instance of CalciteQuery

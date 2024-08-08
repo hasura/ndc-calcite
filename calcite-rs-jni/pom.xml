@@ -292,6 +292,12 @@
             <artifactId>sqlite-jdbc</artifactId>
             <version>3.36.0.3</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>3.8.0</version>
+        </dependency>
+
         <!-- H2 -->
         <!--        <dependency>-->
         <!--            <groupId>com.h2database</groupId>-->

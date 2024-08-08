@@ -10,11 +10,8 @@ import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.checkerframework.checker.units.qual.C;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -82,8 +79,8 @@ class TableMetadata {
     String schema;
     String name;
     String description;
-    ArrayList<String> primaryKeys = new ArrayList<String>();
-    ArrayList<ExportedKey> exportedKeys = new ArrayList<ExportedKey>();
+    ArrayList<String> primaryKeys = new ArrayList<>();
+    ArrayList<ExportedKey> exportedKeys = new ArrayList<>();
     Map<String, ColumnMetadata> columns = new HashMap<>();
 }
 
@@ -137,6 +134,7 @@ public class CalciteQuery {
                         while (schemas.next()) {
                             String schemaName = schemas.getString(1);
                             CalciteSchema schemaPlus = rootSchema.getSubSchema(schemaName, true);
+                            assert schemaPlus != null;
                             Schema schema = schemaPlus.schema;
                             DatabaseMetaData metaData1;
 
@@ -146,11 +144,19 @@ public class CalciteQuery {
                                 metaData1 = metaData;
                             }
                             final List<String> TABLE_TYPES = Arrays.asList("INDEX", "SEQUENCE", "SYSTEM INDEX", "SYSTEM TABLE", "SYSTEM TOAST INDEX");
-
+                            List<String> tableTypeList = new ArrayList<>();
                             try (ResultSet tableTypes = metaData1.getTableTypes()) {
                                 while (tableTypes.next()) {
                                     String tableType = tableTypes.getString(1);
-                                    if (!TABLE_TYPES.contains(tableType)) {
+                                    tableTypeList.add(tableType);
+                                }
+                            } catch (SQLException e) {
+                                throw new RuntimeException(e);
+                            }
+                            tableTypeList.add("STREAM");
+
+                            for (String tableType : tableTypeList) {
+                                if (!TABLE_TYPES.contains(tableType)) {
                                         try (ResultSet tables = metaData.getTables(catalog, schemaName, null, new String[]{tableType})) {
                                             while (tables.next()) {
                                                 String tableName = tables.getString("TABLE_NAME");
@@ -183,10 +189,9 @@ public class CalciteQuery {
                                                 list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys));
                                             }
                                         } catch (Exception e) {
-                                            // ignore
+                                            logger.info(e.getMessage());
                                         }
                                     }
-                                }
                             }
                         }
                     }
@@ -344,7 +349,6 @@ public class CalciteQuery {
                 JsonArray jsonArray = new JsonArray();
                 ResultSetMetaData metaData = resultSet.getMetaData();
                 int columnCount = metaData.getColumnCount();
-                ArrayList<String> results = new ArrayList<>();
                 while (resultSet.next()) {
                     JsonObject jsonObject = new JsonObject();
                     for (int i = 1; i <= columnCount; i++) {
@@ -400,6 +404,7 @@ public class CalciteQuery {
                                 break;
                         }
                     }
+                    System.out.println(jsonObject.toString());
                     jsonArray.add(jsonObject.toString());
                 }
                 resultSet.close();

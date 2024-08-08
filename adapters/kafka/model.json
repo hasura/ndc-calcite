@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "defaultSchema": "KAFKA",
+  "schemas": [
+    {
+      "name": "KAFKA",
+      "tables": [
+        {
+          "name": "TABLE_NAME",
+          "type": "custom",
+          "factory": "org.apache.calcite.adapter.kafka.KafkaTableFactory",
+          "operand": {
+            "bootstrap.servers": "localhost:9092",
+            "zookeeper.connect": "localhost:2181",
+            "topic.name": "foobar",
+            "consumer.params": {
+              "key.deserializer": "org.apache.kafka.common.serialization.ByteArrayDeserializer",
+              "value.deserializer": "org.apache.kafka.common.serialization.ByteArrayDeserializer",
+              "group.id": "your-group-id",
+              "enable.auto.commit": "true",
+              "auto.offset.reset": "latest"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
