@@ -180,6 +180,10 @@ pub struct Operand {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub username: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub keyspace: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "dataFormat")]
     pub data_format: Option<String>,
 }

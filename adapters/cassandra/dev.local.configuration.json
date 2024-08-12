@@ -1,0 +1,54 @@
+{
+  "version": "4",
+  "$schema": "schema.json",
+  "model": {
+    "version": "1.0",
+    "defaultSchema": "twissandra",
+    "schemas": [
+      {
+        "type": "custom",
+        "name": "twissandra",
+        "factory": "org.apache.calcite.adapter.cassandra.CassandraSchemaFactory",
+        "operand": {
+          "host": "localhost",
+          "port": 9042,
+          "password": "cassandra",
+          "username": "cassandra",
+          "keyspace": "my_keyspace"
+        }
+      }
+    ]
+  },
+  "model_file_path": "./model.json",
+  "fixes": true,
+  "metadata": {
+    "musicplaylist": {
+      "schema": "twissandra",
+      "name": "musicplaylist",
+      "columns": {
+        "songname": {
+          "name": "songname",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "songid": {
+          "name": "songid",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "singer": {
+          "name": "singer",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "year": {
+          "name": "year",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
+}

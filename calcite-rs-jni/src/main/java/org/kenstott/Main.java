@@ -15,39 +15,53 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/kafka/model.json";
+        String modelPath = "../adapters/cassandra/model.json";
         String username = "<username>";
         String password = "<password>";
+        Connection calciteConnection = null;
 
         try {
 //            String classpath = System.getProperty("java.class.path");
 //            System.out.println(classpath);
 //            AthenaRowCountExample.test();
             CalciteQuery query = new CalciteQuery();
-            try (Connection calciteConnection = query.createCalciteConnection(modelPath)) {
-                System.out.println("Got connection");
-                String x = query.getModels();
-                System.out.println(x);
+            calciteConnection = query.createCalciteConnection(modelPath);
+            System.out.println("Got connection");
+            String x = query.getModels();
+            System.out.println(x);
 //               String zz = query.queryPlanModels("""
 //
 // """);
 //                System.out.println(zz);
-                String z1 = query.queryModels("""
-SELECT STREAM * FROM "KAFKA"."TABLE_NAME"
-"""
-               );
-                System.out.println(z1);
+            String z1 = query.queryModels("""
+                    SELECT * FROM "twissandra"."musicplaylist" LIMIT 10
+                    """
+            );
+            System.out.println(z1);
 
-                String z2 = query.queryModels("""
-SELECT STREAM * FROM "KAFKA"."TABLE_NAME" LIMIT 2
-"""
-                );
-                System.out.println(z2);
-
-            }
+            String z2 = query.queryModels("""
+                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME" LIMIT 2
+                    """
+            );
+            System.out.println(z2);
+            query.queryModels("""
+                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME"
+                    """
+            );
+            calciteConnection.close();
+            calciteConnection = null;
             // You can now use 'calciteConnection' which is an instance of CalciteQuery
         } catch (Exception e) {
             System.out.println("An error occurred while creating Calcite connection: " + e.getMessage());
+        } finally {
+            if (calciteConnection != null) {
+                try {
+                    calciteConnection.close();
+                } catch (Exception e) {
+                    /* ignore */
+                }
+            }
+            System.exit(0);
         }
     }
 }

@@ -18,24 +18,6 @@
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "DEPTS": {
-      "schema": "SALES",
-      "name": "DEPTS",
-      "columns": {
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
     "SDEPTS": {
       "schema": "SALES",
       "name": "SDEPTS",
@@ -58,26 +40,6 @@
       "schema": "SALES",
       "name": "EMPS",
       "columns": {
-        "JOINEDAT": {
-          "name": "JOINEDAT",
-          "scalarType": "DATE",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
         "DEPTNO": {
           "name": "DEPTNO",
           "scalarType": "INTEGER",
@@ -93,6 +55,26 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
         "CITY": {
           "name": "CITY",
           "scalarType": "VARCHAR",
@@ -103,9 +85,27 @@
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "AGE": {
-          "name": "AGE",
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "DEPTS": {
+      "schema": "SALES",
+      "name": "DEPTS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
           "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
           "nullable": true
         }
       },

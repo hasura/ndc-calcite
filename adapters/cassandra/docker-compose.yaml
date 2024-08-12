@@ -1,0 +1,9 @@
+version: '3'
+services:
+  cassandra:
+    image: cassandra:4.0
+    container_name: my-cassandra
+    ports:
+      - "9042:9042"
+    environment:
+      - CASSANDRA_DC=DC1

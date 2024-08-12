@@ -12,6 +12,7 @@ import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.kenstott.SQLiteSqlDialect;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -89,6 +90,15 @@ class TableMetadata {
  */
 public class CalciteQuery {
 
+    static {
+        // This block runs when the class is loaded
+        Thread.currentThread().setContextClassLoader(CalciteQuery.class.getClassLoader());
+    }
+
+    public static void setClassLoader() {
+        Thread.currentThread().setContextClassLoader(CalciteQuery.class.getClassLoader());
+    }
+
     private static final Logger logger = LogManager.getLogger(CalciteQuery.class);
     Connection connection;
     CalciteSchema rootSchema;
@@ -107,6 +117,7 @@ public class CalciteQuery {
      * @return The created Calcite connection.
      */
     public Connection createCalciteConnection(String modelPath) {
+        CalciteQuery.setClassLoader();
         Span span = tracer.spanBuilder("createCalciteConnection").startSpan();
         span.addEvent(modelPath);
         logger.info(String.format("Using this model file: [%s]", modelPath));
@@ -310,16 +321,22 @@ public class CalciteQuery {
      * @return A JSON string representing the models.
      */
     public String getModels() throws SQLException {
-        Gson gson = new Gson();
         Span span = tracer.spanBuilder("getModels").startSpan();
-        Map<String, TableMetadata> result = new HashMap<>();
-        Collection<TableMetadata> tables = getTables();
-        for (TableMetadata table : tables) {
-            table.columns = getTableColumnInfo(table);
-            result.put(table.name, table);
+        try {
+            Gson gson = new Gson();
+            Map<String, TableMetadata> result = new HashMap<>();
+            Collection<TableMetadata> tables = getTables();
+            for (TableMetadata table : tables) {
+                table.columns = getTableColumnInfo(table);
+                result.put(table.name, table);
+            }
+            span.end();
+            return gson.toJson(result);
+        } catch(Exception e) {
+            System.out.println(e.toString());
+            span.setAttribute("Error", e.toString());
+            return "{\"error\":\"" + e + "\"}";
         }
-        span.end();
-        return gson.toJson(result);
     }
 
     /**
@@ -404,7 +421,7 @@ public class CalciteQuery {
                                 break;
                         }
                     }
-                    System.out.println(jsonObject.toString());
+                    // System.out.println(jsonObject.toString());
                     jsonArray.add(jsonObject.toString());
                 }
                 resultSet.close();
