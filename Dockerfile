@@ -57,7 +57,8 @@ RUN ./gradlew assemble
 
 WORKDIR /calcite-rs-jni
 RUN mvn -version
-RUN mvn clean install
+RUN mvn clean
+RUN mvn install -e -X
 RUN mvn dependency:copy-dependencies
 
 WORKDIR /app

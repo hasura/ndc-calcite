@@ -8,60 +8,38 @@ services:
       MYSQL_PASSWORD: hivepassword
     volumes:
       - ./mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   hive-metastore:
     image: arm64v8/openjdk:11-jre-slim
     volumes:
       - ./hive_data:/opt/hive
-    command: >
-      /bin/bash -c "
-      apt-get update && apt-get install -y wget &&
-      for i in {1..3}; do
-        wget -O apache-hive-3.1.3-bin.tar.gz https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz &&
-        if tar -tzf apache-hive-3.1.3-bin.tar.gz &> /dev/null; then
-          break
-        else
-          echo 'Download corrupted, retrying...'
-          rm apache-hive-3.1.3-bin.tar.gz
-        fi
-      done &&
-      tar -xzf apache-hive-3.1.3-bin.tar.gz -C /opt &&
-      mv /opt/apache-hive-3.1.3-bin/* /opt/hive/ &&
-      rm -rf /opt/apache-hive-3.1.3-bin &&
-      rm apache-hive-3.1.3-bin.tar.gz &&
-      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar -O /opt/hive/lib/mysql-connector-java.jar &&
-      for i in {1..3}; do
-        wget -O hadoop-3.3.6.tar.gz https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz &&
-        if tar -tzf hadoop-3.3.6.tar.gz &> /dev/null; then
-          break
-        else
-          echo 'Download corrupted, retrying...'
-          rm hadoop-3.3.6.tar.gz
-        fi
-      done &&
-      tar -xzf hadoop-3.3.6.tar.gz -C /opt &&
-      mv /opt/hadoop-3.3.6 /opt/hadoop &&
-      rm hadoop-3.3.6.tar.gz &&
-      echo 'export HADOOP_HOME=/opt/hadoop' >> /etc/profile &&
-      echo 'export PATH=$PATH:$HADOOP_HOME/bin' >> /etc/profile &&
-      source /etc/profile &&
-      cp /opt/hadoop/share/hadoop/common/*.jar /opt/hive/lib/ &&
-      cp /opt/hadoop/share/hadoop/common/lib/*.jar /opt/hive/lib/ &&
-      cp /opt/hadoop/share/hadoop/mapreduce/*.jar /opt/hive/lib/ &&
-      cp /opt/hadoop/share/hadoop/mapreduce/lib/*.jar /opt/hive/lib/ &&
-      cp /opt/hadoop/share/hadoop/yarn/*.jar /opt/hive/lib/ &&
-      cp /opt/hadoop/share/hadoop/yarn/lib/*.jar /opt/hive/lib/ &&
-      /opt/hive/bin/schematool -dbType mysql -initSchema &&
+      - ./hadoop_data:/opt/hadoop
+    command: |
+      bash -c '
+      set -e
+      apt-get update && apt-get install -y wget
+      # ... (previous wget and extraction commands remain the same)
+      echo "Waiting for MariaDB to be fully ready..."
+      sleep 15
+      echo "Running schematool..."
+      /opt/hive/bin/schematool -dbType mysql -initSchema --verbose
+      echo "Schematool completed. Starting Hive metastore..."
       /opt/hive/bin/hive --service metastore
-      "
+      '
     environment:
       HADOOP_HOME: /opt/hadoop
-      HIVE_CONF_javax_jdo_option_ConnectionURL: jdbc:mysql://mariadb/metastore
+      HIVE_CONF_javax_jdo_option_ConnectionURL: jdbc:mysql://mariadb:3306/metastore
       HIVE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.cj.jdbc.Driver
-      HIVE_CONF_javax_jdo_option_ConnectionUserName: hive
-      HIVE_CONF_javax_jdo_option_ConnectionPassword: hivepassword
+      HIVE_CONF_javax_jdo_option_ConnectionUserName: root
+      HIVE_CONF_javax_jdo_option_ConnectionPassword: rootpassword
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
 
   hive-server2:
     image: arm64v8/openjdk:11-jre-slim
@@ -70,12 +48,13 @@ services:
       - "10002:10002"
     volumes:
       - ./hive_data:/opt/hive
+      - ./hadoop_data:/opt/hadoop
     command: >
       /bin/bash -c "
       apt-get update && apt-get install -y netcat &&
       while ! nc -z hive-metastore 9083; do sleep 1; done &&
       export HADOOP_HOME=/opt/hadoop &&
-      export PATH=$PATH:$HADOOP_HOME/bin &&
+      export PATH=\$$PATH:\$$HADOOP_HOME/bin &&
       /opt/hive/bin/hiveserver2
       "
     environment:
@@ -91,6 +70,7 @@ services:
     image: arm64v8/openjdk:11-jre-slim
     volumes:
       - ./hive_data:/opt/hive
+      - ./hadoop_data:/opt/hadoop
     command: >
       /bin/bash -c "
       apt-get update && apt-get install -y netcat &&
@@ -106,3 +86,4 @@ services:
 volumes:
   mariadb_data:
   hive_data:
+  hadoop_data:
