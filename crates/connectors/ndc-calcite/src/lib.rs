@@ -9,10 +9,10 @@
 //! ~25 data sources including things like DB2, Teradata etc.
 //!
 //! The full list is here:
-//! - Arrow
-//! - Cassandra
-//! - CSV
-//! - JSON
+//! - Arrow (tested)
+//! - Cassandra (tested)
+//! - CSV (tested)
+//! - JSON (tested)
 //! - Druid
 //! - ElasticSearch
 //! - Geode
@@ -23,13 +23,13 @@
 //! - Solr
 //! - Spark
 //! - Splunk
-//! - Kafka
+//! - Kafka  (tested - with caveats)
 //! - SQLite
 //! - MSSql
 //! - MySql
 //! - Oracle
 //! - Netezza
-//! - Redshift
+//! - Redshift (tested)
 //! - Infobright
 //! - TeraData
 //! - Vertica
@@ -49,7 +49,7 @@
 //! - HIVE (JDBC)
 //! - H2
 //! - DB2
-//! - PostreSQL
+//! - PostreSQL (tested)
 //!
 //! This NDC cannot run independently. Calcite is a JVM-based library. There is a companion java
 //! project that generates a JAR to interface between this Rust-based NDC and Apache Calcite. The Java project
@@ -62,13 +62,12 @@
 //!
 //! - Include multiple data sources in a connection
 //! - Define cross-data source views in the connection configuration
-//! - Define star-schema aggregate views in the connection configuration
-//! - Caching
+//! - Define star-schema aggregate materialized views - to accelerate aggregates
 //! - Query planner and optimizer
 //!
 //! ## Limitations
 //!
-//! - Mutations are not supported
+//! - Mutations are not supported (possible - but not yet implemented)
 //! - Path'ed where-predicates (you can only use the root in List arguments)
 //! - Nested objects are not supported
 

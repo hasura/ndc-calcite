@@ -1,6 +1,6 @@
 //! Structures that represent the ndc-calcite metadata definition.
 //!
-//! See https://github.com/hasura/ndc-hub/blob/main/rfcs/0001-packaging.md#connector-definition.
+//! See <https://github.com/hasura/ndc-hub/blob/main/rfcs/0001-packaging.md#connector-definition>.
 
 use serde::{Deserialize, Serialize};
 
