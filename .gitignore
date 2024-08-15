@@ -15,3 +15,6 @@ target/
 *.rs.bk
 /adapters/file/model.json
 /config-test/*
+/adapters/hive/hive_data/
+/adapters/hive/mariadb_data/
+/adapters/hive/beeline.conf/
