@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Connect to the Hive server and execute Hive commands
-docker exec -i hive-server beeline -u jdbc:hive2://localhost:10000 << EOF
+docker exec -i hive-hive-server-1 beeline --verbose -u jdbc:hive2://localhost:10000 << EOF
 
 -- Create a new database
 CREATE DATABASE IF NOT EXISTS sample_db;

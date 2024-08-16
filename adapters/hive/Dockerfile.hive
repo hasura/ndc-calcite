@@ -1,0 +1,37 @@
+FROM apache/hive:4.0.0-beta-1
+
+USER root
+
+RUN mkdir -p /home/hive/.beeline && \
+    chown -R hive:hive /home/hive/.beeline && \
+    mkdir -p /opt/hive/logs && \
+    chown -R hive:hive /opt/hive/logs
+
+# Install basic utilities
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    curl \
+    telnet \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set bash as the default shell
+SHELL ["/bin/bash", "-c"]
+
+# Add PostgreSQL JDBC driver
+ADD https://jdbc.postgresql.org/download/postgresql-42.2.23.jar /opt/hive/lib/
+RUN chmod 644 /opt/hive/lib/postgresql-42.2.23.jar
+
+COPY start-hive.sh /start-hive.sh
+RUN chmod +x /start-hive.sh
+
+# Create a custom hive-site.xml
+COPY hive-site.xml /opt/hive/conf/hive-site.xml
+RUN chown hive:hive /opt/hive/conf/hive-site.xml
+
+USER hive
+
+ENV HADOOP_HOME=/opt/hadoop
+ENV HIVE_HOME=/opt/hive
+ENV PATH=$HADOOP_HOME/bin:$HIVE_HOME/bin:$PATH
+
+ENTRYPOINT ["/start-hive.sh"]

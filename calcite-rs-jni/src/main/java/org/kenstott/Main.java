@@ -34,20 +34,20 @@ public class Main {
 // """);
 //                System.out.println(zz);
             String z1 = query.queryModels("""
-                    SELECT * FROM "twissandra"."musicplaylist" LIMIT 10
+                    SELECT "article_id" FROM "twissandra"."news_articles_by_source" LIMIT 10
                     """
             );
             System.out.println(z1);
 
-            String z2 = query.queryModels("""
-                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME" LIMIT 2
-                    """
-            );
-            System.out.println(z2);
-            query.queryModels("""
-                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME"
-                    """
-            );
+//            String z2 = query.queryModels("""
+//                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME" LIMIT 2
+//                    """
+//            );
+//            System.out.println(z2);
+//            query.queryModels("""
+//                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME"
+//                    """
+//            );
             calciteConnection.close();
             calciteConnection = null;
             // You can now use 'calciteConnection' which is an instance of CalciteQuery

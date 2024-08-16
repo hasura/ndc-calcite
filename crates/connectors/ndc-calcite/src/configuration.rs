@@ -186,6 +186,22 @@ pub struct Operand {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "dataFormat")]
     pub data_format: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ssl: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub dc: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pathToCert")]
+    pub path_to_cert: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pathToPrivateKey")]
+    pub path_to_private_key: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "keyPassword")]
+    pub key_password: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pathToRootCert")]
+    pub path_to_root_cert: Option<String>,
 }
 
 /// Represents a model. This is explained in greater detail

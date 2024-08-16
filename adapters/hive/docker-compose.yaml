@@ -1,168 +1,43 @@
 services:
-  mariadb:
-    image: arm64v8/mariadb:10.5
+  postgres-db:
+    image: postgres:13
+    platform: linux/arm64
+    ports:
+      - "5432:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: metastore
-      MYSQL_USER: hive
-      MYSQL_PASSWORD: hivepassword
-    volumes:
-      - ./mariadb_data:/var/lib/mysql
-    healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - POSTGRES_DB=metastore
+      - POSTGRES_USER=hive
+      - POSTGRES_PASSWORD=hive
 
   hive-metastore:
-    image: arm64v8/openjdk:11-jre-slim
-    volumes:
-      - ./hive_data:/opt/hive
-      - ./hadoop_data:/opt/hadoop
-      - ./hive-site.xml:/opt/hive/conf/hive-site.xml
-    command: |
-      bash -c '
-      set -e
-      export HADOOP_HOME=/opt/hadoop
-      export HIVE_HOME=/opt/hive
-      export PATH=$PATH:/opt/hadoop/bin:/opt/hive/bin
-      
-      # Create a script to set environment variables
-      cat << EOF > /tmp/set_env.sh
-      export HADOOP_HOME=/opt/hadoop
-      export HIVE_HOME=/opt/hive
-      export PATH=\$PATH:/opt/hadoop/bin:/opt/hive/bin
-      EOF
-      
-      # Source the environment script in .bashrc
-      echo "source /tmp/set_env.sh" >> ~/.bashrc
-      
-      # Source the environment script for the current session
-      source /tmp/set_env.sh
-      
-      apt-get update && apt-get install -y wget
-      
-      # Download and extract Hive if not already present
-      if [ ! -f "/opt/hive/bin/hive" ]; then
-        for i in {1..3}; do
-          wget -O apache-hive-3.1.3-bin.tar.gz https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz
-          if tar -tzf apache-hive-3.1.3-bin.tar.gz &> /dev/null; then
-            break
-          else
-            echo "Download corrupted, retrying..."
-            rm apache-hive-3.1.3-bin.tar.gz
-          fi
-        done
-        tar -xzf apache-hive-3.1.3-bin.tar.gz
-        # Move everything except the conf directory
-        mv apache-hive-3.1.3-bin/bin apache-hive-3.1.3-bin/lib apache-hive-3.1.3-bin/scripts /opt/hive/
-        # Only copy conf files that dont already exist
-        cp -n apache-hive-3.1.3-bin/conf/* /opt/hive/conf/
-        rm -rf apache-hive-3.1.3-bin apache-hive-3.1.3-bin.tar.gz
-      fi
-      
-      # Ensure Hive lib directory exists
-      mkdir -p /opt/hive/lib
-      
-      # Download and extract Hadoop if not already present
-      if [ ! -f "$HADOOP_HOME/bin/hadoop" ]; then
-        for i in {1..3}; do
-          wget -O hadoop-3.3.6.tar.gz https://archive.apache.org/dist/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz
-          if tar -tzf hadoop-3.3.6.tar.gz &> /dev/null; then
-            break
-          else
-            echo "Download corrupted, retrying..."
-            rm hadoop-3.3.6.tar.gz
-          fi
-        done
-        tar -xzf hadoop-3.3.6.tar.gz
-        mv hadoop-3.3.6/* $HADOOP_HOME/
-        rm -rf hadoop-3.3.6 hadoop-3.3.6.tar.gz
-      fi
-      
-      # Download MySQL connector if not present
-      if [ ! -f "/opt/hive/lib/mysql-connector-java.jar" ]; then
-        wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.28/mysql-connector-java-8.0.28.jar -O /opt/hive/lib/mysql-connector-java.jar
-      fi
-      
-      # Copy Hadoop JARs to Hive lib
-      find $HADOOP_HOME -name "*.jar" -exec cp {} /opt/hive/lib/ \;
-      
-      # Ensure hive-exec-*.jar is present
-      if [ ! -f "/opt/hive/lib/hive-exec-*.jar" ]; then
-        echo "hive-exec-*.jar is missing. Hive installation may be incomplete."
-        exit 1
-      fi
-      
-      echo "Waiting for MariaDB to be fully ready..."
-      sleep 30  # Increased wait time
-      echo "Running schematool..."
-      /opt/hive/bin/schematool -dbType mysql -initSchema --verbose || {
-        echo "Schema initialization failed. Checking for file casing issues..."
-        if [ -f "/var/lib/mysql/metastore/KEY_CONSTRAINTS.frm" ]; then
-          mv /var/lib/mysql/metastore/KEY_CONSTRAINTS.frm /var/lib/mysql/metastore/key_constraints.frm
-          echo "File casing corrected. Retrying schema initialization..."
-          /opt/hive/bin/schematool -dbType mysql -initSchema --verbose
-        else
-          echo "File casing issue not found. Please check the logs for more details."
-          exit 1
-        fi
-      }
-      echo "Schematool completed. Starting Hive metastore..."
-      /opt/hive/bin/hive --service metastore
-      '
-    environment:
-      HADOOP_HOME: /opt/hadoop
-      HIVE_HOME: /opt/hive
-      PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hadoop/bin:/opt/hive/bin
+    build:
+      context: .
+      dockerfile: Dockerfile.hive
+    platform: linux/arm64
+    ports:
+      - "9083:9083"
     depends_on:
-      mariadb:
-        condition: service_healthy
+      - postgres-db
+    command: ["metastore"]
 
-  hive-server2:
-    image: arm64v8/openjdk:11-jre-slim
+  hive-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.hive
+    platform: linux/arm64
     ports:
       - "10000:10000"
       - "10002:10002"
-    volumes:
-      - ./hive_data:/opt/hive
-      - ./hadoop_data:/opt/hadoop
-    command: >
-      /bin/bash -c "
-      apt-get update && apt-get install -y netcat &&
-      while ! nc -z hive-metastore 9083; do sleep 1; done &&
-      export HADOOP_HOME=/opt/hadoop &&
-      export PATH=\$$PATH:\$$HADOOP_HOME/bin &&
-      /opt/hive/bin/hiveserver2
-      "
-    environment:
-      HADOOP_HOME: /opt/hadoop
-      HIVE_HOME: /opt/hive
-      HIVE_CONF_javax_jdo_option_ConnectionURL: jdbc:mysql://mariadb/metastore
-      HIVE_CONF_javax_jdo_option_ConnectionDriverName: com.mysql.cj.jdbc.Driver
-      HIVE_CONF_javax_jdo_option_ConnectionUserName: hive
-      HIVE_CONF_javax_jdo_option_ConnectionPassword: hivepassword
     depends_on:
       - hive-metastore
+    command: ["hiveserver2"]
 
   beeline:
-    image: arm64v8/openjdk:11-jre-slim
-    volumes:
-      - ./hive_data:/opt/hive
-      - ./hadoop_data:/opt/hadoop
-    command: >
-      /bin/bash -c "
-      apt-get update && apt-get install -y netcat &&
-      while ! nc -z hive-server2 10000; do sleep 1; done &&
-      echo 'Beeline is ready. You can now use Docker exec to run Beeline commands.'
-      tail -f /dev/null
-      "
-    environment:
-      HADOOP_HOME: /opt/hadoop
+    build:
+      context: .
+      dockerfile: Dockerfile.hive
+    platform: linux/arm64
     depends_on:
-      - hive-server2
-
-volumes:
-  mariadb_data:
-  hive_data:
-  hadoop_data:
+      - hive-server
+    entrypoint: [ "/bin/bash" ]
+    command: [ "-c", "sleep infinity" ]
