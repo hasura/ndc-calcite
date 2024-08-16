@@ -53,6 +53,7 @@ url = "2.5.0"
 dotenv = "0.15.0"
 once_cell = "1.19.0"
 anyhow = "1.0.86"
+log = "0.4.22"
 
 [dev-dependencies]
 axum-test-helper = "0.3.0"

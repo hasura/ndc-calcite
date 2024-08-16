@@ -63,7 +63,7 @@ fn select(
                     let field_statement = format!("'{}', {}.\"{}\"", key, table, column, );
                     field_statements.push(field_statement);
                 } else {
-                    let field_statement = format!("{}.\"{}\"", table, column, );
+                    let field_statement = format!("{}.\"{}\" AS \"{}\"", table, column, key);
                     field_statements.push(field_statement);
                 }
                 // TODO: use nested fields???

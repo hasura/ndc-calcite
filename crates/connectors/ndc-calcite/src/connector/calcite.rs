@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 use std::{env, fs};
 use std::path::Path;
-
+use log::{info, error};
 use async_trait::async_trait;
 use dotenv;
 use jni::objects::GlobalRef;
@@ -266,6 +266,7 @@ impl Connector for Calcite {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::QueryResponse>, QueryError> {
+        // println!("{:?}", serde_json::to_string_pretty(&request));
         let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
         let mut row_sets = vec![];
         let input_map: BTreeMap<String, Argument> = request.arguments.clone();
@@ -278,7 +279,7 @@ impl Connector for Calcite {
                 )
                 .collect();
         for variables in &variable_sets {
-            let row_set = execute_query_with_variables(
+            let row_set = match execute_query_with_variables(
                 configuration,
                 &request.collection,
                 &relationship_arguments,
@@ -287,9 +288,22 @@ impl Connector for Calcite {
                 variables,
                 &state,
                 &false
-            )?;
+            ) {
+                Ok(row_set) => {
+                    info!("execute_query_with_variables was successful");
+                    row_set
+                },
+                Err(e) => {
+                    error!("Error executing query: {:?}", e);
+                    return Err(e.into());
+                },
+            };
+            // println!("Get row set");
+            // println!("{:?}", serde_json::to_string_pretty(&row_set));
             row_sets.push(row_set);
+            // println!("Pushed row set");
         }
+        // println!("Returning row sets");
         Ok(models::QueryResponse(row_sets).into())
     }
 }

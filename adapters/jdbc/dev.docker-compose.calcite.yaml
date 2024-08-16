@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile_inline: |-
-        FROM jdbc_connector:latest
+        FROM meta_connector:latest
         COPY ./ /etc/connector
     develop:
       watch:

@@ -1091,6 +1091,7 @@ dependencies = [
  "http",
  "indexmap 2.2.6",
  "jni",
+ "log",
  "mime",
  "ndc-models",
  "ndc-sdk",

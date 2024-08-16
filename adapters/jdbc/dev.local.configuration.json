@@ -3,154 +3,242 @@
   "$schema": "schema.json",
   "model": {
     "version": "1.0",
-    "defaultSchema": "test",
+    "defaultSchema": "DEFAULT",
     "schemas": [
       {
         "type": "jdbc",
-        "name": "test",
-        "jdbcUser": "kenstott",
-        "jdbcPassword": "rN8qOh6AEMCP",
-        "jdbcUrl": "jdbc:postgresql://ep-yellow-salad-961725.us-west-2.aws.neon.tech/crisp-sheepdog-47_db_3216533?sslmode=require",
-        "jdbcCatalog": "public"
+        "name": "crm",
+        "jdbcUrl": "jdbc:redshift://default-workgroup.528956693660.us-east-2.redshift-serverless.amazonaws.com:5439/dev?user=redshiftdev&password=#Hasura2024!&currentSchema=crm"
+      },
+      {
+        "type": "jdbc",
+        "name": "emr",
+        "jdbcUrl": "jdbc:redshift://default-workgroup.528956693660.us-east-2.redshift-serverless.amazonaws.com:5439/dev?user=redshiftdev&password=#Hasura2024!&currentSchema=emr"
       }
     ]
   },
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "Stores": {
-      "schema": "test",
-      "name": "Stores",
+    "customers": {
+      "schema": "crm",
+      "name": "customers",
       "columns": {
-        "squareMeters": {
-          "name": "squareMeters",
-          "scalarType": "DOUBLE",
-          "nullable": true
+        "customer_id": {
+          "name": "customer_id",
+          "scalarType": "INTEGER",
+          "nullable": false
         },
-        "state": {
-          "name": "state",
+        "email": {
+          "name": "email",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "storeKey": {
-          "name": "storeKey",
+        "last_name": {
+          "name": "last_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "first_name": {
+          "name": "first_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "registration_date": {
+          "name": "registration_date",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [
+        "customer_id"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "crm",
+          "pkTableName": "customers",
+          "pkColumnName": "customer_id",
+          "pkName": "customers_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "crm",
+          "fkTableName": "contacts",
+          "fkColumnName": "customer_id",
+          "fkName": "contacts_customer_id_fkey"
+        },
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "crm",
+          "pkTableName": "customers",
+          "pkColumnName": "customer_id",
+          "pkName": "customers_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "crm",
+          "fkTableName": "orders",
+          "fkColumnName": "customer_id",
+          "fkName": "orders_customer_id_fkey"
+        },
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "crm",
+          "pkTableName": "customers",
+          "pkColumnName": "customer_id",
+          "pkName": "customers_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "crm",
+          "fkTableName": "tasks",
+          "fkColumnName": "customer_id",
+          "fkName": "tasks_customer_id_fkey"
+        }
+      ]
+    },
+    "medications": {
+      "schema": "emr",
+      "name": "medications",
+      "columns": {
+        "medication_id": {
+          "name": "medication_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "patient_id": {
+          "name": "patient_id",
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "openDate": {
-          "name": "openDate",
-          "scalarType": "TIMESTAMP",
+        "prescription_date": {
+          "name": "prescription_date",
+          "scalarType": "DATE",
           "nullable": true
         },
-        "country": {
-          "name": "country",
+        "dosage": {
+          "name": "dosage",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "notes": {
+          "name": "notes",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "medication_name": {
+          "name": "medication_name",
           "scalarType": "VARCHAR",
           "nullable": true
         }
       },
-      "primaryKeys": [],
+      "primaryKeys": [
+        "medication_id"
+      ],
       "exportedKeys": []
     },
-    "DataDictionary": {
-      "schema": "test",
-      "name": "DataDictionary",
+    "doctors": {
+      "schema": "emr",
+      "name": "doctors",
       "columns": {
-        "table": {
-          "name": "table",
+        "phone_number": {
+          "name": "phone_number",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "field": {
-          "name": "field",
+        "specialization": {
+          "name": "specialization",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "description": {
-          "name": "description",
+        "address": {
+          "name": "address",
           "scalarType": "VARCHAR",
           "nullable": true
+        },
+        "first_name": {
+          "name": "first_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "doctor_id": {
+          "name": "doctor_id",
+          "scalarType": "INTEGER",
+          "nullable": false
         }
       },
-      "primaryKeys": [],
-      "exportedKeys": []
+      "primaryKeys": [
+        "doctor_id"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "emr",
+          "pkTableName": "doctors",
+          "pkColumnName": "doctor_id",
+          "pkName": "doctors_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "emr",
+          "fkTableName": "appointments",
+          "fkColumnName": "doctor_id",
+          "fkName": "fk_appointments_doctors"
+        }
+      ]
     },
-    "Customers": {
-      "schema": "test",
-      "name": "Customers",
+    "orders": {
+      "schema": "crm",
+      "name": "orders",
       "columns": {
-        "birthday": {
-          "name": "birthday",
-          "scalarType": "TIMESTAMP",
+        "order_id": {
+          "name": "order_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "order_date": {
+          "name": "order_date",
+          "scalarType": "DATE",
           "nullable": true
         },
-        "city": {
-          "name": "city",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "name": {
-          "name": "name",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "state": {
-          "name": "state",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "zipCode": {
-          "name": "zipCode",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "continent": {
-          "name": "continent",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "country": {
-          "name": "country",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "stateCode": {
-          "name": "stateCode",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "gender": {
-          "name": "gender",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "customerKey": {
-          "name": "customerKey",
+        "customer_id": {
+          "name": "customer_id",
           "scalarType": "INTEGER",
           "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "z": {
-      "schema": "test",
-      "name": "z",
-      "columns": {
-        "z": {
-          "name": "z",
-          "scalarType": "BOOLEAN",
+        },
+        "total_amount": {
+          "name": "total_amount",
+          "scalarType": "FLOAT",
           "nullable": true
         }
       },
-      "primaryKeys": [],
-      "exportedKeys": []
+      "primaryKeys": [
+        "order_id"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "crm",
+          "pkTableName": "orders",
+          "pkColumnName": "order_id",
+          "pkName": "orders_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "crm",
+          "fkTableName": "order_items",
+          "fkColumnName": "order_id",
+          "fkName": "order_items_order_id_fkey"
+        }
+      ]
     },
-    "Sales": {
-      "schema": "test",
-      "name": "Sales",
+    "order_items": {
+      "schema": "crm",
+      "name": "order_items",
       "columns": {
-        "lineItem": {
-          "name": "lineItem",
+        "order_id": {
+          "name": "order_id",
           "scalarType": "INTEGER",
           "nullable": true
         },
@@ -159,125 +247,320 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "deliveryDate": {
-          "name": "deliveryDate",
-          "scalarType": "TIMESTAMP",
+        "item_amount": {
+          "name": "item_amount",
+          "scalarType": "FLOAT",
           "nullable": true
         },
-        "productKey": {
-          "name": "productKey",
+        "order_item_id": {
+          "name": "order_item_id",
           "scalarType": "INTEGER",
-          "nullable": true
+          "nullable": false
         },
-        "orderNumber": {
-          "name": "orderNumber",
+        "product_id": {
+          "name": "product_id",
           "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "orderDate": {
-          "name": "orderDate",
-          "scalarType": "TIMESTAMP",
-          "nullable": true
-        },
-        "storeKey": {
-          "name": "storeKey",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "customerKey": {
-          "name": "customerKey",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "currencyCode": {
-          "name": "currencyCode",
-          "scalarType": "VARCHAR",
           "nullable": true
         }
       },
-      "primaryKeys": [],
+      "primaryKeys": [
+        "order_item_id"
+      ],
       "exportedKeys": []
     },
-    "Products": {
-      "schema": "test",
-      "name": "Products",
+    "contacts": {
+      "schema": "crm",
+      "name": "contacts",
       "columns": {
-        "unitPriceUSD": {
-          "name": "unitPriceUSD",
-          "scalarType": "DOUBLE",
-          "nullable": true
+        "contact_id": {
+          "name": "contact_id",
+          "scalarType": "INTEGER",
+          "nullable": false
         },
-        "productName": {
-          "name": "productName",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "category": {
-          "name": "category",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "categoryKey": {
-          "name": "categoryKey",
+        "customer_id": {
+          "name": "customer_id",
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "unitCostUSD": {
-          "name": "unitCostUSD",
-          "scalarType": "DOUBLE",
-          "nullable": true
-        },
-        "subcategory": {
-          "name": "subcategory",
+        "contact_type": {
+          "name": "contact_type",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "brand": {
-          "name": "brand",
+        "contact_date": {
+          "name": "contact_date",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "notes": {
+          "name": "notes",
           "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "color": {
-          "name": "color",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "productKey": {
-          "name": "productKey",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "subcategoryKey": {
-          "name": "subcategoryKey",
-          "scalarType": "INTEGER",
           "nullable": true
         }
       },
-      "primaryKeys": [],
+      "primaryKeys": [
+        "contact_id"
+      ],
       "exportedKeys": []
     },
-    "ExchangeRates": {
-      "schema": "test",
-      "name": "ExchangeRates",
+    "tasks": {
+      "schema": "crm",
+      "name": "tasks",
       "columns": {
-        "exchange": {
-          "name": "exchange",
-          "scalarType": "DOUBLE",
+        "task_status": {
+          "name": "task_status",
+          "scalarType": "VARCHAR",
           "nullable": true
         },
-        "date": {
-          "name": "date",
+        "customer_id": {
+          "name": "customer_id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "task_id": {
+          "name": "task_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "task_description": {
+          "name": "task_description",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "task_date": {
+          "name": "task_date",
+          "scalarType": "DATE",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [
+        "task_id"
+      ],
+      "exportedKeys": []
+    },
+    "medical_conditions": {
+      "schema": "emr",
+      "name": "medical_conditions",
+      "columns": {
+        "condition_name": {
+          "name": "condition_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "notes": {
+          "name": "notes",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "condition_id": {
+          "name": "condition_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "diagnosis_date": {
+          "name": "diagnosis_date",
+          "scalarType": "DATE",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [
+        "condition_id"
+      ],
+      "exportedKeys": []
+    },
+    "products": {
+      "schema": "crm",
+      "name": "products",
+      "columns": {
+        "price": {
+          "name": "price",
+          "scalarType": "FLOAT",
+          "nullable": true
+        },
+        "product_id": {
+          "name": "product_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "description": {
+          "name": "description",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "product_name": {
+          "name": "product_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [
+        "product_id"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "crm",
+          "pkTableName": "products",
+          "pkColumnName": "product_id",
+          "pkName": "products_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "crm",
+          "fkTableName": "order_items",
+          "fkColumnName": "product_id",
+          "fkName": "order_items_product_id_fkey"
+        }
+      ]
+    },
+    "appointments": {
+      "schema": "emr",
+      "name": "appointments",
+      "columns": {
+        "notes": {
+          "name": "notes",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "appointment_id": {
+          "name": "appointment_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "doctor_id": {
+          "name": "doctor_id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "appointment_date": {
+          "name": "appointment_date",
           "scalarType": "TIMESTAMP",
           "nullable": true
         },
-        "currency": {
-          "name": "currency",
+        "reason": {
+          "name": "reason",
           "scalarType": "VARCHAR",
           "nullable": true
         }
       },
-      "primaryKeys": [],
+      "primaryKeys": [
+        "appointment_id"
+      ],
       "exportedKeys": []
+    },
+    "patients": {
+      "schema": "emr",
+      "name": "patients",
+      "columns": {
+        "first_name": {
+          "name": "first_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "date_of_birth": {
+          "name": "date_of_birth",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "address": {
+          "name": "address",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "gender": {
+          "name": "gender",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [
+        "patient_id"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "emr",
+          "pkTableName": "patients",
+          "pkColumnName": "patient_id",
+          "pkName": "patients_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "emr",
+          "fkTableName": "appointments",
+          "fkColumnName": "patient_id",
+          "fkName": "fk_appointments_patients"
+        },
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "emr",
+          "pkTableName": "patients",
+          "pkColumnName": "patient_id",
+          "pkName": "patients_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "emr",
+          "fkTableName": "medical_conditions",
+          "fkColumnName": "patient_id",
+          "fkName": "fk_medical_conditions_patients"
+        },
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "emr",
+          "pkTableName": "patients",
+          "pkColumnName": "patient_id",
+          "pkName": "patients_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "emr",
+          "fkTableName": "medical_conditions",
+          "fkColumnName": "patient_id",
+          "fkName": "medical_conditions_patient_id_fkey"
+        },
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "emr",
+          "pkTableName": "patients",
+          "pkColumnName": "patient_id",
+          "pkName": "patients_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "emr",
+          "fkTableName": "medications",
+          "fkColumnName": "patient_id",
+          "fkName": "fk_medications_patients"
+        },
+        {
+          "pkTableCatalog": "dev",
+          "pkTableSchema": "emr",
+          "pkTableName": "patients",
+          "pkColumnName": "patient_id",
+          "pkName": "patients_pkey",
+          "fkTableCatalog": "dev",
+          "fkTableSchema": "emr",
+          "fkTableName": "medications",
+          "fkColumnName": "patient_id",
+          "fkName": "medications_patient_id_fkey"
+        }
+      ]
     }
   }
 }

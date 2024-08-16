@@ -18,3 +18,4 @@ target/
 /adapters/hive/hive_data/
 /adapters/hive/mariadb_data/
 /adapters/hive/beeline.conf/
+/adapters/hive/hadoop_data/
