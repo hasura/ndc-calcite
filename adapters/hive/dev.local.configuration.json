@@ -1,0 +1,109 @@
+{
+  "version": "4",
+  "$schema": "schema.json",
+  "model": {
+    "version": "1.0",
+    "defaultSchema": "hive",
+    "schemas": [
+      {
+        "type": "jdbc",
+        "name": "hive",
+        "jdbcUrl": "jdbc:hive2://192.168.86.233:10000",
+        "jdbcSchema": "default"
+      }
+    ]
+  },
+  "model_file_path": "./model.json",
+  "fixes": true,
+  "metadata": {
+    "tasks": {
+      "schema": "hive",
+      "name": "tasks",
+      "columns": {
+        "assigned_to": {
+          "name": "assigned_to",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "status": {
+          "name": "status",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "task_name": {
+          "name": "task_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "project_id": {
+          "name": "project_id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "task_id": {
+          "name": "task_id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "employees": {
+      "schema": "hive",
+      "name": "employees",
+      "columns": {
+        "name": {
+          "name": "name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "id": {
+          "name": "id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "age": {
+          "name": "age",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "department": {
+          "name": "department",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "projects": {
+      "schema": "hive",
+      "name": "projects",
+      "columns": {
+        "project_name": {
+          "name": "project_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "project_id": {
+          "name": "project_id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "end_date": {
+          "name": "end_date",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "start_date": {
+          "name": "start_date",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
+}

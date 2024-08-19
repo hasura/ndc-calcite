@@ -179,24 +179,26 @@ public class CalciteQuery {
                                                         primaryKeys.add(pks.getString("COLUMN_NAME"));
                                                     }
                                                 }
-                                                try (ResultSet eks = metaData1.getExportedKeys(catalog, schemaName, tableName)) {
-                                                    while (eks.next()) {
-                                                        exportedKeys.add(
-                                                                new ExportedKey(
-                                                                        eks.getString("PKTABLE_CAT"),
-                                                                        eks.getString("PKTABLE_SCHEM"),
-                                                                        eks.getString("PKTABLE_NAME"),
-                                                                        eks.getString("PKCOLUMN_NAME"),
-                                                                        eks.getString("PK_NAME"),
-                                                                        eks.getString("FKTABLE_CAT"),
-                                                                        eks.getString("FKTABLE_SCHEM"),
-                                                                        eks.getString("FKTABLE_NAME"),
-                                                                        eks.getString("FKCOLUMN_NAME"),
-                                                                        eks.getString("FK_NAME")
-                                                                )
-                                                        );
+                                                try {
+                                                    try (ResultSet eks = metaData1.getExportedKeys(catalog, schemaName, tableName)) {
+                                                        while (eks.next()) {
+                                                            exportedKeys.add(
+                                                                    new ExportedKey(
+                                                                            eks.getString("PKTABLE_CAT"),
+                                                                            eks.getString("PKTABLE_SCHEM"),
+                                                                            eks.getString("PKTABLE_NAME"),
+                                                                            eks.getString("PKCOLUMN_NAME"),
+                                                                            eks.getString("PK_NAME"),
+                                                                            eks.getString("FKTABLE_CAT"),
+                                                                            eks.getString("FKTABLE_SCHEM"),
+                                                                            eks.getString("FKTABLE_NAME"),
+                                                                            eks.getString("FKCOLUMN_NAME"),
+                                                                            eks.getString("FK_NAME")
+                                                                    )
+                                                            );
+                                                        }
                                                     }
-                                                }
+                                                } catch (SQLException e) { /* ignore */ }
                                                 list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys));
                                             }
                                         } catch (Exception e) {

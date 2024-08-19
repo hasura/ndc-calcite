@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "defaultSchema": "hive",
+  "schemas": [
+    {
+      "name": "hive",
+      "type": "jdbc",
+        "jdbcUrl": "jdbc:hive2://192.168.86.233:10000",
+        "jdbcSchema": "default"
+      }
+  ]
+}

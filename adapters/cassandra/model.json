@@ -7,11 +7,14 @@
       "type": "custom",
       "factory": "org.apache.calcite.adapter.cassandra.CassandraSchemaFactory",
       "operand": {
-        "host": "localhost",
-        "keyspace": "my_keyspace",
-        "username": "cassandra",
-        "password": "cassandra",
-        "port": 9042
+        "host": "cassandra.us-west-1.amazonaws.com",
+        "keyspace": "content_data",
+        "username": "athenauser-at-528956693660",
+        "password": "thfXHbP4KMRH8Je//SsoISZyOq/SNE3ltg40WIreGhcfGNVKsLqFwZwSQfc=",
+        "port": 9142,
+        "ssl": true,
+        "dc": "us-west-1",
+        "pathToRootCert": "/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/cassandra/root.crt"
       }
     }
   ]
