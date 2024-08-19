@@ -34,7 +34,7 @@ public class Main {
 // """);
 //                System.out.println(zz);
             String z1 = query.queryModels("""
-                    SELECT "a" FROM "sales"."test" LIMIT 10
+                    SELECT "model_file_path" FROM "sales"."configuration"
                     """
             );
             System.out.println(z1);
