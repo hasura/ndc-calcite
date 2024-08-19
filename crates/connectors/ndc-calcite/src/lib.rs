@@ -19,12 +19,11 @@
 //! - InnoDB (MySQL)
 //! - MongoDB
 //! - Redis
-//! - Hive Files
 //! - Solr
 //! - Spark
 //! - Splunk
 //! - Kafka  (tested - with caveats)
-//! - SQLite
+//! - SQLite (tested)
 //! - MSSql
 //! - MySql
 //! - Oracle
@@ -46,7 +45,7 @@
 //! - Ingres
 //! - Informix
 //! - HSQLDB
-//! - HIVE (JDBC)
+//! - HIVE (JDBC, tested)
 //! - H2
 //! - DB2
 //! - PostreSQL (tested)
