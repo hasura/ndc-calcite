@@ -15,7 +15,7 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/cassandra/model.json";
+        String modelPath = "../adapters/file/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -34,7 +34,7 @@ public class Main {
 // """);
 //                System.out.println(zz);
             String z1 = query.queryModels("""
-                    SELECT "article_id" FROM "twissandra"."news_articles_by_source" LIMIT 10
+                    SELECT "a" FROM "sales"."test" LIMIT 10
                     """
             );
             System.out.println(z1);

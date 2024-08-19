@@ -1,43 +1,55 @@
+version: '3'
+
 services:
-  postgres-db:
-    image: postgres:13
+  hive:
+    image: openjdk:8-jdk-slim
     platform: linux/arm64
-    ports:
-      - "5432:5432"
+    volumes:
+      - ./hive_data:/opt/hive_data
     environment:
-      - POSTGRES_DB=metastore
-      - POSTGRES_USER=hive
-      - POSTGRES_PASSWORD=hive
-
-  hive-metastore:
-    build:
-      context: .
-      dockerfile: Dockerfile.hive
-    platform: linux/arm64
-    ports:
-      - "9083:9083"
-    depends_on:
-      - postgres-db
-    command: ["metastore"]
-
-  hive-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.hive
-    platform: linux/arm64
+      - HIVE_VERSION=2.3.9
     ports:
       - "10000:10000"
-      - "10002:10002"
-    depends_on:
-      - hive-metastore
-    command: ["hiveserver2"]
+      - "9083:9083"
+    command: >
+      /bin/bash -c "
+      apt-get update && 
+      apt-get install -y wget procps &&
+      wget https://downloads.apache.org/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz &&
+      tar -xzf apache-hive-2.3.9-bin.tar.gz &&
+      mv apache-hive-2.3.9-bin /opt/hive &&
+      rm apache-hive-2.3.9-bin.tar.gz &&
+      echo 'export HIVE_HOME=/opt/hive' >> ~/.bashrc &&
+      echo 'export PATH=$$PATH:$$HIVE_HOME/bin' >> ~/.bashrc &&
+      source ~/.bashrc &&
+      sed -i 's|$${system:java.io.tmpdir}|/opt/hive_data|g' /opt/hive/conf/hive-site.xml &&
+      sed -i 's|$${system:user.name}|root|g' /opt/hive/conf/hive-site.xml &&
+      /opt/hive/bin/schematool -dbType derby -initSchema &&
+      /opt/hive/bin/hive --service metastore &
+      sleep 10 &&
+      /opt/hive/bin/hive --service hiveserver2
+      "
 
-  beeline:
-    build:
-      context: .
-      dockerfile: Dockerfile.hive
+  hive-beeline:
+    image: openjdk:8-jdk-slim
     platform: linux/arm64
     depends_on:
-      - hive-server
-    entrypoint: [ "/bin/bash" ]
-    command: [ "-c", "sleep infinity" ]
+      - hive
+    volumes:
+      - ./hive_data:/opt/hive_data
+    environment:
+      - HIVE_VERSION=2.3.9
+    command: >
+      /bin/bash -c "
+      apt-get update && 
+      apt-get install -y wget procps &&
+      wget https://downloads.apache.org/hive/hive-2.3.9/apache-hive-2.3.9-bin.tar.gz &&
+      tar -xzf apache-hive-2.3.9-bin.tar.gz &&
+      mv apache-hive-2.3.9-bin /opt/hive &&
+      rm apache-hive-2.3.9-bin.tar.gz &&
+      echo 'export HIVE_HOME=/opt/hive' >> ~/.bashrc &&
+      echo 'export PATH=$$PATH:$$HIVE_HOME/bin' >> ~/.bashrc &&
+      source ~/.bashrc &&
+      sleep 30 &&
+      /opt/hive/bin/beeline -u jdbc:hive2://hive:10000
+      "
