@@ -19,3 +19,6 @@ target/
 /adapters/hive/mariadb_data/
 /adapters/hive/beeline.conf/
 /adapters/hive/hadoop_data/
+.dir-locals.el
+rest.txt
+setenv.sh
