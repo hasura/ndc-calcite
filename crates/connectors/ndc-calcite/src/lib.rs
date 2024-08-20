@@ -46,7 +46,7 @@
 //! - Informix
 //! - HSQLDB
 //! - HIVE (JDBC, tested)
-//! - H2
+//! - H2 (tested)
 //! - DB2 (tested)
 //! - PostreSQL (tested)
 //!
