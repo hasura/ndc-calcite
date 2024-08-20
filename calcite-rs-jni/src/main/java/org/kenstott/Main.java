@@ -15,7 +15,7 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/hive/model.json";
+        String modelPath = "../adapters/db2/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -34,7 +34,7 @@ public class Main {
 // """);
 //                System.out.println(zz);
             String z1 = query.queryModels("""
-                    SELECT "end_date" FROM "hive"."projects"
+                    SELECT "PROJECTID" FROM "db2"."PROJECTS"
                     """
             );
             System.out.println(z1);
