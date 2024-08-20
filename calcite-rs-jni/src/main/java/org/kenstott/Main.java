@@ -15,7 +15,7 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/db2/model.json";
+        String modelPath = "../adapters/h2/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -34,7 +34,7 @@ public class Main {
 // """);
 //                System.out.println(zz);
             String z1 = query.queryModels("""
-                    SELECT "PROJECTID" FROM "db2"."PROJECTS"
+                    SELECT "ID" FROM "TEST"."PROJECTS"
                     """
             );
             System.out.println(z1);

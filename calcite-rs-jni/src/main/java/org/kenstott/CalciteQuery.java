@@ -12,7 +12,8 @@ import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.kenstott.SQLiteSqlDialect;
+
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -156,55 +157,54 @@ public class CalciteQuery {
                             }
                             final List<String> TABLE_TYPES = Arrays.asList("INDEX", "SEQUENCE", "SYSTEM INDEX", "SYSTEM TABLE", "SYSTEM TOAST INDEX");
                             List<String> tableTypeList = new ArrayList<>();
-                            try (ResultSet tableTypes = metaData1.getTableTypes()) {
+                            try (ResultSet tableTypes = metaData.getTableTypes()) {
                                 while (tableTypes.next()) {
                                     String tableType = tableTypes.getString(1);
-                                    tableTypeList.add(tableType);
+                                    if (!TABLE_TYPES.contains(tableType)) {
+                                        tableTypeList.add(tableType);
+                                    }
                                 }
                             } catch (SQLException e) {
                                 throw new RuntimeException(e);
                             }
                             tableTypeList.add("STREAM");
-
-                            for (String tableType : tableTypeList) {
-                                if (!TABLE_TYPES.contains(tableType)) {
-                                        try (ResultSet tables = metaData.getTables(catalog, schemaName, null, new String[]{tableType})) {
-                                            while (tables.next()) {
-                                                String tableName = tables.getString("TABLE_NAME");
-                                                String remarks = tables.getString("REMARKS");
-                                                ArrayList<String> primaryKeys = new ArrayList<>();
-                                                ArrayList<ExportedKey> exportedKeys = new ArrayList<ExportedKey>();
-                                                try (ResultSet pks = metaData1.getPrimaryKeys(catalog, schemaName, tableName)) {
-                                                    while (pks.next()) {
-                                                        primaryKeys.add(pks.getString("COLUMN_NAME"));
-                                                    }
-                                                }
-                                                try {
-                                                    try (ResultSet eks = metaData1.getExportedKeys(catalog, schemaName, tableName)) {
-                                                        while (eks.next()) {
-                                                            exportedKeys.add(
-                                                                    new ExportedKey(
-                                                                            eks.getString("PKTABLE_CAT"),
-                                                                            eks.getString("PKTABLE_SCHEM"),
-                                                                            eks.getString("PKTABLE_NAME"),
-                                                                            eks.getString("PKCOLUMN_NAME"),
-                                                                            eks.getString("PK_NAME"),
-                                                                            eks.getString("FKTABLE_CAT"),
-                                                                            eks.getString("FKTABLE_SCHEM"),
-                                                                            eks.getString("FKTABLE_NAME"),
-                                                                            eks.getString("FKCOLUMN_NAME"),
-                                                                            eks.getString("FK_NAME")
-                                                                    )
-                                                            );
-                                                        }
-                                                    }
-                                                } catch (SQLException e) { /* ignore */ }
-                                                list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys));
-                                            }
-                                        } catch (Exception e) {
-                                            logger.info(e.getMessage());
+                            tableTypeList.add("BASE_TABLE");
+                            String[] tableTypeArray = tableTypeList.toArray(new String[0]);
+                            try (ResultSet tables = metaData.getTables(catalog, schemaName, null, tableTypeArray)) {
+                                while (tables.next()) {
+                                    String tableName = tables.getString("TABLE_NAME");
+                                    String remarks = tables.getString("REMARKS");
+                                    ArrayList<String> primaryKeys = new ArrayList<>();
+                                    ArrayList<ExportedKey> exportedKeys = new ArrayList<ExportedKey>();
+                                    try (ResultSet pks = metaData1.getPrimaryKeys(catalog, schemaName, tableName)) {
+                                        while (pks.next()) {
+                                            primaryKeys.add(pks.getString("COLUMN_NAME"));
                                         }
                                     }
+                                    try {
+                                        try (ResultSet eks = metaData1.getExportedKeys(catalog, schemaName, tableName)) {
+                                            while (eks.next()) {
+                                                exportedKeys.add(
+                                                        new ExportedKey(
+                                                                eks.getString("PKTABLE_CAT"),
+                                                                eks.getString("PKTABLE_SCHEM"),
+                                                                eks.getString("PKTABLE_NAME"),
+                                                                eks.getString("PKCOLUMN_NAME"),
+                                                                eks.getString("PK_NAME"),
+                                                                eks.getString("FKTABLE_CAT"),
+                                                                eks.getString("FKTABLE_SCHEM"),
+                                                                eks.getString("FKTABLE_NAME"),
+                                                                eks.getString("FKCOLUMN_NAME"),
+                                                                eks.getString("FK_NAME")
+                                                        )
+                                                );
+                                            }
+                                        }
+                                    } catch (SQLException e) { /* ignore */ }
+                                    list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys));
+                                }
+                            } catch (Exception e) {
+                                logger.info(e.getMessage());
                             }
                         }
                     }
@@ -279,14 +279,11 @@ public class CalciteQuery {
                 if (mappedType == null) {
                     if (dataTypeName.toLowerCase().contains("varchar")) {
                         mappedType = "VARCHAR";
-                    }
-                    else if (dataTypeName.toLowerCase().contains("timestamp")) {
+                    } else if (dataTypeName.toLowerCase().contains("timestamp")) {
                         mappedType = "TIMESTAMP";
-                    }
-                    else if (dataTypeName.toLowerCase().contains("decimal")) {
+                    } else if (dataTypeName.toLowerCase().contains("decimal")) {
                         mappedType = "FLOAT";
-                    }
-                    else {
+                    } else {
                         mappedType = "VARCHAR";
                     }
                 }
@@ -334,7 +331,7 @@ public class CalciteQuery {
             }
             span.end();
             return gson.toJson(result);
-        } catch(Exception e) {
+        } catch (Exception e) {
             System.out.println(e.toString());
             span.setAttribute("Error", e.toString());
             return "{\"error\":\"" + e + "\"}";
