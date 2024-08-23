@@ -273,6 +273,11 @@
             <version>453</version>
         </dependency>
         <dependency>
+            <groupId>com.teradata.jdbc</groupId>
+            <artifactId>terajdbc</artifactId>
+            <version>20.00.00.24</version>
+        </dependency>
+        <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
             <version>12.6.3.jre11</version>

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  h2:
+    image: oscarfonts/h2:latest
+    container_name: h2-database
+    ports:
+      - "81:81"
+      - "1521:1521"
+    environment:
+      - H2_OPTIONS=-tcp -tcpAllowOthers -web -webAllowOthers -ifNotExists
+    volumes:
+      - h2-data:/opt/h2-data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  h2-data:

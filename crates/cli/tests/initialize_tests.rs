@@ -3,8 +3,8 @@ mod common;
 use tokio::fs;
 
 use ndc_calcite_cli::*;
-use ndc_calcite_cli::configuration as configuration;
-use ndc_calcite_cli::configuration::ParsedConfiguration;
+use ndc_calcite_configuration as configuration;
+use ndc_calcite_configuration::ParsedConfiguration;
 
 #[tokio::test]
 async fn test_initialize_directory() -> anyhow::Result<()> {
@@ -35,8 +35,8 @@ async fn test_initialize_directory() -> anyhow::Result<()> {
 
     let metadata_file_path = dir
         .path()
-        .join(".hasura-ndc-calcite")
-        .join("ndc-calcite-metadata.yaml");
+        .join(".hasura-connector")
+        .join("connector-metadata.yaml");
     assert!(!metadata_file_path.exists());
 
     Ok(())
@@ -133,8 +133,8 @@ async fn test_initialize_directory_with_metadata() -> anyhow::Result<()> {
 
     let metadata_file_path = dir
         .path()
-        .join(".hasura-ndc-calcite")
-        .join("ndc-calcite-metadata.yaml");
+        .join(".hasura-connector")
+        .join("connector-metadata.yaml");
     assert!(metadata_file_path.exists());
     let contents = fs::read_to_string(metadata_file_path).await?;
     common::assert_ends_with_newline(&contents);
@@ -170,8 +170,8 @@ async fn test_initialize_directory_with_metadata_and_release_version() -> anyhow
 
     let metadata_file_path = dir
         .path()
-        .join(".hasura-ndc-calcite")
-        .join("ndc-calcite-metadata.yaml");
+        .join(".hasura-connector")
+        .join("connector-metadata.yaml");
     assert!(metadata_file_path.exists());
     let contents = fs::read_to_string(metadata_file_path).await?;
     common::assert_ends_with_newline(&contents);

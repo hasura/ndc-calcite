@@ -4,15 +4,15 @@ expression: contents
 ---
 packagingDefinition:
   type: PrebuiltDockerImage
-  dockerImage: ghcr.io/hasura/ndc-postgres:v1.2.3
+  dockerImage: ghcr.io/hasura/ndc-calcite:v1.2.3
 supportedEnvironmentVariables:
 - name: CONNECTION_URI
-  description: The PostgreSQL connection URI
-  defaultValue: postgresql://read_only_user:readonlyuser@35.236.11.122:5432/v3-docs-sample-app
+  description: The calciteQL connection URI
+  defaultValue: calciteql://read_only_user:readonlyuser@35.236.11.122:5432/v3-docs-sample-app
 commands:
-  update: hasura-ndc-postgres update
+  update: hasura-ndc-calcite update
 cliPlugin:
-  name: ndc-postgres
+  name: ndc-calcite
   version: v1.2.3
 dockerComposeWatch:
 - path: ./

@@ -70,18 +70,12 @@
 //! - Path'ed where-predicates (you can only use the root in List arguments)
 //! - Nested objects are not supported
 
-pub mod aggregates;
 pub mod calcite;
 pub mod capabilities;
-pub mod collections;
-pub mod comparators;
-pub mod jvm;
-pub mod scalars;
-pub mod schema;
 pub mod sql;
-pub mod configuration;
 pub mod query;
 
 pub mod connector {
     pub mod calcite;
 }
+

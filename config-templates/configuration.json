@@ -1,6 +1,0 @@
-{
-  "version": "4",
-  "$schema": "schema.json",
-  "model_file_path": "/etc/connector/models/model.json",
-  "fixes": true
-}

@@ -15,7 +15,7 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/h2/model.json";
+        String modelPath = "../adapters/file/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -34,7 +34,7 @@ public class Main {
 // """);
 //                System.out.println(zz);
             String z1 = query.queryModels("""
-                    SELECT "ID" FROM "TEST"."PROJECTS"
+                    SELECT COUNT("a") AS "a_count", COUNT(DISTINCT "a") AS "a_distinct_count", COUNT("b") AS "b_count", COUNT(DISTINCT "b") AS "b_distinct_count", COUNT("c") AS "c_count", COUNT(DISTINCT "c") AS "c_distinct_count", COUNT("d") AS "d_count", COUNT(DISTINCT "d") AS "d_distinct_count", COUNT("e") AS "e_count", COUNT(DISTINCT "e") AS "e_distinct_count", COUNT("f") AS "f_count", COUNT(DISTINCT "f") AS "f_distinct_count", COUNT("g") AS "g_count", COUNT(DISTINCT "g") AS "g_distinct_count", COUNT("id") AS "id_count", COUNT(DISTINCT "id") AS "id_distinct_count", COUNT("object") AS "object_count", COUNT(DISTINCT "object") AS "object_distinct_count" FROM "sales"."ARCHERS"  LIMIT 10
                     """
             );
             System.out.println(z1);

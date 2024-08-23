@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  sybase:
+    image: datagrip/sybase
+    container_name: sybase
+    ports:
+      - "5001:5000"
+    environment:
+      - SYBASE_USER=sa
+      - SYBASE_PASSWORD=your_password
+      - LD_LIBRARY_PATH=/opt/sybase/ASE-16_0/lib:/opt/sybase/OCS-16_0/lib:$LD_LIBRARY_PATH
+    volumes:
+      - sybase-data:/var/lib/sybase
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./custom-entrypoint.sh:/custom-entrypoint.sh
+    entrypoint: ["/bin/bash", "/custom-entrypoint.sh"]
+
+volumes:
+  sybase-data:

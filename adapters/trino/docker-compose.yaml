@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  trino:
+    image: trinodb/trino:latest
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_TOOL_OPTIONS=-Duser.timezone=UTC
+    depends_on:
+      - postgres
+    volumes:
+      - trino_catalog:/etc/trino/catalog
+      - ./config:/etc/trino
+      - ./var/trino:/var/trino
+    command: /usr/lib/trino/bin/run-trino
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: trino
+      POSTGRES_PASSWORD: trino
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  trino_catalog:
+  postgres_data:

@@ -3,53 +3,22 @@
 //! Takes a Calcite query, passes it to Calcite Query Engine
 //! and then transforms it into a Vec<Row>.
 //!
-use std::collections::HashMap;
 use std::fmt;
 
 use indexmap::IndexMap;
 use jni::JNIEnv;
-use jni::objects::{GlobalRef, JObject, JString, JValueGen, JValueOwned};
+use jni::objects::{GlobalRef, JObject, JString, JValueGen};
 use jni::objects::JValueGen::Object;
 use ndc_models as models;
-use ndc_models::RowFieldValue;
-use ndc_sdk::connector::{InitializationError, QueryError};
-use serde_json::{Value};
+use ndc_models::{FieldName, RowFieldValue};
+use ndc_sdk::connector::{QueryError};
+use serde_json::Value;
 use tracing::{event, Level};
+use ndc_calcite_schema::version5::ParsedConfiguration;
+use ndc_calcite_schema::jvm::get_jvm;
+use ndc_calcite_schema::version5::create_calcite_connection;
 
-use crate::configuration::CalciteConfiguration;
-use crate::jvm::get_jvm;
-use crate::configuration::TableMetadata;
-
-pub type Row = IndexMap<String, RowFieldValue>;
-
-#[tracing::instrument]
-fn create_calcite_connection<'a>(
-    configuration: &CalciteConfiguration,
-    calcite_query: &JObject<'a>,
-    env: &'a mut JNIEnv<'a>,
-) -> Result<JValueOwned<'a>, InitializationError> {
-    let calcite_model = configuration.clone().model_file_path.unwrap_or_default();
-    let arg0: JObject = env.new_string(calcite_model).unwrap().into();
-    let args: &[JValueGen<&JObject<'_>>] = &[Object(&arg0)];
-    let method_signature = "(Ljava/lang/String;)Ljava/sql/Connection;";
-    let result = env.call_method(
-        calcite_query,
-        "createCalciteConnection",
-        method_signature,
-        args,
-    );
-
-    match result {
-        Ok(val) => {
-            event!(Level::INFO, "Connected to Calcite");
-            Ok(val)
-        }
-        Err(e) => {
-            event!(Level::ERROR, "Error while connecting to Calcite: {:?}", e);
-            Err(InitializationError::Other(Box::new(e)))
-        }
-    }
-}
+pub type Row = IndexMap<FieldName, RowFieldValue>;
 
 /// Creates a Calcite query engine.
 ///
@@ -72,11 +41,10 @@ fn create_calcite_connection<'a>(
 /// use jni::JNIEnv;
 /// use jni::objects::JObject;
 /// use tracing::Level;
-///
-/// # fn create_calcite_connection(configuration: &CalciteConfiguration, instance: &JObject, env: &mut JNIEnv) { unimplemented!() }
+/// use ndc_calcite_schema::version5::{create_calcite_connection, ParsedConfiguration};
 ///
 /// #[tracing::instrument]
-/// pub fn create_calcite_query_engine<'a>(configuration: &CalciteConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
+/// pub fn create_calcite_query_engine<'a>(configuration: &ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
 ///     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
 ///     let instance = env.new_object(class, "()V", &[]).unwrap();
 ///     let _ = create_calcite_connection(configuration, &instance, env);
@@ -85,44 +53,12 @@ fn create_calcite_connection<'a>(
 /// }
 /// ```
 #[tracing::instrument]
-pub fn create_calcite_query_engine<'a>(configuration: &CalciteConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
+pub fn create_calcite_query_engine<'a>(configuration: &ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
     let instance = env.new_object(class, "()V", &[]).unwrap();
     let _ = create_calcite_connection(configuration, &instance, env);
     event!(Level::INFO, "Instantiated Calcite Query Engine");
     return instance;
-}
-
-/// Retrieves models from Calcite.
-///
-/// # Arguments
-///
-/// * `calcite_ref` - A reference to the Calcite instance.
-///
-/// # Return
-///
-/// A `HashMap` containing the retrieved models. The outer `HashMap` maps model names
-/// to inner `HashMap`s, where each inner `HashMap` represents a model with its properties.
-#[tracing::instrument]
-pub fn get_models(calcite_ref: GlobalRef) -> HashMap<String, TableMetadata> {
-    let jvm = get_jvm().lock().unwrap();
-    let env = jvm.attach_current_thread().unwrap();
-    let calcite_query = env.new_local_ref(calcite_ref).unwrap();
-    let mut env = jvm.attach_current_thread_as_daemon().unwrap();
-    let args: &[JValueGen<&JObject<'_>>] = &[];
-    let method_signature = "()Ljava/lang/String;";
-    let result = env.call_method(calcite_query, "getModels", method_signature, args);
-    let map= match result.unwrap() {
-        Object(obj) => {
-            let j_string = JString::from(obj);
-            let json_string: String = env.get_string(&j_string).unwrap().into();
-            let map: HashMap<String, TableMetadata> = serde_json::from_str(&json_string).unwrap();
-            map
-        }
-        _ => todo!(),
-    };
-    event!(Level::INFO, "Retrieved models from Calcite");
-    return map;
 }
 
 fn parse_to_row(data: Vec<String>) -> Vec<Row> {
@@ -181,7 +117,7 @@ fn parse_to_row(data: Vec<String>) -> Vec<Row> {
 // ANCHOR: calcite_query
 #[tracing::instrument]
 pub fn calcite_query(
-    config: &CalciteConfiguration,
+    config: &ParsedConfiguration,
     calcite_reference: GlobalRef,
     sql_query: &str,
     query_metadata: &models::Query,
@@ -208,7 +144,7 @@ pub fn calcite_query(
                 Ok(rows) => rows,
                 Err(_) => {
                     println!("{:?}", json_string);
-                    return Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")})))
+                    return Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")}), serde_json::from_str(&json_string).unwrap_or_default()))
                 }
             };
             let rows = parse_to_row(json_rows);
@@ -220,7 +156,7 @@ pub fn calcite_query(
             log_event(Level::INFO, &format!("Completed Query. Retrieved {} rows. Result: {}", rows.len().to_string(), serde_json::to_string(&rows).unwrap()));
             Ok(rows)
         },
-        _ => Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")})))
+        _ => Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")}), Value::Null))
     }
 }
 
@@ -238,7 +174,7 @@ fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
     let fields = query_metadata.clone().fields.unwrap_or_default();
     let aggregates = query_metadata.clone().aggregates.unwrap_or_default();
     let max_keys = fields.len() + aggregates.len();
-    let mut key_sample: Vec<String> = vec![];
+    let mut key_sample: Vec<FieldName> = vec![];
 
     for (key, _) in fields {
         key_sample.push(key);
@@ -252,7 +188,7 @@ fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
         if max_keys > row.len() {
             for key in &key_sample {
                 if !row.contains_key(key) {
-                    row.insert(key.into(), RowFieldValue(Value::Null));
+                    row.insert(key.clone(), RowFieldValue(Value::Null));
                 }
             }
         }

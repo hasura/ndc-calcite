@@ -1,0 +1,90 @@
+{
+  "version": "5",
+  "$schema": "schema.json",
+  "model": {
+    "version": "1.0",
+    "defaultSchema": "db2",
+    "schemas": [
+      {
+        "type": "jdbc",
+        "name": "db2",
+        "jdbcUser": "db2inst1",
+        "jdbcPassword": "mypassword",
+        "jdbcUrl": "jdbc:db2://192.168.86.233:50000/testdb"
+      }
+    ]
+  },
+  "model_file_path": "./model.json",
+  "fixes": true,
+  "metadata": {
+    "PROJECTS": {
+      "schema": "db2",
+      "name": "PROJECTS",
+      "columns": {
+        "PROJECTID": {
+          "name": "PROJECTID",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "PROJECTNAME": {
+          "name": "PROJECTNAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "DEPARTMENTID": {
+          "name": "DEPARTMENTID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "EMPLOYEES": {
+      "schema": "db2",
+      "name": "EMPLOYEES",
+      "columns": {
+        "FIRSTNAME": {
+          "name": "FIRSTNAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "LASTNAME": {
+          "name": "LASTNAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "EMPLOYEEID": {
+          "name": "EMPLOYEEID",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "DEPARTMENTID": {
+          "name": "DEPARTMENTID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "DEPARTMENTS": {
+      "schema": "db2",
+      "name": "DEPARTMENTS",
+      "columns": {
+        "DEPARTMENTNAME": {
+          "name": "DEPARTMENTNAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "DEPARTMENTID": {
+          "name": "DEPARTMENTID",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
+}

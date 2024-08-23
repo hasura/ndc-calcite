@@ -4,30 +4,33 @@
 //! the request to the underlying code and providing the result.
 //!
 use std::collections::BTreeMap;
-use std::{env, fs};
+use std::{fs};
 use std::path::Path;
 use log::{info, error};
 use async_trait::async_trait;
 use dotenv;
 use jni::objects::GlobalRef;
-use ndc_models::{Argument, ExplainResponse, RelationshipArgument};
+use ndc_models as models;
+use ndc_models::{ArgumentName, Capabilities, CollectionName, Relationship, RelationshipName, VariableName};
 use ndc_sdk::connector::{
     Connector, ConnectorSetup, ExplainError, FetchMetricsError, HealthError, InitializationError,
     MutationError, ParseError, QueryError, SchemaError,
 };
 use ndc_sdk::json_response::JsonResponse;
-use ndc_sdk::models;
+use serde_json::Value;
 use tracing::info_span;
 use tracing::Instrument;
 
-use crate::{calcite, jvm, query, schema};
 use crate::capabilities::calcite_capabilities;
-use crate::configuration::{CalciteConfiguration, Model};
-use crate::jvm::init_jvm;
+use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
+use ndc_calcite_schema::calcite::Model;
+use ndc_calcite_schema::models::get_models;
+use ndc_calcite_schema::schema::get_schema as retrieve_schema;
+use ndc_calcite_schema::version5::ParsedConfiguration;
+use ndc_calcite_values::is_running_in_container::is_running_in_container;
+use ndc_calcite_values::values::{CONFIG_FILE_NAME, DEV_CONFIG_FILE_NAME};
+use crate::{calcite, query};
 use crate::query::QueryParams;
-
-pub const CONFIG_FILE_NAME: &str = "configuration.json";
-pub const DEV_CONFIG_FILE_NAME: &str = "dev.local.configuration.json";
 
 #[derive(Clone, Default, Debug)]
 pub struct Calcite {}
@@ -37,39 +40,14 @@ pub struct CalciteState {
     pub calcite_ref: GlobalRef,
 }
 
-/// Checks if the code is running inside a container.
-///
-/// This function checks for the existence of the `/.dockerenv` file in the filesystem,
-/// which is commonly used to indicate that the code is running inside a Docker container.
-///
-/// # Examples
-///
-/// ```
-/// use std::path::Path;
-///
-/// fn is_running_in_container() -> bool {
-///     Path::new("/.dockerenv").exists()
-/// }
-///
-/// assert_eq!(is_running_in_container(), false);
-/// ```
-///
-/// # Returns
-///
-/// Returns `true` if the code is running inside a container, `false` otherwise.
-#[tracing::instrument]
-pub fn is_running_in_container() -> bool {
-    Path::new("/.dockerenv").exists() || env::var("KUBERNETES_SERVICE_HOST").is_ok()
-}
-
 #[tracing::instrument]
 fn execute_query_with_variables(
-    config: &CalciteConfiguration,
-    coll: &str,
-    args: &BTreeMap<String, models::RelationshipArgument>,
-    coll_rel: &BTreeMap<String, models::Relationship>,
+    config: &ParsedConfiguration,
+    coll: &CollectionName,
+    args: &BTreeMap<ArgumentName, models::RelationshipArgument>,
+    coll_rel: &BTreeMap<RelationshipName, Relationship>,
     query: &models::Query,
-    vars: &BTreeMap<String, serde_json::Value>,
+    vars: &BTreeMap<VariableName, Value>,
     state: &CalciteState,
     explain: &bool
 ) -> Result<models::RowSet, QueryError> {
@@ -99,7 +77,7 @@ impl ConnectorSetup for Calcite {
         match fs::read_to_string(file_path) {
             Ok(file_content) => {
                 println!("Configuration file content: {:?}", file_content);
-                let mut json_object: CalciteConfiguration = serde_json::from_str(&file_content)
+                let mut json_object: ParsedConfiguration = serde_json::from_str(&file_content)
                     .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
                 match json_object.model_file_path {
                     None => {
@@ -123,7 +101,7 @@ impl ConnectorSetup for Calcite {
                 match json_object.metadata {
                     None => {
                         let state = init_state(&json_object).expect("TODO: panic message");
-                        json_object.metadata = Some(calcite::get_models(state.calcite_ref));
+                        json_object.metadata = Some(get_models(state.calcite_ref));
                         println!("metadata: {:?}",  serde_json::to_string_pretty(&json_object.metadata));
                     }
                     Some(_) => {}
@@ -146,7 +124,7 @@ impl ConnectorSetup for Calcite {
 
 #[async_trait]
 impl Connector for Calcite {
-    type Configuration = CalciteConfiguration;
+    type Configuration = ParsedConfiguration;
     type State = CalciteState;
 
     fn fetch_metrics(
@@ -163,8 +141,8 @@ impl Connector for Calcite {
         Ok(())
     }
 
-    async fn get_capabilities() -> JsonResponse<models::CapabilitiesResponse> {
-        calcite_capabilities().into()
+    async fn get_capabilities() -> Capabilities {
+        calcite_capabilities().capabilities
     }
 
     async fn get_schema(
@@ -179,17 +157,17 @@ impl Connector for Calcite {
         let calcite;
         let calcite_ref;
         {
-            let java_vm = jvm::get_jvm().lock().unwrap();
+            let java_vm = get_jvm().lock().unwrap();
             let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
             calcite = calcite::create_calcite_query_engine(configuration, &mut env);
             let env = java_vm.attach_current_thread_as_daemon().unwrap();
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }
 
-        let schema = schema::get_schema(configuration, calcite_ref.clone());
+        let schema = retrieve_schema(configuration, calcite_ref.clone());
         match schema {
-            Ok(schema) => Ok(schema.into()),
-            Err(e) => Err(SchemaError::Other(e.to_string().into())),
+            Ok(schema) => Ok(JsonResponse::from(schema)),
+            Err(e) => Err(SchemaError::Other(e.to_string().into(), Value::Null)),
         }
     }
 
@@ -200,8 +178,8 @@ impl Connector for Calcite {
     ) -> Result<JsonResponse<models::ExplainResponse>, ExplainError> {
         let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
         let mut map: BTreeMap<String, String> = BTreeMap::new();
-        let input_map: BTreeMap<String, Argument> = request.arguments.clone();
-        let relationship_arguments : BTreeMap<String, models::RelationshipArgument> =
+        let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
+        let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
             input_map.iter()
                 .map(|(key, value)|
                 (key.clone(), convert_to_relationship_argument(value))
@@ -217,12 +195,12 @@ impl Connector for Calcite {
                 variables,
                 &state,
                 &true
-            ).map_err(|error| ExplainError::Other(Box::new(error)))?;
+            ).map_err(|error| ExplainError::Other(Box::new(error), Value::Null))?;
             match row_set.aggregates {
                 None => {}
                 Some(map_index) => {
                     let map_btree: BTreeMap<String, String> = map_index.iter()
-                        .map(|(key, value)| (key.clone(), value.to_string()))
+                        .map(|(key, value)| (key.clone().to_string(), value.to_string()))
                         .collect();
                     map.extend(map_btree);
                 }
@@ -232,14 +210,14 @@ impl Connector for Calcite {
                 Some(r) => {
                     for map_index in r {
                         let map_btree: BTreeMap<String, String> = map_index.iter()
-                            .map(|(key, value)| (key.clone(), value.0.to_string()))
+                            .map(|(key, value)| (key.clone().to_string(), value.0.to_string()))
                             .collect();
                         map.extend(map_btree);
                     }
                 }
             }
         }
-        let explain_response = ExplainResponse {
+        let explain_response = models::ExplainResponse {
             details: map,
         };
         Ok(JsonResponse::from(explain_response))
@@ -269,8 +247,8 @@ impl Connector for Calcite {
         // println!("{:?}", serde_json::to_string_pretty(&request));
         let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
         let mut row_sets = vec![];
-        let input_map: BTreeMap<String, Argument> = request.arguments.clone();
-        let relationship_arguments : BTreeMap<String, models::RelationshipArgument> =
+        let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
+        let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
             input_map.iter()
                 .map(|(key, value)|
                 // Assuming we have a function `convert_to_relationship_argument`
@@ -308,19 +286,19 @@ impl Connector for Calcite {
     }
 }
 
-fn convert_to_relationship_argument(p0: &Argument) -> RelationshipArgument {
+fn convert_to_relationship_argument(p0: &models::Argument) -> models::RelationshipArgument {
     match p0 {
-        Argument::Variable { name } => RelationshipArgument::Variable { name: name.to_string() },
-        Argument::Literal { value } => RelationshipArgument::Literal { value: value.clone() }
+        models::Argument::Variable { name } => models::RelationshipArgument::Variable { name: name.clone() },
+        models::Argument::Literal { value } => models::RelationshipArgument::Literal { value: value.clone() }
     }
 }
 
 fn init_state(
-    configuration: &CalciteConfiguration,
+    configuration: &ParsedConfiguration,
 ) -> Result<CalciteState, InitializationError> {
     dotenv::dotenv().ok();
-    init_jvm(configuration);
-    let java_vm = jvm::get_jvm().lock().unwrap();
+    init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()));
+    let java_vm = get_jvm().lock().unwrap();
         let calcite;
         let calcite_ref;
         {

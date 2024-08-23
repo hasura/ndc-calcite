@@ -126,7 +126,7 @@
     "Version": {
       "type": "string",
       "enum": [
-        "4"
+        "5"
       ]
     }
   }

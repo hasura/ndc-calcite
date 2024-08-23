@@ -8,13 +8,13 @@
 use std::collections::BTreeMap;
 
 use indexmap::IndexMap;
-use ndc_models::{ComparisonTarget, ComparisonValue, Expression, Field, Query, Relationship, RelationshipArgument, RelationshipType, RowFieldValue};
+use ndc_models::{ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, RelationshipType, RowFieldValue, VariableName};
 use ndc_sdk::connector::QueryError;
 use ndc_sdk::models;
 use serde_json::{Number, Value};
 
 use crate::calcite::{calcite_query, Row};
-use crate::configuration::CalciteConfiguration;
+use ndc_calcite_schema::version5::ParsedConfiguration;
 use crate::connector::calcite::CalciteState;
 use crate::sql;
 
@@ -29,12 +29,12 @@ use crate::sql;
 /// `'a` - A lifetime parameter specifying the lifetime of the query parameters.
 #[derive(Clone, Copy)]
 pub struct QueryParams<'a> {
-    pub config: &'a CalciteConfiguration,
-    pub coll: &'a str,
-    pub coll_rel: &'a BTreeMap<String, models::Relationship>,
-    pub args: &'a BTreeMap<String, models::RelationshipArgument>,
-    pub query: &'a models::Query,
-    pub vars: &'a BTreeMap<String, Value>,
+    pub config: &'a ParsedConfiguration,
+    pub coll: &'a CollectionName,
+    pub coll_rel: &'a BTreeMap<RelationshipName, Relationship>,
+    pub args: &'a BTreeMap<ArgumentName, RelationshipArgument>,
+    pub query: &'a Query,
+    pub vars: &'a BTreeMap<VariableName, Value>,
     pub state: &'a CalciteState,
     pub explain: &'a bool
 }
@@ -45,7 +45,7 @@ pub struct QueryParams<'a> {
 /// These components include the argument values, the SELECT clause, the ORDER BY clause,
 /// the pagination settings, the aggregates, the predicates, the final aggregates, and the join clause.
 pub struct QueryComponents {
-    pub argument_values: BTreeMap<String, Value>,
+    pub argument_values: BTreeMap<ArgumentName, Value>,
     pub select: Option<String>,
     pub order_by: Option<String>,
     pub pagination: Option<String>,
@@ -87,7 +87,7 @@ pub fn orchestrate_query(
 ) -> Result<models::RowSet, QueryError> {
     let components = sql::parse_query(&params.config, params.coll, params.coll_rel, params.args, params.query, params.vars)?;
     let mut rows: Option<Vec<Row>> = process_rows(params, &components)?;
-    let aggregates: Option<IndexMap<String, Value>> = process_aggregates(params, &components)?;
+    let aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(params, &components)?;
     let fields = params.query.clone().fields.unwrap_or_default();
     for (field_name, field) in &fields {
         match &rows {
@@ -134,12 +134,12 @@ fn generate_value_from_rows(rows: &Vec<Row>, sub_relationship: &Relationship) ->
     Ok(value)
 }
 
-fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<&String>, Vec<&String>, RelationshipType), QueryError> {
-    let pks: Vec<&String> = sub_relationship.column_mapping.values().collect();
+fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<&FieldName>, Vec<&FieldName>, RelationshipType), QueryError> {
+    let pks: Vec<&FieldName> = sub_relationship.column_mapping.values().collect();
     if pks.len() > 1 {
-        return Err(QueryError::Other(Box::from("Cannot create a sub-query based on a composite key")));
+        return Err(QueryError::Other(Box::from("Cannot create a sub-query based on a composite key"), Value::Null));
     }
-    let fks: Vec<&String> = sub_relationship.column_mapping.keys().collect();
+    let fks: Vec<&FieldName> = sub_relationship.column_mapping.keys().collect();
     let relationship_type = sub_relationship.relationship_type.clone();
     Ok((pks, fks, relationship_type))
 }
@@ -168,7 +168,7 @@ fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Resu
 }
 
 
-fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -> Result<Option<IndexMap<String, Value>>, QueryError> {
+fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -> Result<Option<IndexMap<FieldName, Value>>, QueryError> {
     if let Some(phrase) = &query_components.aggregates {
         if phrase.is_empty() {
             return Ok(None);
@@ -195,7 +195,7 @@ fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -
                         row.insert(key.into(), RowFieldValue(Value::from(Number::from(0))));
                     }
                 }
-                let map: IndexMap<String, Value> = row.into_iter()
+                let map: IndexMap<FieldName, Value> = row.into_iter()
                     .map(|(k, v)| (k, v.0))
                     .collect();
                 Ok(Some(map))
@@ -207,19 +207,19 @@ fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -
     }
 }
 
-fn generate_predicate(pks: &Vec<&String>, value: Value) -> Result<Expression, QueryError> {
+fn generate_predicate(pks: &Vec<&FieldName>, value: Value) -> Result<Expression, QueryError> {
     Ok(Expression::BinaryComparisonOperator {
         column: ComparisonTarget::Column {
-            name: pks[0].to_string(),
+            name: pks[0].clone(),
             field_path: None,
             path: vec![]
         },
-        operator: "_in".to_string(),
+        operator: ComparisonOperatorName::from("_in".to_string()),
         value: ComparisonValue::Scalar { value },
     })
 }
 
-fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<&String>) -> Result<Box<Query>, QueryError> {
+fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<&FieldName>) -> Result<Box<Query>, QueryError> {
     let mut revised_query = query.clone();
     revised_query.predicate = Some(predicate);
     revised_query.offset = None;
@@ -227,8 +227,8 @@ fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<&String>) ->
     let mut fields = query.fields.unwrap();
     for pk in pks {
         if !fields.contains_key(*pk) {
-            fields.insert(pk.to_string(), Field::Column {
-                column: pk.to_string(),
+            fields.insert(FieldName::from(pk.to_string()), Field::Column {
+                column: FieldName::from(pk.to_string()),
                 fields: None,
                 arguments: Default::default(),
             });
@@ -238,7 +238,7 @@ fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<&String>) ->
     Ok(revised_query)
 }
 
-fn execute_query(params: QueryParams, arguments: &BTreeMap<String, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>, QueryError> {
+fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>, QueryError> {
     let fk_rows = orchestrate_query(QueryParams {
         config: params.config,
         coll: &sub_relationship.target_collection,
@@ -252,7 +252,7 @@ fn execute_query(params: QueryParams, arguments: &BTreeMap<String, RelationshipA
     Ok(fk_rows.rows.unwrap())
 }
 
-fn process_object_relationship(rows: Vec<Row>, field_name: &String, fk_rows: &Vec<Row>, pks: &Vec<&String>, fks: &Vec<&String>) -> Result<Option<Vec<Row>>, QueryError> {
+fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<&FieldName>, fks: &Vec<&FieldName>) -> Result<Option<Vec<Row>>, QueryError> {
     let modified_rows: Vec<Row> = rows.clone().into_iter().map(|mut row| {
         let pk_value = row.get(fks[0]).unwrap().0.clone();
         let rowset = serde_json::map::Map::new();
@@ -270,7 +270,7 @@ fn process_object_relationship(rows: Vec<Row>, field_name: &String, fk_rows: &Ve
     Ok(Some(modified_rows))
 }
 
-fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &String, fk_rows: &Vec<Row>, pks: &Vec<&String>, fks: &Vec<&String>, query: &Query) -> Result<Option<Vec<Row>>, QueryError> {
+fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<&FieldName>, fks: &Vec<&FieldName>, query: &Query) -> Result<Option<Vec<Row>>, QueryError> {
     let modified_rows: Vec<Row> = rows.clone().unwrap().into_iter().map(|mut row| {
         let pk_value = row.get(fks[0]).unwrap().0.clone();
         let rowset = serde_json::map::Map::new();

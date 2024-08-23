@@ -1,0 +1,21 @@
+{
+  "version": "1.0",
+  "defaultSchema": "cassandra",
+  "schemas": [
+    {
+      "name": "cassandra",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.cassandra.CassandraSchemaFactory",
+      "operand": {
+        "host": "<host>",
+        "keyspace": "<keyspace>",
+        "username": "<username>",
+        "password": "<password>>",
+        "port": 9142,
+        "ssl": true,
+        "dc": "<data-center>",
+        "pathToRootCert": "<path-to-CA-vert>"
+      }
+    }
+  ]
+}

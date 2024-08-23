@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "defaultSchema": "TEST",
+  "schemas": [
+    {
+      "name": "TEST",
+      "type": "jdbc",
+      "jdbcDriver": "org.h2.Driver",
+      "jdbcUrl": "jdbc:h2:tcp://localhost:1521/test",
+      "jdbcSchema": "PUBLIC",
+      "jdbcUser": "sa",
+      "jdbcPassword": ""
+    }
+  ]
+}

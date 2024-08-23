@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultSchema": "default",
+  "schemas": [
+    {
+      "name": "default",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.arrow.ArrowSchemaFactory",
+      "operand": {
+        "directory": "./data/arrow"
+      }
+    }
+  ]
+}

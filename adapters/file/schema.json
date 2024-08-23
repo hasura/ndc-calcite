@@ -41,6 +41,9 @@
               "jdbcUrl": {
                 "type": "string"
               },
+              "sqlDialectFactory": {
+                "type": "string"
+              },
               "jdbcCatalog": {
                 "type": "string"
               },
@@ -123,7 +126,7 @@
     "Version": {
       "type": "string",
       "enum": [
-        "4"
+        "5"
       ]
     }
   }

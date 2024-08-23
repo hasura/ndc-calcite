@@ -8,14 +8,16 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+ndc-calcite-schema = { path = "../calcite-schema"}
+
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive", "env"] }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }
-schemars = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
+include_dir = { version = "0.7.4", features = ["default", "glob"] }
 
 [build-dependencies]
 build-data = { workspace = true }

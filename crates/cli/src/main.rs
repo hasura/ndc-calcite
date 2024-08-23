@@ -8,9 +8,9 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use clap::Parser;
-use ndc_calcite_cli::{Command, Context, run, environment::ProcessEnvironment};
 
-
+use ndc_calcite_cli::*;
+use ndc_calcite_schema as configuration;
 
 /// The release version specified at build time.
 ///
@@ -54,7 +54,7 @@ async fn try_main() -> anyhow::Result<()> {
     };
     let context = Context {
         context_path,
-        environment: ProcessEnvironment,
+        environment: configuration::environment::ProcessEnvironment,
         release_version: RELEASE_VERSION,
     };
     run(args.subcommand, context).await?;

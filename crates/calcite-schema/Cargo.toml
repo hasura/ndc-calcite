@@ -1,0 +1,31 @@
+[package]
+name = "ndc-calcite-schema"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+ndc-calcite-values = { path = "../values"}
+ndc-models = { workspace = true }
+ndc-sdk = { workspace = true }
+jni = { workspace = true }
+
+anyhow = { workspace = true }
+# We only use clap for the derive feature.
+clap = { workspace = true, features = ["derive", "env"] }
+prometheus = {workspace = true }
+schemars = { workspace = true, features = ["smol_str", "preserve_order"] }
+serde = { workspace = true }
+serde_json = { workspace = true, features = ["raw_value"] }
+smol_str = { workspace = true }
+sqlx = { workspace = true, features = ["json", "postgres", "runtime-tokio-rustls"] }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+tracing = { workspace = true }
+once_cell = { workspace = true}
+
+[dev-dependencies]
+jsonschema = { workspace = true }
