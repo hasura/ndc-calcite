@@ -23,17 +23,17 @@ wildcard_imports = { level = "allow" }
 
 [workspace.dependencies]
 jni = { version = "0.21.1", features = ["invocation"] }
-axum-extra = "0.8.0"
-http = "0.2"
+axum-extra = "0.9.3"
+http = "1.1.0"
 mime = "0.3.17"
-opentelemetry = "0.22.0"
-opentelemetry-http = "0.11.0"
-opentelemetry-otlp = { version = "0.15.0", features = ["reqwest-client", "gzip-tonic", "tls", "tls-roots", "http-proto"] }
-opentelemetry-semantic-conventions = "0.14.0"
-opentelemetry_sdk = { version = "0.22.1", features = ["rt-tokio"] }
-opentelemetry-zipkin = "0.20.0"
-tower-http = { version = "0.4.4", features = ["cors", "trace", "validate-request"] }
-tracing-opentelemetry = "0.23.0"
+opentelemetry = "0.24.0"
+opentelemetry-http = "0.13.0"
+opentelemetry-otlp = { version = "0.17.0", features = ["reqwest-client", "gzip-tonic", "tls", "tls-roots", "http-proto"] }
+opentelemetry-semantic-conventions = "0.16.0"
+opentelemetry_sdk = { version = "0.24.1", features = ["rt-tokio"] }
+opentelemetry-zipkin = "0.22.0"
+tower-http = { version = "0.5.2", features = ["cors", "trace", "validate-request"] }
+tracing-opentelemetry = "0.25.0"
 tracing-subscriber = { version = "0.3", default-features = false, features = ["ansi", "env-filter", "fmt", "json"] }
 dotenv = "0.15.0"
 once_cell = "1.19.0"
@@ -43,18 +43,18 @@ ndc-test = { git = "https://github.com/hasura/ndc-spec.git", tag = "v0.1.5" }
 
 anyhow = "1"
 async-trait = "0.1"
-axum = "0.6"
-axum-test-helper = "0.3"
+axum = "0.7.5"
+axum-test-helper = "0.4.0"
 build-data = "0.2"
 bytes = "1"
 clap = "4"
 env_logger = "0.11"
-hyper = "0.14"
+hyper = "1.4.1"
 indexmap = "2"
 insta = "1"
-jsonschema = "0.17"
+jsonschema = "0.18.0"
 log = "0.4.22"
-multimap = "0.9"
+multimap = "0.10.0"
 nonempty = "0.10"
 percent-encoding = "2"
 prometheus = "0.13"
@@ -65,9 +65,9 @@ serde = "1"
 serde_json = "1"
 serde_yaml = "0.9"
 similar-asserts = "1"
-smol_str = "0.1"
+smol_str = "0.2.2"
 sqlformat = "0.2"
-sqlx = "0.7"
+sqlx = "0.8.0"
 tempfile = "3"
 test-each = "0.2"
 thiserror = "1"
