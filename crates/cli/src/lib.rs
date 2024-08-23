@@ -115,7 +115,7 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
             supported_environment_variables: vec![metadata::EnvironmentVariableDefinition {
                 name: "MODEL_FILE".to_string(),
                 description: "The calcite connection mode file path".to_string(),
-                default_value: Some("./models/model.json".to_string()),
+                default_value: Some("/etc/connector/models/model.json".to_string()),
             }],
             commands: metadata::Commands {
                 update: Some(update_command.to_string()),

@@ -64,7 +64,7 @@ impl ParsedConfiguration {
             version: Version::This,
             _schema: Some(CONFIGURATION_JSONSCHEMA_FILENAME.to_string()),
             model: None,
-            model_file_path: Some("./models/model.json".to_string()),
+            model_file_path: Some("/etc/connector/models/model.json".to_string()),
             fixes: Some(true),
             supports_json_object: None,
             jars: None,
