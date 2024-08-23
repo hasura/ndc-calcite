@@ -24,6 +24,7 @@ static CONFIG: OnceCell<Mutex<ParsedConfiguration>> = OnceCell::new();
 ///
 /// ```
 /// use std::sync::Mutex;
+/// use jni::JavaVM;
 ///
 /// static JVM: once_cell::sync::OnceCell<Mutex<JavaVM>> = once_cell::sync::OnceCell::new();
 ///
@@ -59,9 +60,9 @@ pub fn get_jvm() -> &'static Mutex<JavaVM> {
 /// # Example
 ///
 /// ```rust
-/// use crate::CalciteConfiguration;
+/// use crate::configuration::ParsedConfiguration;
 ///
-/// let config = CalciteConfiguration { ... };
+/// let config = ParsedConfiguration { ... };
 /// init_jvm(&config);
 /// ```
 // ANCHOR: init_jvm

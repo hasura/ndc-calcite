@@ -17,6 +17,7 @@ COPY Cargo.toml ./
 COPY Cargo.lock ./
 COPY crates crates
 RUN cargo build --locked --profile release --package ndc-calcite
+RUN cargo build --locked --profile release --package ndc-calcite-cli
 
 
 FROM ubuntu:latest AS runtime
@@ -44,6 +45,7 @@ RUN java -version && echo $JAVA_HOME
 
 WORKDIR /app
 COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
+COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin
 
 RUN mkdir -p /etc/ndc-calcite
 ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector

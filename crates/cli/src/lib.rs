@@ -54,7 +54,7 @@ pub enum Error {
 /// Run a command in a given directory.
 pub async fn run(command: Command, context: Context<impl Environment>) -> anyhow::Result<()> {
     match command {
-        Command::Initialize { with_metadata } => initialize(with_metadata, context).await?,
+        Command::Initialize { with_metadata } => initialize(with_metadata, &context).await?,
         Command::Update => update(context).await?,
         Command::Upgrade { dir_from, dir_to } => upgrade(dir_from, dir_to).await?,
     };
@@ -72,7 +72,7 @@ const MODELS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/assets");
 /// Optionally, this can also create the connector metadata, which is used by the Hasura CLI to
 /// automatically work with this CLI as a plugin.
 
-async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> anyhow::Result<()> {
+async fn initialize(with_metadata: bool, context: &Context<impl Environment>) -> anyhow::Result<()> {
     // refuse to initialize the directory unless it is empty
     let mut items_in_dir = fs::read_dir(&context.context_path).await?;
     if items_in_dir.next_entry().await?.is_some() {
@@ -82,8 +82,7 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
     write_parsed_configuration(
         ParsedConfiguration::initial(),
         &context.context_path,
-    )
-        .await?;
+    ).await?;
 
     for entry in MODELS_DIR.find("**/*").unwrap() {
         match entry {
@@ -104,14 +103,14 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
         let metadata_dir = context.context_path.join(".hasura-connector");
         fs::create_dir(&metadata_dir).await?;
         let metadata_file = metadata_dir.join("connector-metadata.yaml");
+        let docker_image = format!(
+            "docker.io/kstott/meta_connector:{}",
+            context.release_version.unwrap_or("latest")
+        );
+        let update_command = format!("docker run --entry-point ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:/etc/connector {} update", docker_image);
         let metadata = metadata::ConnectorMetadataDefinition {
             packaging_definition: metadata::PackagingDefinition::PrebuiltDockerImage(
-                metadata::PrebuiltDockerImagePackaging {
-                    docker_image: format!(
-                        "docker.io/kstott/meta_connector:{}",
-                        context.release_version.unwrap_or("latest")
-                    ),
-                },
+                metadata::PrebuiltDockerImagePackaging { docker_image },
             ),
             supported_environment_variables: vec![metadata::EnvironmentVariableDefinition {
                 name: "MODEL_FILE".to_string(),
@@ -119,13 +118,10 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
                 default_value: Some("./models/model.json".to_string()),
             }],
             commands: metadata::Commands {
-                update: Some("hasura-ndc-calcite update".to_string()),
+                update: Some(update_command.to_string()),
                 watch: None,
             },
-            cli_plugin: Some(metadata::CliPluginDefinition {
-                name: "ndc-calcite-cli".to_string(),
-                version: context.release_version.unwrap_or("latest").to_string(),
-            }),
+            cli_plugin: None,
             docker_compose_watch: vec![metadata::DockerComposeWatchItem {
                 path: "./".to_string(),
                 target: Some("/etc/connector".to_string()),
@@ -142,8 +138,13 @@ async fn initialize(with_metadata: bool, context: Context<impl Environment>) -> 
 
 /// Update the configuration in the current directory by introspecting the database.
 ///
-/// This expects a configuration with a valid model.json.
+/// If the directory is empty - it will initialize with the core files first.
 async fn update(context: Context<impl Environment>) -> anyhow::Result<()> {
+
+    let mut items_in_dir = fs::read_dir(&context.context_path).await?;
+    if !items_in_dir.next_entry().await?.is_some() {
+        initialize(true, &context).await?
+    }
     // It is possible to change the file in the middle of introspection.
     // We want to detect this scenario and retry, or fail if we are unable to.
     // We do that with a few attempts.

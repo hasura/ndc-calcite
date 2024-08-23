@@ -6,7 +6,7 @@
         "name": "default",
         "type": "jdbc",
         "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
-        "jdbcUrl": "jdbc:sqlite:./data/chinook.db"
+        "jdbcUrl": "jdbc:sqlite:/etc/connector/data/chinook.db"
       }
     ]
   }

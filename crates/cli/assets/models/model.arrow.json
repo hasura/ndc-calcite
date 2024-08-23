@@ -7,7 +7,7 @@
       "type": "custom",
       "factory": "org.apache.calcite.adapter.arrow.ArrowSchemaFactory",
       "operand": {
-        "directory": "./data/arrow"
+        "directory": "/etc/connector/data/arrow"
       }
     }
   ]
