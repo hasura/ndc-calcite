@@ -8,7 +8,7 @@ pub trait Environment {
     fn read(&self, variable: &Variable) -> Result<Value, Error>;
 }
 
-/// The name of an an environment variable.
+/// The name of an environment variable.
 #[derive(Clone, PartialEq, Eq, Hash, Deserialize, Serialize, JsonSchema)]
 pub struct Variable(String);
 
