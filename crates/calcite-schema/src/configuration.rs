@@ -18,8 +18,6 @@ pub fn generate_latest_schema() -> RootSchema {
         .into_root_schema_for::<version5::ParsedConfiguration>()
 }
 
-pub const DEFAULT_CONNECTION_URI_VARIABLE: &str = "CONNECTION_URI";
-
 /// The 'ParsedConfiguration' type models the various concrete configuration formats that are
 /// currently supported.
 ///

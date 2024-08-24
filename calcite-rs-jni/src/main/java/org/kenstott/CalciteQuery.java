@@ -125,9 +125,10 @@ public class CalciteQuery {
         Properties info = new Properties();
         info.setProperty("model", modelPath);
         try {
+            Class.forName("org.apache.calcite.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:calcite:", info);
             rootSchema = connection.unwrap(CalciteConnection.class).getRootSchema().unwrap(CalciteSchema.class);
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
         span.end();

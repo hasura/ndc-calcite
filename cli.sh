@@ -1,5 +1,6 @@
-export HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH=/Users/kennethstott/Documents/GitHub/ndc-calcite/config-test
-rm -rf ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}
-mkdir -p ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}
-echo docker run --entrypoint ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}:/etc/connector docker.io/kstott/meta_connector:latest update
-docker run --entrypoint ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}:/etc/connector docker.io/kstott/meta_connector:latest update
+export LOCAL_PATH=/Users/kennethstott/Documents/GitHub/ndc-calcite/config-test
+export HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH=/etc/connector
+#rm -rf ${LOCAL_PATH}
+mkdir -p ${LOCAL_PATH}
+echo docker run --entrypoint ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${LOCAL_PATH}:/etc/connector docker.io/kstott/meta_connector:latest update
+docker run --entrypoint ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${LOCAL_PATH}:/etc/connector docker.io/kstott/meta_connector:latest update

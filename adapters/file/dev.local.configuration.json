@@ -6,146 +6,34 @@
     "defaultSchema": "sales",
     "schemas": [
       {
-        "type": "custom",
         "name": "sales",
-        "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
-        "operand": {
-          "directory": "/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/file/resources/test/bug"
-        }
+        "tables": [
+          {
+            "name": "EMPS",
+            "type": "custom",
+            "factory": "org.apache.calcite.adapter.file.CsvTableFactory",
+            "operand": {}
+          },
+          {
+            "name": "female_emps",
+            "type": "view",
+            "sql": "select * from \"EMPS\" where \"GENDER\" = 'F'",
+            "modifiable": false
+          }
+        ]
       }
     ]
   },
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "ARCHERS": {
+    "EMPS": {
       "schema": "sales",
-      "name": "ARCHERS",
+      "name": "EMPS",
       "columns": {
-        "f": {
-          "name": "f",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "d": {
-          "name": "d",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "c": {
-          "name": "c",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "e": {
-          "name": "e",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "b": {
-          "name": "b",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "object": {
-          "name": "object",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "id": {
-          "name": "id",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "a": {
-          "name": "a",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "g": {
-          "name": "g",
-          "scalarType": "LIST",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "test": {
-      "schema": "sales",
-      "name": "test",
-      "columns": {
-        "id": {
-          "name": "id",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "d": {
-          "name": "d",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "b": {
-          "name": "b",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "object": {
-          "name": "object",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "f": {
-          "name": "f",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "c": {
-          "name": "c",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "g": {
-          "name": "g",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "a": {
-          "name": "a",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "e": {
-          "name": "e",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "LONG_EMPS": {
-      "schema": "sales",
-      "name": "LONG_EMPS",
-      "columns": {
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
         "CITY": {
           "name": "CITY",
           "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
           "nullable": true
         },
         "DEPTNO": {
@@ -153,9 +41,24 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "AGE": {
-          "name": "AGE",
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
           "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
           "nullable": true
         },
         "GENDER": {
@@ -163,37 +66,9 @@
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "JOINEDAT": {
-          "name": "JOINEDAT",
-          "scalarType": "DATE",
-          "nullable": true
-        },
         "NAME": {
           "name": "NAME",
           "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "WACKY_COLUMN_NAMES": {
-      "schema": "sales",
-      "name": "WACKY_COLUMN_NAMES",
-      "columns": {
-        "CITY": {
-          "name": "CITY",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
           "nullable": true
         },
         "EMPNO": {
@@ -201,9 +76,32 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "2gender": {
-          "name": "2gender",
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "female_emps": {
+      "schema": "sales",
+      "name": "female_emps",
+      "columns": {
+        "NAME": {
+          "name": "NAME",
           "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "GENDER": {
+          "name": "GENDER",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
           "nullable": true
         },
         "AGE": {
@@ -211,14 +109,9 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "naME": {
-          "name": "naME",
+        "CITY": {
+          "name": "CITY",
           "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
           "nullable": true
         },
         "MANAGER": {
@@ -226,65 +119,14 @@
           "scalarType": "BOOLEAN",
           "nullable": true
         },
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "VARCHAR",
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
           "nullable": true
         },
-        "joined at": {
-          "name": "joined at",
-          "scalarType": "DATE",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "configuration": {
-      "schema": "sales",
-      "name": "configuration",
-      "columns": {
-        "metadata": {
-          "name": "metadata",
-          "scalarType": "MAP",
-          "nullable": true
-        },
-        "fixes": {
-          "name": "fixes",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "$schema": {
-          "name": "$schema",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "model": {
-          "name": "model",
-          "scalarType": "MAP",
-          "nullable": true
-        },
-        "model_file_path": {
-          "name": "model_file_path",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "version": {
-          "name": "version",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "DATES": {
-      "schema": "sales",
-      "name": "DATES",
-      "columns": {
-        "JOINTIMES": {
-          "name": "JOINTIMES",
-          "scalarType": "TIMESTAMP",
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
           "nullable": true
         },
         "JOINEDAT": {
@@ -292,13 +134,8 @@
           "scalarType": "DATE",
           "nullable": true
         },
-        "JOINTIME": {
-          "name": "JOINTIME",
-          "scalarType": "TIME",
-          "nullable": true
-        },
-        "EMPNO": {
-          "name": "EMPNO",
+        "EMPID": {
+          "name": "EMPID",
           "scalarType": "INTEGER",
           "nullable": true
         }

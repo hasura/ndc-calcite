@@ -111,8 +111,9 @@ pub struct Materialization {
 
 #[derive(Eq, PartialEq, JsonSchema, Serialize, Deserialize, Clone, Debug)]
 pub struct Column {
+    #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "type")]
-    pub r#type: String,
+    pub r#type: Option<String>,
     pub name: String,
 }
 
@@ -141,7 +142,7 @@ pub struct Table {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub factory: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub operand: Option<String>,
+    pub operand: Option<Operand>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub columns: Option<Vec<Column>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -173,6 +174,8 @@ pub struct Function {
 pub struct Operand {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub directory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub host: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
