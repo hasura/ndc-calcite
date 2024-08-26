@@ -1,3 +1,5 @@
+use tracing::{Level};
+
 #[derive(Debug, Copy, Clone)]
 pub enum VersionTag {
     Version3,
@@ -6,6 +8,7 @@ pub enum VersionTag {
 }
 
 /// Emit deprecation warning text if the version is deprecated.
+#[tracing::instrument(skip(version), level=Level::INFO)]
 pub fn deprecated_config_warning(version: VersionTag) -> Option<String> {
     match version {
 		VersionTag::Version3 => Some(

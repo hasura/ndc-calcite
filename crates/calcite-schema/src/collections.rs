@@ -28,6 +28,7 @@ use crate::calcite::{ColumnMetadata, TableMetadata};
 ///
 /// An inner Result can also be returned, which contains an error indicating an issue with the input data.
 // ANCHOR: collections
+#[tracing::instrument(skip(data_models, scalar_types), level=Level::INFO)]
 pub fn collections(
     data_models: &HashMap<CollectionName, TableMetadata>,
     scalar_types: &BTreeMap<ScalarTypeName, ScalarType>,

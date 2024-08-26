@@ -25,7 +25,7 @@ use ndc_models::{AggregateFunctionDefinition, AggregateFunctionName, Type};
 /// # Returns
 ///
 /// A `BTreeMap` containing aggregate function definitions for `sum`, `max`, `avg`, and `min`.
-#[tracing::instrument(skip(underlying_type))]
+#[tracing::instrument(skip(underlying_type), level=Level::INFO)]
 pub fn numeric_aggregates(
     underlying_type: &str,
 ) -> BTreeMap<AggregateFunctionName, AggregateFunctionDefinition> {

@@ -17,7 +17,7 @@ use crate::jvm::get_jvm;
 /// A `HashMap` containing the retrieved models. The outer `HashMap` maps model names
 /// to inner `HashMap`s, where each inner `HashMap` represents a model with its properties.
 
-#[tracing::instrument(skip(calcite_ref))]
+#[tracing::instrument(skip(calcite_ref), level=Level::INFO)]
 pub fn get_models(calcite_ref: &GlobalRef) -> HashMap<CollectionName, TableMetadata> {
     let map = {
         let jvm = get_jvm().lock().unwrap();

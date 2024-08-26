@@ -33,7 +33,7 @@ static CONFIG: OnceCell<Mutex<ParsedConfiguration>> = OnceCell::new();
 /// }
 /// ```
 // ANCHOR: get_jvm
-#[tracing::instrument(skip())]
+#[tracing::instrument(skip(), level=Level::INFO)]
 pub fn get_jvm() -> &'static Mutex<JavaVM> {
     {
         let jvm = JVM.get().expect("JVM is not set up.");
@@ -69,7 +69,7 @@ pub fn get_jvm() -> &'static Mutex<JavaVM> {
 /// init_jvm(&config);
 /// ```
 // ANCHOR: init_jvm
-#[tracing::instrument(skip(calcite_configuration))]
+#[tracing::instrument(skip(calcite_configuration), level=Level::INFO)]
 pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
     let configuration = match calcite_configuration {
         ParsedConfiguration::Version5(c) => c

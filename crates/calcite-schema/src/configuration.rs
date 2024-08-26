@@ -1,7 +1,6 @@
 //! Configuration for the connector.
 
 use std::path::{Path, PathBuf};
-
 use crate::environment::Environment;
 use crate::error::{
     MakeRuntimeConfigurationError, ParseConfigurationError,
@@ -11,8 +10,9 @@ use crate::version5;
 use crate::version::VersionTag;
 use schemars::{gen::SchemaSettings, schema::RootSchema};
 use crate::version5::CalciteRefSingleton;
+use tracing::{Level};
 
-
+#[tracing::instrument(skip(), level=Level::INFO)]
 pub fn generate_latest_schema() -> RootSchema {
     SchemaSettings::openapi3()
         .into_generator()
@@ -38,9 +38,11 @@ pub enum ParsedConfiguration {
 type Configuration = ParsedConfiguration;
 
 impl ParsedConfiguration {
+    #[tracing::instrument(skip(), level=Level::INFO)]
     pub fn initial() -> Self {
         ParsedConfiguration::Version5(version5::ParsedConfiguration::empty())
     }
+    #[tracing::instrument(skip_all, level=Level::INFO)]
     pub fn version(&self) -> VersionTag {
         match self {
             ParsedConfiguration::Version5(_) => VersionTag::Version5,
@@ -89,6 +91,7 @@ pub async fn parse_configuration(
 ///
 /// Each concrete supported version implementation is responsible for interpretation its format
 /// into the runtime configuration.
+#[tracing::instrument(skip(parsed_config,_environment), level=Level::INFO)]
 pub fn make_runtime_configuration(
     parsed_config: ParsedConfiguration,
     _environment: impl Environment,
@@ -112,6 +115,7 @@ pub async fn write_parsed_configuration(
 ///
 /// This is part of the configuration crate API to enable users to upgrade their configurations
 /// mechanically, using the ndc-postgres cli, when new versions are released.
+#[tracing::instrument(skip(parsed_config), level=Level::INFO)]
 pub fn upgrade_to_latest_version(parsed_config: ParsedConfiguration) -> ParsedConfiguration {
     match parsed_config {
         ParsedConfiguration::Version5(_) => parsed_config,

@@ -1,5 +1,6 @@
 use std::env;
 use std::path::Path;
+use tracing::{Level};
 
 /// Checks if the code is running inside a container.
 ///
@@ -21,7 +22,7 @@ use std::path::Path;
 /// # Returns
 ///
 /// Returns `true` if the code is running inside a container, `false` otherwise.
-#[tracing::instrument(skip())]
+#[tracing::instrument(skip(), level=Level::INFO)]
 pub fn is_running_in_container() -> bool {
     Path::new("/.dockerenv").exists() || env::var("KUBERNETES_SERVICE_HOST").is_ok()
 }

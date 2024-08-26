@@ -453,7 +453,7 @@ fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
     path.join(".")
 }
 
-#[tracing::instrument(skip(configuration,_arguments, select, order_by, pagination, where_clause, join_clause),level=Level::DEBUG)]
+#[tracing::instrument(skip(configuration,_arguments, select, order_by, pagination, where_clause, join_clause),level=Level::INFO)]
 pub fn query_collection(
     configuration: &ParsedConfiguration,
     collection_name: &CollectionName,
@@ -545,7 +545,7 @@ pub fn query_collection(
     arguments,
     query,
     variables
-))]
+), level=Level::INFO)]
 pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents, QueryError> {
     let mut argument_values = BTreeMap::new();
     for (argument_name, argument_value) in arguments {

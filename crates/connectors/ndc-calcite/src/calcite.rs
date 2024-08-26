@@ -52,7 +52,7 @@ pub type Row = IndexMap<FieldName, RowFieldValue>;
 ///     return instance;
 /// }
 /// ```
-#[tracing::instrument(skip(configuration, env))]
+#[tracing::instrument(skip(configuration, env), level=Level::INFO)]
 pub fn create_calcite_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
     let instance = env.new_object(class, "()V", &[]).unwrap();
@@ -115,7 +115,7 @@ fn parse_to_row(data: Vec<String>) -> Vec<Row> {
 /// }
 /// ```
 // ANCHOR: calcite_query
-#[tracing::instrument(skip(config,calcite_reference,sql_query,query_metadata))]
+#[tracing::instrument(skip(config,calcite_reference,sql_query,query_metadata), level=Level::INFO)]
 pub fn calcite_query(
     config: &ParsedConfiguration,
     calcite_reference: GlobalRef,

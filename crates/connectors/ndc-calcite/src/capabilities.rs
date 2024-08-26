@@ -10,6 +10,7 @@ use ndc_models::{
     Capabilities, CapabilitiesResponse, LeafCapability, MutationCapabilities,
     NestedFieldCapabilities, QueryCapabilities, RelationshipCapabilities,
 };
+use tracing::{Level};
 
 /// Calculates the capabilities of the Calcite system.
 ///
@@ -31,6 +32,7 @@ use ndc_models::{
 ///
 /// - `CapabilitiesResponse`: A struct representing the capabilities of the Calcite system.
 // ANCHOR: calcite_capabilities
+#[tracing::instrument(skip(), level=Level::INFO)]
 pub fn calcite_capabilities() -> CapabilitiesResponse {
     CapabilitiesResponse {
         version: "0.1.4".into(),

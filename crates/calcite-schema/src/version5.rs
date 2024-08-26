@@ -33,6 +33,7 @@ impl CalciteRefSingleton {
         }
     }
 
+    #[tracing::instrument(skip(self, args), level=Level::INFO)]
     pub fn initialize(&self, args: &crate::configuration::ParsedConfiguration) -> Result<(), &'static str> {
         match args {
             crate::configuration::ParsedConfiguration::Version5(config) => {
@@ -102,6 +103,7 @@ impl ParsedConfiguration {
     }
 }
 
+#[tracing::instrument(skip(configuration, calcite_query, env), level=Level::INFO)]
 pub fn create_calcite_connection<'a, 'b>(
     configuration: &'a ParsedConfiguration,
     calcite_query: &'b JObject,
@@ -130,6 +132,7 @@ pub fn create_calcite_connection<'a, 'b>(
     }
 }
 
+#[tracing::instrument(skip(configuration, env), level=Level::INFO)]
 pub fn create_calcite_query_engine<'a>(
     configuration: &'a ParsedConfiguration,
     mut env: JNIEnv<'a>

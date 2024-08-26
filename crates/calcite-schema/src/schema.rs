@@ -60,7 +60,7 @@ use crate::version5::ParsedConfiguration;
 /// }
 /// ```
 // ANCHOR: get_schema
-#[tracing::instrument(skip(configuration, calcite_ref))]
+#[tracing::instrument(skip(configuration, calcite_ref), level=Level::INFO)]
 pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse, Box<dyn Error>> {
     let data_models = get_models(&calcite_ref);
     let scalar_types = scalars::scalars();

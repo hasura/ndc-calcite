@@ -3,10 +3,9 @@
 //! Make additional changes to scalar definitions here.
 //!
 use std::collections::BTreeMap;
-
 use ndc_models::{ComparisonOperatorDefinition, ScalarType, ScalarTypeName, TypeRepresentation};
-
 use crate::{aggregates, comparators};
+use tracing::{Level};
 
 /// Retrieves a mapping of scalar types with their respective properties.
 ///
@@ -67,7 +66,7 @@ use crate::{aggregates, comparators};
 /// }
 /// ```
 // ANCHOR: scalars
-#[tracing::instrument(skip())]
+#[tracing::instrument(skip(), level=Level::INFO)]
 pub fn scalars() -> BTreeMap<ScalarTypeName, ScalarType> {
     let string_comparison_operators =
         comparators::string_comparators(&comparators::numeric_comparators("VARCHAR".into()));
