@@ -4,6 +4,7 @@
   "schemas": [
     {
       "name": "hive",
+      "cache": true,
       "type": "jdbc",
         "jdbcUrl": "jdbc:hive2://192.168.86.233:10000",
         "jdbcSchema": "default"

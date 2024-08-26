@@ -6,18 +6,22 @@
     "defaultSchema": "sales",
     "schemas": [
       {
+        "type": "custom",
         "name": "sales",
+        "cache": true,
+        "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
+        "operand": {
+          "directory": "resources/test/bug"
+        }
+      },
+      {
+        "name": "sales_views",
+        "cache": true,
         "tables": [
-          {
-            "name": "EMPS",
-            "type": "custom",
-            "factory": "org.apache.calcite.adapter.file.CsvTableFactory",
-            "operand": {}
-          },
           {
             "name": "female_emps",
             "type": "view",
-            "sql": "select * from \"EMPS\" where \"GENDER\" = 'F'",
+            "sql": "select * from \"sales\".\"LONG_EMPS\" where \"GENDER\" = 'F'",
             "modifiable": false
           }
         ]
@@ -26,122 +30,5 @@
   },
   "model_file_path": "./model.json",
   "fixes": true,
-  "metadata": {
-    "EMPS": {
-      "schema": "sales",
-      "name": "EMPS",
-      "columns": {
-        "CITY": {
-          "name": "CITY",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "JOINEDAT": {
-          "name": "JOINEDAT",
-          "scalarType": "DATE",
-          "nullable": true
-        },
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "GENDER": {
-          "name": "GENDER",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "AGE": {
-          "name": "AGE",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "female_emps": {
-      "schema": "sales",
-      "name": "female_emps",
-      "columns": {
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "GENDER": {
-          "name": "GENDER",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "AGE": {
-          "name": "AGE",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "CITY": {
-          "name": "CITY",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "JOINEDAT": {
-          "name": "JOINEDAT",
-          "scalarType": "DATE",
-          "nullable": true
-        },
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    }
-  }
+  "metadata": {}
 }

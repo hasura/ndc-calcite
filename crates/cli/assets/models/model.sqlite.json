@@ -4,6 +4,7 @@
     "schemas": [
       {
         "name": "default",
+        "cache": true,
         "type": "jdbc",
         "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
         "jdbcUrl": "jdbc:sqlite:./data/chinook.db"

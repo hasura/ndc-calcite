@@ -12,6 +12,8 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <calcite.version>1.38.0-SNAPSHOT</calcite.version>
+        <opentelemetry.version>1.40.0</opentelemetry.version>
     </properties>
 
     <dependencies>
@@ -24,107 +26,124 @@
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-file</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/file/build/libs/calcite-file-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/file/build/libs/calcite-file-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-linq4j</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/linq4j/build/libs/calcite-linq4j-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/linq4j/build/libs/calcite-linq4j-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-druid</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/druid/build/libs/calcite-druid-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/druid/build/libs/calcite-druid-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-elasticsearch</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/elasticsearch/build/libs/calcite-elasticsearch-1.38.0-SNAPSHOT.jar
+            <systemPath>${project.basedir}/calcite/elasticsearch/build/libs/calcite-elasticsearch-${calcite.version}.jar
             </systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-csv</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/example/csv/build/libs/calcite-csv-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/example/csv/build/libs/calcite-csv-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-cassandra</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/cassandra/build/libs/calcite-cassandra-1.38.0-SNAPSHOT.jar
+            <systemPath>${project.basedir}/calcite/cassandra/build/libs/calcite-cassandra-${calcite.version}.jar
             </systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-redis</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/redis/build/libs/calcite-redis-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/redis/build/libs/calcite-redis-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-pig</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/pig/build/libs/calcite-pig-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/pig/build/libs/calcite-pig-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-geode</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/geode/build/libs/calcite-geode-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/geode/build/libs/calcite-geode-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-spark</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/spark/build/libs/calcite-spark-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/spark/build/libs/calcite-spark-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-mongodb</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/mongodb/build/libs/calcite-mongodb-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/mongodb/build/libs/calcite-mongodb-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-arrow</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/arrow/build/libs/calcite-arrow-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/arrow/build/libs/calcite-arrow-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-innodb</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/innodb/build/libs/calcite-innodb-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/innodb/build/libs/calcite-innodb-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-splunk</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/splunk/build/libs/calcite-splunk-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/splunk/build/libs/calcite-splunk-${calcite.version}.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-kafka</artifactId>
+            <version>${calcite.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/calcite/kafka/build/libs/calcite-kafka-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite.avatica</groupId>
             <artifactId>avatica-core</artifactId>
             <version>1.25.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -132,38 +151,46 @@
             <version>3.6.1</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.calcite</groupId>
-            <artifactId>calcite-kafka</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/kafka/build/libs/calcite-kafka-1.38.0-SNAPSHOT.jar</systemPath>
-        </dependency>
-        <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-api</artifactId>
-            <version>1.40.0</version>
-        </dependency>
-        <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
-            <version>1.40.0</version>
+            <version>${opentelemetry.version}</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-otlp</artifactId>
-            <version>1.40.0</version>
+            <version>${opentelemetry.version}</version>
         </dependency>
         <dependency>
             <groupId>io.opentelemetry</groupId>
             <artifactId>opentelemetry-exporter-logging</artifactId>
-            <version>1.40.0</version>
+            <version>${opentelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk</artifactId>
+            <version>${opentelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-metrics</artifactId>
+            <version>${opentelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+            <version>${opentelemetry.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-sdk-extension-autoconfigure-spi</artifactId>
+            <version>${opentelemetry.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-core</artifactId>
-            <version>1.38.0-SNAPSHOT</version>
+            <version>${calcite.version}</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/calcite/core/build/libs/calcite-core-1.38.0-SNAPSHOT.jar</systemPath>
+            <systemPath>${project.basedir}/calcite/core/build/libs/calcite-core-${calcite.version}.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -316,6 +343,20 @@
             <groupId>org.apache.cassandra</groupId>
             <artifactId>cassandra-all</artifactId>
             <version>4.1.3</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -341,6 +382,16 @@
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
             <version>3.1.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>log4j-slf4j-impl</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.hsqldb</groupId>
@@ -371,7 +422,7 @@
             <dependency>
                 <groupId>io.opentelemetry</groupId>
                 <artifactId>opentelemetry-bom</artifactId>
-                <version>1.40.0</version>
+                <version>${opentelemetry.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -425,7 +476,7 @@
                     <argLine>
                         --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED
                         -Dotel.java.global-autoconfigure.enabled=true
-                        -Dlog_level=DEBUG
+                        -Dlog_level=verbose
                     </argLine>
                 </configuration>
             </plugin>

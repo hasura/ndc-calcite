@@ -21,7 +21,7 @@ use std::path::Path;
 /// # Returns
 ///
 /// Returns `true` if the code is running inside a container, `false` otherwise.
-#[tracing::instrument]
+#[tracing::instrument(skip())]
 pub fn is_running_in_container() -> bool {
     Path::new("/.dockerenv").exists() || env::var("KUBERNETES_SERVICE_HOST").is_ok()
 }

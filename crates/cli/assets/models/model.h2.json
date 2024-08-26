@@ -4,6 +4,7 @@
   "schemas": [
     {
       "name": "TEST",
+      "cache": true,
       "type": "jdbc",
       "jdbcDriver": "org.h2.Driver",
       "jdbcUrl": "jdbc:h2:tcp://localhost:1521/test",

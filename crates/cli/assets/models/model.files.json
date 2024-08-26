@@ -4,6 +4,7 @@
   "schemas": [
     {
       "name": "default",
+      "cache": true,
       "type": "custom",
       "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
       "operand": {

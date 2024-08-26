@@ -12,6 +12,8 @@ use tokio::fs;
 
 use ndc_calcite_schema::configuration::{introspect, parse_configuration, ParsedConfiguration, upgrade_to_latest_version, write_parsed_configuration};
 use ndc_calcite_schema::environment::Environment;
+use ndc_calcite_schema::jvm::init_jvm;
+use ndc_calcite_schema::version5::CalciteRefSingleton;
 
 mod metadata;
 
@@ -52,10 +54,11 @@ pub enum Error {
 }
 
 /// Run a command in a given directory.
-pub async fn run(command: Command, context: Context<impl Environment>) -> anyhow::Result<()> {
+#[tracing::instrument(skip(context,calcite_ref_singleton))]
+pub async fn run(command: Command, context: Context<impl Environment>, calcite_ref_singleton: CalciteRefSingleton) -> anyhow::Result<()> {
     match command {
         Command::Initialize { with_metadata } => initialize(with_metadata, &context).await?,
-        Command::Update => update(context).await?,
+        Command::Update => update(context, &calcite_ref_singleton).await?,
         Command::Upgrade { dir_from, dir_to } => upgrade(dir_from, dir_to).await?,
     };
     Ok(())
@@ -72,6 +75,7 @@ const MODELS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/assets");
 /// Optionally, this can also create the connector metadata, which is used by the Hasura CLI to
 /// automatically work with this CLI as a plugin.
 
+#[tracing::instrument(skip(context))]
 async fn initialize(with_metadata: bool, context: &Context<impl Environment>) -> anyhow::Result<()> {
     // refuse to initialize the directory unless it is empty
     let mut items_in_dir = fs::read_dir(&context.context_path).await?;
@@ -114,7 +118,7 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
             ),
             supported_environment_variables: vec![metadata::EnvironmentVariableDefinition {
                 name: "MODEL_FILE".to_string(),
-                description: "The calcite connection mode file path".to_string(),
+                description: "The calcite connection model file path".to_string(),
                 default_value: Some("/etc/connector/models/model.json".to_string()),
             }],
             commands: metadata::Commands {
@@ -139,8 +143,8 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
 /// Update the configuration in the current directory by introspecting the database.
 ///
 /// If the directory is empty - it will initialize with the core files first.
-async fn update(context: Context<impl Environment>) -> anyhow::Result<()> {
-
+#[tracing::instrument(skip(context,calcite_ref_singleton))]
+async fn update(context: Context<impl Environment>, calcite_ref_singleton: &CalciteRefSingleton) -> anyhow::Result<()> {
     let mut items_in_dir = fs::read_dir(&context.context_path).await?;
     if !items_in_dir.next_entry().await?.is_some() {
         initialize(true, &context).await?
@@ -151,8 +155,9 @@ async fn update(context: Context<impl Environment>) -> anyhow::Result<()> {
     for _attempt in 1..=UPDATE_ATTEMPTS {
         let existing_configuration =
             parse_configuration(&context.context_path).await?;
+        init_jvm(&existing_configuration);
         let output =
-            introspect(existing_configuration.clone(), &context.context_path, &context.environment).await?;
+            introspect(existing_configuration.clone(), &context.context_path, &context.environment, calcite_ref_singleton).await?;
 
         // Check that the input file did not change since we started introspecting,
         let input_again_before_write =
@@ -178,6 +183,7 @@ async fn update(context: Context<impl Environment>) -> anyhow::Result<()> {
 /// Upgrade the configuration in a directory by trying to read it and then write it back
 /// out to a different directory.
 ///
+#[tracing::instrument(skip(dir_from, dir_to))]
 async fn upgrade(dir_from: PathBuf, dir_to: PathBuf) -> anyhow::Result<()> {
     let old_configuration = parse_configuration(dir_from).await?;
     let upgraded_configuration = upgrade_to_latest_version(old_configuration);

@@ -7,6 +7,7 @@ use std::error::Error;
 
 use ndc_models::{CollectionInfo, CollectionName, FieldName, ForeignKeyConstraint, ObjectField, ObjectType, ObjectTypeName, ScalarType, ScalarTypeName, SchemaResponse, Type, TypeName, UniquenessConstraint};
 use ndc_models::Type::{Named, Nullable};
+use tracing::Level;
 
 use crate::calcite::{ColumnMetadata, TableMetadata};
 
@@ -66,7 +67,7 @@ pub fn collections(
     Ok((object_types, collection_infos))
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(column_metadata), level=Level::DEBUG)]
 fn build_fields(column_metadata: &HashMap<FieldName, ColumnMetadata>) -> BTreeMap<FieldName, ObjectField> {
     column_metadata.iter().map(|(column_name, column_metadata)| {
         let scalar_type = TypeName::from(column_metadata.scalar_type.clone());
@@ -85,38 +86,48 @@ fn build_fields(column_metadata: &HashMap<FieldName, ColumnMetadata>) -> BTreeMa
     }).collect()
 }
 
-fn build_uniqueness_constraints(tb_metadata: &TableMetadata) -> BTreeMap<String, UniquenessConstraint> {
-    let mut uc = BTreeMap::new();
-    uc.insert("PK".into(), UniquenessConstraint {
-        unique_columns: tb_metadata.primary_keys.clone().unwrap().iter().map(|s| FieldName::new(s.clone().parse().unwrap())).collect()
+#[tracing::instrument(skip(table_metadata), level=Level::DEBUG)]
+fn build_uniqueness_constraints(table_metadata: &TableMetadata) -> BTreeMap<String, UniquenessConstraint> {
+    let mut unique_constraints = BTreeMap::new();
+    unique_constraints.insert("PK".into(), UniquenessConstraint {
+        unique_columns: table_metadata.primary_keys.clone().unwrap().iter().map(|s| FieldName::new(s.clone().parse().unwrap())).collect()
     });
-    uc
+    unique_constraints
 }
 
-fn build_foreign_keys(tb_metadata: &TableMetadata, data_models: &HashMap<CollectionName, TableMetadata>) -> BTreeMap<String, ForeignKeyConstraint> {
-    let mut constraints: BTreeMap<String, ForeignKeyConstraint> = Default::default();
-    for (_, foreign_table_metadata) in data_models {
-        for ft in foreign_table_metadata.clone().exported_keys.unwrap_or_default() {
-            if ft.fk_table_catalog == tb_metadata.catalog && ft.fk_table_schema == tb_metadata.schema && ft.fk_table_name == tb_metadata.name {
-                let pk_table_name = ft.pk_table_name.clone();
-                match constraints.get_mut(&pk_table_name) {
+#[tracing::instrument(skip(table_metadata, models_data_map), level=Level::DEBUG)]
+fn build_foreign_keys(table_metadata: &TableMetadata, models_data_map: &HashMap<CollectionName, TableMetadata>) -> BTreeMap<String, ForeignKeyConstraint> {
+    let mut foreign_key_constraints: BTreeMap<String, ForeignKeyConstraint> = Default::default();
+
+    for (_, foreign_metadata) in models_data_map {
+        for foreign_key in foreign_metadata.clone().exported_keys.unwrap_or_default() {
+            if foreign_key.fk_table_catalog == table_metadata.catalog
+                && foreign_key.fk_table_schema == table_metadata.schema
+                && foreign_key.fk_table_name == table_metadata.name {
+
+                let primary_table_name = foreign_key.pk_table_name.clone();
+
+                match foreign_key_constraints.get_mut(&primary_table_name) {
+                    // If there was no key exists in the map, insert the new one
                     None => {
-                        let mut constraint = ForeignKeyConstraint {
+                        let mut new_constraint = ForeignKeyConstraint {
                             column_mapping: Default::default(),
-                            foreign_collection: CollectionName::from(pk_table_name.clone())
+                            foreign_collection: CollectionName::from(primary_table_name.clone())
                         };
-                        constraint.column_mapping.insert(FieldName::from(ft.fk_column_name), FieldName::from(ft.pk_column_name));
-                        constraints.insert(pk_table_name.clone(), constraint);
+
+                        new_constraint.column_mapping.insert(FieldName::from(foreign_key.fk_column_name), FieldName::from(foreign_key.pk_column_name));
+                        foreign_key_constraints.insert(primary_table_name.clone(), new_constraint);
                     }
-                    Some(value) => {
-                        value.column_mapping.insert(FieldName::from(ft.fk_column_name), FieldName::from(ft.pk_column_name));
+                    // If the key already exists, simply update it
+                    Some(existing_constraint) => {
+                        existing_constraint.column_mapping.insert(FieldName::from(foreign_key.fk_column_name), FieldName::from(foreign_key.pk_column_name));
                     }
                 }
             }
         }
     }
-    constraints
-}
 
+    return foreign_key_constraints;
+}
 
 // ANCHOR_END: collections

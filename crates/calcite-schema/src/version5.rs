@@ -2,11 +2,13 @@
 
 use std::collections::{HashMap};
 use std::path::Path;
+use jni::errors::{Error, JniError};
 use jni::JNIEnv;
 use jni::objects::{GlobalRef, JObject, JValueGen, JValueOwned};
 use jni::objects::JValueGen::Object;
 use ndc_models::CollectionName;
 use ndc_sdk::connector::InitializationError;
+use once_cell::sync::OnceCell;
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -17,8 +19,35 @@ use ndc_calcite_values::values::{CONFIGURATION_FILENAME, CONFIGURATION_JSONSCHEM
 use crate::calcite::{Model, TableMetadata};
 use crate::environment::Environment;
 use crate::error::{ParseConfigurationError, WriteParsedConfigurationError};
-use crate::jvm::{get_jvm, init_jvm};
+use crate::jvm::{get_jvm};
 use crate::models::get_models;
+
+pub struct CalciteRefSingleton {
+    calcite_ref: OnceCell<GlobalRef>,
+}
+
+impl CalciteRefSingleton {
+    pub fn new() -> Self {
+        Self {
+            calcite_ref: OnceCell::new(),
+        }
+    }
+
+    pub fn initialize(&self, args: &crate::configuration::ParsedConfiguration) -> Result<(), &'static str> {
+        match args {
+            crate::configuration::ParsedConfiguration::Version5(config) => {
+                 let java_vm = get_jvm().lock().unwrap();
+                 let env = java_vm.attach_current_thread_as_daemon().map_err(| _ | "Could not attach thread to JVM") ?;
+                 let calcite_ref = create_calcite_query_engine(&config, env).map_err(| _ | "Could not create Calcite Query Engine") ?;
+                 self.calcite_ref.set(calcite_ref).map_err(| _ | "Calcite Query Engine already initialized")
+             }
+        }
+    }
+
+    pub fn get(&self) -> Option<&GlobalRef> {
+        self.calcite_ref.get()
+    }
+}
 
 /// Initial configuration, just enough to connect to a database and elaborate a full
 /// 'Configuration'.
@@ -73,10 +102,10 @@ impl ParsedConfiguration {
     }
 }
 
-pub fn create_calcite_connection<'a>(
-    configuration: &ParsedConfiguration,
-    calcite_query: &JObject<'a>,
-    env: &'a mut JNIEnv<'a>,
+pub fn create_calcite_connection<'a, 'b>(
+    configuration: &'a ParsedConfiguration,
+    calcite_query: &'b JObject,
+    env: &'b mut JNIEnv<'a>,
 ) -> Result<JValueOwned<'a>, InitializationError> {
     let calcite_model = configuration.clone().model_file_path.unwrap_or_default();
     let arg0: JObject = env.new_string(calcite_model).unwrap().into();
@@ -100,41 +129,59 @@ pub fn create_calcite_connection<'a>(
         }
     }
 }
-pub fn create_calcite_query_engine<'a>(configuration: &ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
-    let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
-    let instance = env.new_object(class, "()V", &[]).unwrap();
-    let _ = create_calcite_connection(configuration, &instance, env);
-    event!(Level::INFO, "Instantiated Calcite Query Engine");
-    return instance;
-}
-pub async fn introspect(
-    args: ParsedConfiguration,
-    _environment: impl Environment,
-) -> anyhow::Result<ParsedConfiguration> {
-    init_jvm(&crate::configuration::ParsedConfiguration::Version5(args.clone()));
-    let calcite_ref: GlobalRef;
-    {
-        let java_vm = get_jvm().lock().unwrap();
-        let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-        let calcite = create_calcite_query_engine(&args, &mut env);
-        let env = java_vm.attach_current_thread_as_daemon().unwrap();
-        calcite_ref = env.new_global_ref(calcite).unwrap();
+
+pub fn create_calcite_query_engine<'a>(
+    configuration: &'a ParsedConfiguration,
+    mut env: JNIEnv<'a>
+) -> Result<GlobalRef, Error> {
+    let class_result = env.find_class("org/kenstott/CalciteQuery");
+    let class = match class_result {
+        Ok(class) => class,
+        Err(e) => return Err(e),
+    };
+    let instance_result = env.new_object(class, "()V", &[]);
+    let instance = match instance_result {
+        Ok(instance) => instance,
+        Err(e) => return Err(e),
+    };
+
+    match create_calcite_connection(configuration, &instance, &mut env) {
+        Ok(_) => {
+            event!(Level::INFO, "Instantiated Calcite Query Engine");
+            Ok(env.new_global_ref(instance)?)
+        },
+        Err(_) => {
+            Err(Error::JniCall(JniError::Unknown))
+        }
     }
+}
+
+#[tracing::instrument(skip(_environment,calcite_ref_singleton))]
+pub async fn introspect(
+    args: &ParsedConfiguration,
+    _environment: impl Environment,
+    calcite_ref_singleton: &CalciteRefSingleton
+) -> anyhow::Result<ParsedConfiguration> {
+    if let Err(e) = calcite_ref_singleton.initialize(&crate::configuration::ParsedConfiguration::Version5(args.clone())) {
+        println!("Error initializing CalciteRef: {}", e);
+    }
+    let calcite_ref = calcite_ref_singleton.get().unwrap();
     let metadata = get_models(calcite_ref);
     let introspected = ParsedConfiguration {
         version: Version::This,
-        _schema: args._schema,
-        model: args.model,
-        model_file_path: args.model_file_path,
+        _schema: args._schema.clone(),
+        model: args.model.clone(),
+        model_file_path: args.model_file_path.clone(),
         fixes: args.fixes,
         supports_json_object: args.supports_json_object,
-        jars: args.jars,
+        jars: args.jars.clone(),
         metadata: Some(metadata),
     };
     Ok(introspected)
 }
 
 /// Parse the configuration format from a directory.
+#[tracing::instrument(skip(configuration_dir))]
 pub async fn parse_configuration(
     configuration_dir: impl AsRef<Path>,
 ) -> Result<ParsedConfiguration, ParseConfigurationError> {
@@ -163,6 +210,7 @@ pub async fn parse_configuration(
 }
 
 /// Write the parsed configuration into a directory on disk.
+#[tracing::instrument(skip(out_dir))]
 pub async fn write_parsed_configuration(
     parsed_config: ParsedConfiguration,
     out_dir: impl AsRef<Path>,

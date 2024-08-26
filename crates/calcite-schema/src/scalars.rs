@@ -67,7 +67,7 @@ use crate::{aggregates, comparators};
 /// }
 /// ```
 // ANCHOR: scalars
-#[tracing::instrument]
+#[tracing::instrument(skip())]
 pub fn scalars() -> BTreeMap<ScalarTypeName, ScalarType> {
     let string_comparison_operators =
         comparators::string_comparators(&comparators::numeric_comparators("VARCHAR".into()));

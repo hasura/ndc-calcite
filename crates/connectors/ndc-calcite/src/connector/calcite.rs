@@ -4,8 +4,8 @@
 //! the request to the underlying code and providing the result.
 //!
 use std::collections::BTreeMap;
-use std::{fs};
-use std::path::Path;
+use std::{env, fs};
+use std::path::{Path, PathBuf};
 use log::{info, error};
 use async_trait::async_trait;
 use dotenv;
@@ -18,7 +18,7 @@ use ndc_sdk::connector::{
 };
 use ndc_sdk::json_response::JsonResponse;
 use serde_json::Value;
-use tracing::info_span;
+use tracing::{info_span, Level, span, Span};
 use tracing::Instrument;
 
 use crate::capabilities::calcite_capabilities;
@@ -40,7 +40,7 @@ pub struct CalciteState {
     pub calcite_ref: GlobalRef,
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(config, coll, args, coll_rel, query, vars, state, explain))]
 fn execute_query_with_variables(
     config: &ParsedConfiguration,
     coll: &CollectionName,
@@ -54,60 +54,74 @@ fn execute_query_with_variables(
     query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state, explain})
 }
 
+const CONFIG_ERROR_MSG: &str = "Could not find model file.";
+
 #[async_trait]
 impl ConnectorSetup for Calcite {
     type Connector = Self;
 
+    #[tracing::instrument(skip(configuration_dir))]
     async fn parse_configuration(
         &self,
         configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<<Self as Connector>::Configuration, ParseError> {
-        async {
-            info_span!("inside parsing configuration");
-        }
-            .instrument(info_span!("parsing configuration"))
-            .await;
+
+        let span = span!(Level::INFO, "parse_configuration");
         dotenv::dotenv().ok();
-        let file_path = if is_running_in_container() {
-            configuration_dir.as_ref().join(CONFIG_FILE_NAME)
-        } else {
-            configuration_dir.as_ref().join(DEV_CONFIG_FILE_NAME)
-        };
-        println!("Configuration file path: {:?}", configuration_dir.as_ref().display());
-        match fs::read_to_string(file_path) {
-            Ok(file_content) => {
-                println!("Configuration file content: {:?}", file_content);
-                let mut json_object: ParsedConfiguration = serde_json::from_str(&file_content)
-                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
-                match json_object.model_file_path {
-                    None => {
-                        match json_object.model {
-                            None => {}
-                            Some(_) => {}
-                        }
-                    }
-                    Some(ref model_file_path) => {
-                        match fs::read_to_string(model_file_path) {
-                            Ok(models) => {
-                                println!("Configuration model content: {:?}", models);
-                                let model_object: Model = serde_json::from_str(&models)
-                                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
-                                json_object.model = Some(model_object)
-                            },
-                            Err(_err) => {}
-                        }
-                    }
-                }
-                match json_object.metadata {
-                    None => {
-                        let state = init_state(&json_object).expect("TODO: panic message");
-                        json_object.metadata = Some(get_models(state.calcite_ref));
-                        println!("metadata: {:?}",  serde_json::to_string_pretty(&json_object.metadata));
-                    }
-                    Some(_) => {}
-                }
-                Ok(json_object)
+
+        fn get_config_file_path(configuration_dir: impl AsRef<Path> + Send) -> PathBuf {
+            if is_running_in_container() {
+                configuration_dir.as_ref().join(CONFIG_FILE_NAME)
+            } else {
+                configuration_dir.as_ref().join(DEV_CONFIG_FILE_NAME)
             }
+        }
+
+        fn configure_path(span: Span, configuration_dir: &(impl AsRef<Path> + Send)) {
+            println!(
+                "Configuration file path: {:?}",
+                configuration_dir.as_ref().display()
+            );
+            span.record("configuration_dir", format!("{:?}", configuration_dir.as_ref().display()));
+        }
+
+        fn parse_json<T: Connector<Configuration = ParsedConfiguration>>(json_str: String) -> Result<T::Configuration, ParseError> {
+            let mut json_object: ParsedConfiguration = serde_json::from_str(&json_str)
+                .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+
+            update_model(&mut json_object)?;
+            update_metadata(&mut json_object);
+
+            Ok(json_object)
+        }
+
+        fn update_model(json_object: &mut ParsedConfiguration) -> Result<(), ParseError> {
+            let model_file_path = json_object
+                .model_file_path
+                .clone()
+                .or_else(|| env::var("MODEL_FILE").ok())
+                .ok_or(ParseError::Other(Box::from(CONFIG_ERROR_MSG)))?;
+
+            let models = fs::read_to_string(model_file_path)?;
+
+            let model_object: Model = serde_json::from_str(&models)
+                .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+
+            json_object.model = Some(model_object);
+            Ok(())
+        }
+
+        fn update_metadata(json_object: &mut ParsedConfiguration) {
+            if json_object.metadata.is_none() {
+                let state = init_state(&json_object).expect("TODO: panic message");
+                json_object.metadata = Some(get_models(&state.calcite_ref));
+                println!("metadata: {:?}", serde_json::to_string_pretty(&json_object.metadata));
+            }
+        }
+
+        configure_path(span, &configuration_dir);
+        match fs::read_to_string(get_config_file_path(configuration_dir)) {
+            Ok(file_content) => parse_json::<Self>(file_content),
             Err(err) => Err(ParseError::Other(Box::from(err.to_string()))),
         }
     }

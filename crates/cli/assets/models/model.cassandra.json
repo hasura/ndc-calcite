@@ -4,6 +4,7 @@
   "schemas": [
     {
       "name": "cassandra",
+      "cache": true,
       "type": "custom",
       "factory": "org.apache.calcite.adapter.cassandra.CassandraSchemaFactory",
       "operand": {

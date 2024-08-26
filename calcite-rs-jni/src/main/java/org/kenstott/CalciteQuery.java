@@ -10,6 +10,11 @@ import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
+import org.apache.calcite.tools.FrameworkConfig;
+import org.apache.calcite.tools.Frameworks;
+import org.apache.calcite.tools.Planner;
+import org.apache.calcite.tools.RuleSets;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -91,6 +96,13 @@ class TableMetadata {
  */
 public class CalciteQuery {
 
+    private static Logger logger = LogManager.getLogger(CalciteQuery.class);
+
+    static {
+        System.setProperty("log4j.configurationFile", "classpath:log4j2-config.xml");
+        logger = LogManager.getLogger(CalciteQuery.class);
+    }
+
     static {
         // This block runs when the class is loaded
         Thread.currentThread().setContextClassLoader(CalciteQuery.class.getClassLoader());
@@ -100,15 +112,16 @@ public class CalciteQuery {
         Thread.currentThread().setContextClassLoader(CalciteQuery.class.getClassLoader());
     }
 
-    private static final Logger logger = LogManager.getLogger(CalciteQuery.class);
-    Connection connection;
-    CalciteSchema rootSchema;
     private static final OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
     private static final Tracer tracer = openTelemetry.getTracer("calcite-driver");
     private static final Gson gson = new Gson();
 
+    Connection connection;
+    CalciteSchema rootSchema;
+
     public static void noOpMethod() {
-        // No-op method
+        Span span = tracer.spanBuilder("noOpMethod").startSpan();
+        span.end();
     }
 
     /**
@@ -120,22 +133,32 @@ public class CalciteQuery {
     public Connection createCalciteConnection(String modelPath) {
         CalciteQuery.setClassLoader();
         Span span = tracer.spanBuilder("createCalciteConnection").startSpan();
-        span.addEvent(modelPath);
-        logger.info(String.format("Using this model file: [%s]", modelPath));
+        span.setAttribute("modelPath", modelPath);
         Properties info = new Properties();
         info.setProperty("model", modelPath);
         try {
             Class.forName("org.apache.calcite.jdbc.Driver");
+//            FrameworkConfig config = Frameworks.newConfigBuilder()
+//                    .ruleSets(RuleSets.ofList()) // or an empty rule set to disable all optimizations
+//                    .build();
             connection = DriverManager.getConnection("jdbc:calcite:", info);
             rootSchema = connection.unwrap(CalciteConnection.class).getRootSchema().unwrap(CalciteSchema.class);
+//            Planner planner = Frameworks.getPlanner(config);
+            span.setStatus(StatusCode.OK);
         } catch (SQLException | ClassNotFoundException e) {
+            span.setAttribute("error", e.toString());
+            span.setStatus(StatusCode.ERROR);
             throw new RuntimeException(e);
+        } finally {
+            span.end();
         }
-        span.end();
+
+
         return connection;
     }
 
     private Collection<TableMetadata> getTables() {
+        Span span = tracer.spanBuilder("getTables").startSpan();
         try {
             DatabaseMetaData metaData = connection.getMetaData();
             List<TableMetadata> list = new ArrayList<>();
@@ -166,6 +189,7 @@ public class CalciteQuery {
                                     }
                                 }
                             } catch (SQLException e) {
+                                logger.error(e.toString());
                                 throw new RuntimeException(e);
                             }
                             tableTypeList.add("STREAM");
@@ -205,19 +229,25 @@ public class CalciteQuery {
                                     list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys));
                                 }
                             } catch (Exception e) {
-                                logger.info(e.getMessage());
+                                span.setAttribute("Error", e.toString());
                             }
                         }
                     }
                 }
             }
+            span.setAttribute("Number of Tables", list.size());
+            span.setStatus(StatusCode.OK);
             return list;
         } catch (SQLException e) {
+            span.setStatus(StatusCode.ERROR);
             throw new RuntimeException(e);
+        } finally {
+            span.end();
         }
     }
 
     private Map<String, ColumnMetadata> getTableColumnInfo(TableMetadata table) {
+        Span span = tracer.spanBuilder("getTables").startSpan();
         Map<String, ColumnMetadata> columns = new HashMap<>();
         ResultSet columnsSet;
         try {
@@ -287,6 +317,7 @@ public class CalciteQuery {
                     } else if (dataTypeName.toLowerCase().contains("decimal")) {
                         mappedType = "FLOAT";
                     } else {
+                        span.setAttribute(dataTypeName, "unknown column type");
                         mappedType = "VARCHAR";
                     }
                 }
@@ -301,13 +332,18 @@ public class CalciteQuery {
                         nullable,
                         description
                 ));
-
-
             }
+            span.setAttribute("Number of Columns Mapped", columns.size());
+            span.setStatus(StatusCode.OK);
+            return columns;
         } catch (SQLException e) {
+            span.setAttribute("Error", e.toString());
+            span.setStatus(StatusCode.ERROR);
             throw new RuntimeException(e);
+        } finally {
+            span.end();
         }
-        return columns;
+
     }
 
     /**
@@ -330,14 +366,17 @@ public class CalciteQuery {
             Collection<TableMetadata> tables = getTables();
             for (TableMetadata table : tables) {
                 table.columns = getTableColumnInfo(table);
+                span.setAttribute(String.format("Table Name: '%s'", table.name), String.format("Column Count: %d", table.columns.size()));
                 result.put(table.name, table);
             }
-            span.end();
+            span.setStatus(StatusCode.OK);
             return gson.toJson(result);
         } catch (Exception e) {
-            System.out.println(e.toString());
             span.setAttribute("Error", e.toString());
+            span.setStatus(StatusCode.ERROR);
             return "{\"error\":\"" + e + "\"}";
+        } finally {
+            span.end();
         }
     }
 
@@ -351,9 +390,11 @@ public class CalciteQuery {
         Span span = tracer.spanBuilder("queryModels").startSpan();
         try {
             Statement statement = connection.createStatement();
+            span.setAttribute("query", query);
             PreparedStatement preparedStatement = StatementPreparer.prepare(query, connection);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (query.toLowerCase().trim().startsWith("select json_object(")) {
+                span.setAttribute("Using JSON_OBJECT() method", true);
                 ArrayList<String> rows = new ArrayList<>();
                 while (resultSet.next()) {
                     rows.add(resultSet.getString(1));
@@ -362,9 +403,11 @@ public class CalciteQuery {
                 statement.close();
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 String result = gson.toJson(rows);
+                span.setAttribute("Rows returned", rows.size());
                 span.setStatus(StatusCode.OK);
                 return result;
             } else {
+                span.setAttribute("Using JSON_OBJECT() method", false);
                 JsonArray jsonArray = new JsonArray();
                 ResultSetMetaData metaData = resultSet.getMetaData();
                 int columnCount = metaData.getColumnCount();
@@ -423,13 +466,13 @@ public class CalciteQuery {
                                 break;
                         }
                     }
-                    // System.out.println(jsonObject.toString());
                     jsonArray.add(jsonObject.toString());
                 }
                 resultSet.close();
                 statement.close();
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
                 String result = gson.toJson(jsonArray);
+                span.setAttribute("Rows returned", jsonArray.size());
                 span.setStatus(StatusCode.OK);
                 return result;
             }
@@ -443,9 +486,10 @@ public class CalciteQuery {
     }
 
     public String queryPlanModels(String query) {
-        Span span = tracer.spanBuilder("queryModels").startSpan();
+        Span span = tracer.spanBuilder("queryPlanModels").startSpan();
         try {
             Statement statement = connection.createStatement();
+            span.setAttribute("query", query);
             PreparedStatement preparedStatement = StatementPreparer.prepare("explain plan for " + query, connection);
             ResultSet resultSet = preparedStatement.executeQuery();
             JsonArray jsonArray = new JsonArray();
@@ -468,6 +512,7 @@ public class CalciteQuery {
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             jsonArray.add(gson.toJson(jsonObject));
             String result = gson.toJson(jsonArray);
+            span.setAttribute("plan", result);
             span.setStatus(StatusCode.OK);
             return result;
         } catch (Exception e) {

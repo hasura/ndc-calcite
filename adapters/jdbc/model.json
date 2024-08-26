@@ -4,13 +4,9 @@
   "schemas": [
     {
       "type": "jdbc",
-      "name": "crm",
-      "jdbcUrl": "jdbc:redshift://default-workgroup.528956693660.us-east-2.redshift-serverless.amazonaws.com:5439/dev?user=redshiftdev&password=#Hasura2024!&currentSchema=crm"
-    },
-    {
-      "type": "jdbc",
       "name": "emr",
-      "jdbcUrl": "jdbc:redshift://default-workgroup.528956693660.us-east-2.redshift-serverless.amazonaws.com:5439/dev?user=redshiftdev&password=#Hasura2024!&currentSchema=emr"
+      "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
+      "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/jdbc/chinook.db"
     }
   ]
 }

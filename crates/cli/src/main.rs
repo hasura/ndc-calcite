@@ -3,7 +3,7 @@
 //! This is intended to be automatically downloaded and invoked via the Hasura CLI, as a plugin.
 //! It is unlikely that end-users will use it directly.
 
-use std::env;
+use std::{env};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
@@ -11,6 +11,7 @@ use clap::Parser;
 
 use ndc_calcite_cli::*;
 use ndc_calcite_schema as configuration;
+use ndc_calcite_schema::version5::CalciteRefSingleton;
 
 /// The release version specified at build time.
 ///
@@ -34,7 +35,18 @@ pub struct Args {
 
 #[tokio::main]
 pub async fn main() -> ExitCode {
-    if let Err(err) = try_main().await {
+    let calcite_singleton = CalciteRefSingleton::new();
+    tracing::subscriber::set_global_default(
+        tracing_subscriber::FmtSubscriber::builder()
+            .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+            .finish(),
+    )
+        .unwrap();
+
+    // Now We log
+    tracing::warn!("Tracing is setup");
+
+    if let Err(err) = try_main(calcite_singleton).await {
         // The default formatting for anyhow in our case includes a 'Caused by' section
         // that duplicates what's already in the error message, so we don't display it.
         eprintln!("ERROR: {err}");
@@ -45,7 +57,7 @@ pub async fn main() -> ExitCode {
 
 /// The application entrypoint. It pulls information from the environment and then calls the [run]
 /// function. The library remains unaware of the environment, so that we can more easily test it.
-async fn try_main() -> anyhow::Result<()> {
+async fn try_main(calcite_ref_singleton: CalciteRefSingleton) -> anyhow::Result<()> {
     let args = Args::parse();
     // Default the context path to the current directory.
     let context_path = match args.context_path {
@@ -57,6 +69,6 @@ async fn try_main() -> anyhow::Result<()> {
         environment: configuration::environment::ProcessEnvironment,
         release_version: RELEASE_VERSION,
     };
-    run(args.subcommand, context).await?;
+    run(args.subcommand, context, calcite_ref_singleton).await?;
     Ok(())
 }

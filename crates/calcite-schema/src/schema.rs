@@ -8,17 +8,15 @@ use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-
 use jni::objects::GlobalRef;
 use ndc_models as models;
-use ndc_models::{SchemaResponse};
-use tracing::{event, Level};
-
+use ndc_models::SchemaResponse;
+use tracing::{debug, event, Level};
 use ndc_calcite_values::is_running_in_container::is_running_in_container;
 use ndc_calcite_values::values::{CONFIG_FILE_NAME, DEV_CONFIG_FILE_NAME};
-use crate::version5::ParsedConfiguration;
-use crate::models::get_models;
 use crate::{collections, scalars};
+use crate::models::get_models;
+use crate::version5::ParsedConfiguration;
 
 /// Get the schema information from the given `calcite_ref`.
 ///
@@ -42,19 +40,18 @@ use crate::{collections, scalars};
 ///
 /// ```rust
 /// use std::error::Error;
-/// use crate::models::GlobalRef;
-/// use crate::models::SchemaResponse;
-/// use crate::models::FunctionInfo;
-/// use crate::scalars;
-/// use crate::collections;
-/// use crate::calcite;
+/// use ndc_calcite_schema::version5::ParsedConfiguration;
 ///
-/// fn main() -> Result<(), Box<dyn Error>> {
+/// fn main(configuration: &ParsedConfiguration) -> Result<(), Box<dyn Error>> {
 ///     // Initialize the Calcite reference
+///     use jni::objects::GlobalRef;
+///
+///     use ndc_calcite_schema::schema::get_schema;
+///
 ///     let calcite_ref = GlobalRef::new();
 ///
 ///     // Get the schema
-///     let schema = get_schema(calcite_ref)?;
+///     let schema = get_schema(configuration, calcite_ref)?;
 ///
 ///     // Print the schema
 ///     println!("Schema: {:?}", schema);
@@ -63,15 +60,15 @@ use crate::{collections, scalars};
 /// }
 /// ```
 // ANCHOR: get_schema
-#[tracing::instrument]
+#[tracing::instrument(skip(configuration, calcite_ref))]
 pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse, Box<dyn Error>> {
-    event!(Level::INFO, "in get_schema");
-    let data_models = get_models(calcite_ref);
+    let data_models = get_models(&calcite_ref);
     let scalar_types = scalars::scalars();
     let (object_types, collections) = match collections::collections(&data_models, &scalar_types) {
         Ok(value) => value,
         Err(value) => return value,
-    };    let procedures = vec![];
+    };
+    let procedures = vec![];
     let functions: Vec<models::FunctionInfo> = vec![];
     let schema = SchemaResponse {
         scalar_types,
@@ -94,16 +91,14 @@ pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -
         Ok(mut file) => {
             let serialized_json = serde_json::to_string_pretty(&new_configuration)?;
             file.write_all(serialized_json.as_bytes())?;
-            event!(
-        Level::INFO,
-        schema = serde_json::to_string(&schema).unwrap()
-    );
+            event!(Level::INFO, "Wrote metadata to config: {}", serde_json::to_string(&schema).unwrap());
         }
-        Err(_err) => {
-            println!("Unable to create config file: {:?}", file_path_clone)
+        Err(_) => {
+            debug!("Unable to create config file: {:?}", file_path_clone);
+            event!(Level::DEBUG, "Unable to create config file {:?}, schema: {:?}", file_path_clone, serde_json::to_string(&schema).unwrap());
+            // Not updating the config file is not fatal
         }
     }
-
     Ok(schema)
 }
 // ANCHOR_END: get_schema

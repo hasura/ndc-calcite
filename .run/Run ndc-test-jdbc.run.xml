@@ -2,7 +2,12 @@
   <configuration default="false" name="Run ndc-test-jdbc" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="command" value="run --package ndc-calcite --bin ndc-calcite  -- test --configuration . " />
     <option name="workingDirectory" value="file://$PROJECT_DIR$/adapters/jdbc" />
-    <envs />
+    <envs>
+      <env name="OTEL_LOG_LEVEL" value="all" />
+      <env name="OTEL_LOGS_EXPORTER" value="console" />
+      <env name="OTEL_TRACES_EXPORTER" value="console" />
+      <env name="RUST_LOG" value="trace" />
+    </envs>
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

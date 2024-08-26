@@ -1,55 +1,12 @@
 {
   "version": "1.0",
-  "defaultSchema": "TEST",
+  "defaultSchema": "default",
   "schemas": [
     {
       "type": "jdbc",
-      "name": "TEST",
+      "name": "default",
       "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
       "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/jdbc/chinook.db"
-    },
-    {
-      "type": "map",
-      "name": "AGG",
-      "tables": [
-        {
-          "name": "myview",
-          "type": "view",
-          "sql": "SELECT \"FirstName\" FROM TEST.\"customers\""
-        }
-      ]
-    },
-    {
-      "name": "adhoc",
-      "lattices": [
-        {
-          "name": "star",
-          "sql": [
-            "SELECT 1 from \"TEST\".\"invoice_items\" as \"ii\"",
-            "JOIN \"TEST\".\"tracks\" as \"t\" USING (\"TrackId\")",
-            "JOIN \"TEST\".\"albums\" as \"a\" USING (\"AlbumId\")",
-            "JOIN \"TEST\".\"invoices\" as \"i\" USING (\"InvoiceId\")",
-            "JOIN \"TEST\".\"customers\" as \"c\" USING (\"CustomerId\")"
-          ],
-          "auto": true,
-          "algorithm": true,
-          "rowCountEstimate": 86837,
-          "defaultMeasures": [
-            {
-              "agg": "count"
-            }
-          ],
-          "tiles": [ {
-            "dimensions": [ ["c","CustomerId"], [ "i", "InvoiceId"] ],
-            "measures": [ {
-              "agg": "sum",
-              "args": "Quantity"
-            }, {
-              "agg": "count"
-            } ]
-          } ]
-        }
-      ]
     }
-  ]
+    ]
 }

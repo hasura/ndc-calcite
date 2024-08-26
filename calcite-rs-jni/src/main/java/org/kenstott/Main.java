@@ -15,42 +15,23 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        String modelPath = "../adapters/file/model.json";
+        String modelPath = "../adapters/jdbc/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
 
         try {
-//            String classpath = System.getProperty("java.class.path");
-//            System.out.println(classpath);
-//            AthenaRowCountExample.test();
             CalciteQuery query = new CalciteQuery();
             calciteConnection = query.createCalciteConnection(modelPath);
-            System.out.println("Got connection");
             String x = query.getModels();
             System.out.println(x);
-//               String zz = query.queryPlanModels("""
-//
-// """);
-//                System.out.println(zz);
             String z1 = query.queryModels("""
-                    SELECT * from "sales"."female_emps"
+                    SELECT min(PlaylistId) AS "PlaylistId_min_5667", max(PlaylistId) AS "PlaylistId_max_6029" FROM "emr"."playlists"  LIMIT 10
                     """
             );
             System.out.println(z1);
-
-//            String z2 = query.queryModels("""
-//                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME" LIMIT 2
-//                    """
-//            );
-//            System.out.println(z2);
-//            query.queryModels("""
-//                    SELECT STREAM * FROM "KAFKA"."TABLE_NAME"
-//                    """
-//            );
             calciteConnection.close();
             calciteConnection = null;
-            // You can now use 'calciteConnection' which is an instance of CalciteQuery
         } catch (Exception e) {
             System.out.println("An error occurred while creating Calcite connection: " + e.getMessage());
         } finally {

@@ -13,7 +13,7 @@ use ndc_models as models;
 use ndc_models::{FieldName, RowFieldValue};
 use ndc_sdk::connector::{QueryError};
 use serde_json::Value;
-use tracing::{event, Level};
+use tracing::{debug, error, event, Level};
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_schema::jvm::get_jvm;
 use ndc_calcite_schema::version5::create_calcite_connection;
@@ -43,7 +43,7 @@ pub type Row = IndexMap<FieldName, RowFieldValue>;
 /// use tracing::Level;
 /// use ndc_calcite_schema::version5::{create_calcite_connection, ParsedConfiguration};
 ///
-/// #[tracing::instrument]
+/// #[tracing::instrument(skip(configuration, env))]
 /// pub fn create_calcite_query_engine<'a>(configuration: &ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
 ///     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
 ///     let instance = env.new_object(class, "()V", &[]).unwrap();
@@ -52,8 +52,8 @@ pub type Row = IndexMap<FieldName, RowFieldValue>;
 ///     return instance;
 /// }
 /// ```
-#[tracing::instrument]
-pub fn create_calcite_query_engine<'a>(configuration: &ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
+#[tracing::instrument(skip(configuration, env))]
+pub fn create_calcite_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
     let instance = env.new_object(class, "()V", &[]).unwrap();
     let _ = create_calcite_connection(configuration, &instance, env);
@@ -115,7 +115,7 @@ fn parse_to_row(data: Vec<String>) -> Vec<Row> {
 /// }
 /// ```
 // ANCHOR: calcite_query
-#[tracing::instrument]
+#[tracing::instrument(skip(config,calcite_reference,sql_query,query_metadata))]
 pub fn calcite_query(
     config: &ParsedConfiguration,
     calcite_reference: GlobalRef,
@@ -123,7 +123,7 @@ pub fn calcite_query(
     query_metadata: &models::Query,
     explain: &bool
 ) -> Result<Vec<Row>, QueryError> {
-    log_event(Level::INFO, &format!("Attempting this query: {}", sql_query));
+    debug!("Attempting this query: {}", sql_query);
     let jvm = get_jvm().lock().unwrap();
     let mut java_env = jvm.attach_current_thread().unwrap();
     let calcite_query = java_env.new_local_ref(calcite_reference).unwrap();
@@ -143,7 +143,7 @@ pub fn calcite_query(
             let json_rows = match json_rows {
                 Ok(rows) => rows,
                 Err(_) => {
-                    println!("{:?}", json_string);
+                    error!("Error unwrapping this query result: {:?}", json_string);
                     return Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")}), serde_json::from_str(&json_string).unwrap_or_default()))
                 }
             };
@@ -153,20 +153,10 @@ pub fn calcite_query(
             } else {
                 rows
             };
-            log_event(Level::INFO, &format!("Completed Query. Retrieved {} rows. Result: {}", rows.len().to_string(), serde_json::to_string(&rows).unwrap()));
+            debug!("Completed Query. Retrieved {} rows. Result: {:?}", rows.len().to_string(), serde_json::to_string_pretty(&rows));
             Ok(rows)
         },
         _ => Err(QueryError::Other(Box::new(CalciteError{message: String::from("Invalid response from Calcite.")}), Value::Null))
-    }
-}
-
-fn log_event(level: Level, message: &str) {
-    match level {
-        Level::ERROR => tracing::error!("{}", message),
-        Level::WARN => tracing::warn!("{}", message),
-        Level::INFO => tracing::info!("{}", message),
-        Level::DEBUG => tracing::debug!("{}", message),
-        Level::TRACE => tracing::trace!("{}", message),
     }
 }
 

@@ -4,6 +4,9 @@
 //!
 use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
+use std::fmt;
+use std::fmt::{Display, Formatter};
+use log::debug;
 use ndc_models::{Aggregate, ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ErrorResponse, ExistsInCollection, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, UnaryComparisonOperator, VariableName};
 use ndc_sdk::connector::QueryError;
 use ndc_sdk::models;
@@ -14,18 +17,19 @@ use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_schema::calcite::TableMetadata;
 use crate::query::QueryComponents;
 
+const NOT_FOUND_MSG: &str = "Variable not found";
+
 #[derive(Debug)]
 struct VariableNotFoundError;
-
-impl std::fmt::Display for VariableNotFoundError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Variable not found")
+impl Display for VariableNotFoundError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", NOT_FOUND_MSG)
     }
 }
 
 impl Error for VariableNotFoundError {}
 
-#[tracing::instrument]
+#[tracing::instrument(skip(variables, argument), level=Level::DEBUG)]
 fn eval_argument(
     variables: &BTreeMap<VariableName, Value>,
     argument: &RelationshipArgument,
@@ -40,37 +44,55 @@ fn eval_argument(
     }
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(supports_json_object, key, item, table), level=Level::DEBUG)]
+fn get_field_statement(supports_json_object: bool, key: &FieldName, item: &FieldName, table: &str) -> String {
+    if supports_json_object {
+        format!("'{}', {}.\"{}\"", key, table, item)
+    } else {
+        format!("{}.\"{}\" AS \"{}\"", table, item, key)
+    }
+}
+
+#[tracing::instrument(skip(
+    configuration,
+    _variables,
+    collection,
+    query,
+    collection_relationships,
+    _prepend
+), level=Level::DEBUG)]
 fn select(
     configuration: &ParsedConfiguration,
-    variables: &BTreeMap<VariableName, Value>,
+    _variables: &BTreeMap<VariableName, Value>,
     collection: &CollectionName,
     query: &Query,
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
-    prepend: Option<String>,
+    _prepend: Option<String>,
 ) -> (Vec<String>, Vec<String>) {
     let mut field_statements: Vec<String> = vec![];
     let join_statements: Vec<String> = vec![];
+
     let fields = query.fields.clone().unwrap_or_default();
-    // let prepend = prepend.unwrap_or_default().clone();
     let table = create_qualified_table_name(
         configuration.clone().metadata.unwrap().get(collection).unwrap()
     );
+
+    let supports_json_object = configuration.supports_json_object.unwrap_or_else(|| false);
+
     for (key, field) in fields {
         match field {
             Field::Column { column, .. } => {
-                if configuration.supports_json_object.unwrap_or_else(|| false) {
-                    let field_statement = format!("'{}', {}.\"{}\"", key, table, column, );
-                    field_statements.push(field_statement);
-                } else {
-                    let field_statement = format!("{}.\"{}\" AS \"{}\"", table, column, key);
+                let field_statement = get_field_statement(supports_json_object, &key, &column, &table);
+                if !field_statements.contains(&field_statement) {
                     field_statements.push(field_statement);
                 }
-                // TODO: use nested fields???
             }
             Field::Relationship { relationship, .. } => {
-                let field_statement = format!("'{}', 1", key);
-                field_statements.push(field_statement);
+                if supports_json_object {
+                    field_statements.push( format!("'{}', 1", key));
+                } else {
+                    field_statements.push( format!("1 AS \"{}\"", key));
+                }
                 match collection_relationships.get(&relationship) {
                     None => {}
                     Some(r) => {
@@ -92,10 +114,9 @@ fn select(
             }
         }
     }
-    return (field_statements, join_statements);
+    (field_statements, join_statements)
 }
-
-#[tracing::instrument]
+#[tracing::instrument(skip(query), level=Level::DEBUG)]
 fn order_by(query: &Query) -> Vec<String> {
     let mut order_statements: Vec<String> = Vec::new();
     match &query.order_by {
@@ -125,8 +146,8 @@ fn order_by(query: &Query) -> Vec<String> {
     return order_statements;
 }
 
-#[tracing::instrument]
-fn pagination(query: &Query) -> Vec<String> {
+#[tracing::instrument(skip(query), level=Level::DEBUG)]
+fn pagination(query: &Query) -> Result<Vec<String>, QueryError> {
     let mut pagination_statements: Vec<String> = Vec::new();
     if query.limit.is_some() {
         pagination_statements.push(format!(" LIMIT {}", query.limit.unwrap()));
@@ -134,14 +155,14 @@ fn pagination(query: &Query) -> Vec<String> {
     if query.offset.is_some() {
         pagination_statements.push(format!("OFFSET {}", query.offset.unwrap()))
     }
-    if pagination_statements.len() == 0 {
-        println!("{}","how");
+    if pagination_statements.is_empty() {
+        debug!("No pagination.");
     }
-    return pagination_statements;
+    Ok(pagination_statements)
 }
 
-#[tracing::instrument]
-fn create_column_name(calcite_configuration: &ParsedConfiguration, name: &FieldName, field_path: &Option<Vec<FieldName>>) -> String {
+#[tracing::instrument(skip(_calcite_configuration, name, field_path), level=Level::DEBUG)]
+fn create_column_name(_calcite_configuration: &ParsedConfiguration, name: &FieldName, field_path: &Option<Vec<FieldName>>) -> String {
     match field_path {
         None => name.to_string(),
         Some(f) => {
@@ -150,72 +171,49 @@ fn create_column_name(calcite_configuration: &ParsedConfiguration, name: &FieldN
     }
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(name, aggregate_expr, configuration), level=Level::DEBUG)]
+fn generate_aggregate_statement(name: &FieldName, aggregate_expr: String, configuration: &ParsedConfiguration) -> String {
+    if configuration.supports_json_object.unwrap_or_else(|| false) {
+        format!("'{}', {}", name, aggregate_expr)
+    } else {
+        format!("{} AS \"{}\"", aggregate_expr, name)
+    }
+}
+
+#[tracing::instrument(skip(configuration, column, field_path), level=Level::DEBUG)]
+fn aggregate_column_name(configuration: &ParsedConfiguration, column: &FieldName, field_path: &Option<Vec<FieldName>>) -> String {
+    let column_name = create_column_name(configuration, column, field_path);
+    if configuration.supports_json_object.unwrap_or_else(|| false) {
+        format!("\"{}\"", column_name)
+    } else {
+        column_name
+    }
+}
+
+#[tracing::instrument(skip(configuration, query), level=Level::DEBUG)]
 fn aggregates(configuration: &ParsedConfiguration, query: &Query) -> Vec<String> {
     let mut aggregates: Vec<String> = Vec::new();
-    match &query.aggregates {
-        None => {}
-        Some(_) => {
-            for (name, aggregate) in query.aggregates.as_ref().unwrap() {
-                let aggregate_phrase = match aggregate {
-                    Aggregate::ColumnCount {
-                        column,
-                        distinct,
-                        field_path,
-                    } => {
-                        if configuration.supports_json_object.unwrap_or_else(||false) {
-                            format!(
-                                "'{}', COUNT({}\"{}\")",
-                                name,
-                                if *distinct { "DISTINCT " } else { "" },
-                                create_column_name(configuration, column, field_path),
-                            )
-                        } else {
-                            format!(
-                                "COUNT({}\"{}\") AS \"{}\"",
-                                if *distinct { "DISTINCT " } else { "" },
-                                create_column_name(configuration, column, field_path),
-                                name
-                            )
-                        }
-                    }
-                    Aggregate::SingleColumn {
-                        column,
-                        field_path,
-                        function,
-                    } => {
-                        if configuration.supports_json_object.unwrap_or_else(||false) {
-                            format!(
-                                "'{}', {}(\"{}\")",
-                                name,
-                                function,
-                                create_column_name(configuration, column, field_path),
-                            )
-                        } else {
-                            format!(
-                                "{}(\"{}\") AS \"{}\"",
-                                function,
-                                create_column_name(configuration, column, field_path),
-                                name,
-                            )
-                        }
-                    }
-                    Aggregate::StarCount {} => {
-                        if configuration.supports_json_object.unwrap_or_else(||false) {
-                            format!("'{}', COUNT(*)", name)
-                        } else {
-                            format!("COUNT(*) AS \"{}\"", name)
-                        }
-                    }
-                };
-                aggregates.push(aggregate_phrase);
-            }
+    if let Some(aggregates_map) = &query.aggregates {
+        for (name, aggregate) in aggregates_map {
+            let aggregate_expr = match aggregate {
+                Aggregate::ColumnCount { column, distinct, field_path } => {
+                    let column_name = aggregate_column_name(configuration, column, field_path);
+                    format!("COUNT({}\"{}\")", if *distinct { "DISTINCT " } else { "" }, column_name)
+                }
+                Aggregate::SingleColumn { column, field_path, function } => {
+                    let column_name = aggregate_column_name(configuration, column, field_path);
+                    format!("{}(\"{}\")", function, column_name)
+                }
+                Aggregate::StarCount {} => "COUNT(*)".to_string(),
+            };
+            let aggregate_phrase = generate_aggregate_statement(name, aggregate_expr, configuration);
+            aggregates.push(aggregate_phrase);
         }
     }
     aggregates
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(configuration, collection, collection_relationships, variables, query), level=Level::DEBUG)]
 fn predicates(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
@@ -226,7 +224,13 @@ fn predicates(
     process_expression_option(configuration, collection, collection_relationships, variables, query.clone().predicate)
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(
+    configuration,
+    collection,
+    collection_relationships,
+    variables,
+    predicate
+), level=Level::DEBUG)]
 fn process_expression_option(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
@@ -240,7 +244,7 @@ fn process_expression_option(
     }
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(input), level=Level::DEBUG)]
 fn sql_brackets(input: &str) -> String {
     let mut chars: Vec<char> = input.chars().collect();
     if chars.first() == Some(&'[') && chars.last() == Some(&']') {
@@ -251,12 +255,18 @@ fn sql_brackets(input: &str) -> String {
     return chars.into_iter().collect();
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(input), level=Level::DEBUG)]
 fn sql_quotes(input: &str) -> String {
     input.replace("'", "\\'").replace("\"", "__UTF8__")
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(
+    configuration,
+    collection,
+    collection_relationships,
+    variables,
+    expr
+), level=Level::DEBUG)]
 fn process_sql_expression(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
@@ -345,6 +355,7 @@ fn process_sql_expression(
                         );
                         format!("(SELECT {} FROM {} WHERE FALSE)", left_side, table)
                     } else {
+                        // left this here - just in case we want to differentiate at some point
                         if value.is_string() {
                             sql_value
                         } else if value.is_number() {
@@ -409,6 +420,7 @@ fn process_sql_expression(
     }
 }
 
+#[tracing::instrument(skip_all, level=Level::DEBUG)]
 fn create_arguments(variables: &BTreeMap<VariableName, Value>, arguments: &BTreeMap<ArgumentName, RelationshipArgument>) -> Vec<String> {
     let arguments: Vec<String> = arguments.iter().map(|(name, arg)| {
         let value = match arg {
@@ -425,6 +437,7 @@ fn create_arguments(variables: &BTreeMap<VariableName, Value>, arguments: &BTree
     arguments
 }
 
+#[tracing::instrument(skip(table_metadata), level=Level::DEBUG)]
 fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
     let mut path: Vec<String> = Vec::new();
     let catalog = table_metadata.clone().catalog.unwrap_or_default();
@@ -440,7 +453,7 @@ fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
     path.join(".")
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(configuration,_arguments, select, order_by, pagination, where_clause, join_clause),level=Level::DEBUG)]
 pub fn query_collection(
     configuration: &ParsedConfiguration,
     collection_name: &CollectionName,
@@ -488,27 +501,21 @@ pub fn query_collection(
         }
     };
 
-    let pagination_clause = match pagination {
-        None => "".into(),
-        Some(p) => {
-            if p.is_empty() {
-                "".into()
-            } else {
-                format!(" {}", p)
+    let format_clause = |clause: Option<String>| {
+        match clause {
+            None => "".into(),
+            Some(p) => {
+                if p.is_empty() {
+                    "".into()
+                } else {
+                    format!(" {}", p)
+                }
             }
         }
     };
 
-    let join = match join_clause {
-        None => "".into(),
-        Some(p) => {
-            if p.is_empty() {
-                "".into()
-            } else {
-                format!(" {}", p)
-            }
-        }
-    };
+    let pagination_clause = format_clause(pagination);
+    let join = format_clause(join_clause);
 
     let table = create_qualified_table_name(
         configuration.clone().metadata.unwrap().get(collection_name).unwrap()
@@ -531,7 +538,15 @@ pub fn query_collection(
     }
 }
 
-pub(crate) fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents, QueryError> {
+#[tracing::instrument(skip(
+    configuration,
+    collection,
+    collection_relationships,
+    arguments,
+    query,
+    variables
+))]
+pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents, QueryError> {
     let mut argument_values = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
         if argument_values
@@ -541,10 +556,11 @@ pub(crate) fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection
             )
             .is_some()
         {
-            return Err(QueryError::InvalidRequest(ErrorResponse { message: format!(
-                "Duplicate argument: {}",
-                argument_name
-            ),
+            return Err(QueryError::InvalidRequest(ErrorResponse {
+                message: format!(
+                    "Duplicate argument: {}",
+                    argument_name
+                ),
                 details: Value::String(argument_name.to_string()),
             }));
         }
@@ -553,7 +569,7 @@ pub(crate) fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection
     let select = Some(select_clause.join(","));
     let join = Some(join_clause.join(" "));
     let order_by = Some(order_by(query).join(", "));
-    let pagination = Some(pagination(query).join(" "));
+    let pagination = Some(pagination(query).unwrap().join(" "));
     let aggregates = Some(aggregates(configuration, query).join(", "));
     let predicates = predicates(&configuration, collection, collection_relationships, variables, query);
     let predicates: Option<String> = match predicates {
@@ -561,7 +577,7 @@ pub(crate) fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection
         Err(e) => {
             return Err(QueryError::InvalidRequest(ErrorResponse {
                 message: e.to_string(),
-                details: Default::default()
+                details: Default::default(),
             }));
         }
     };

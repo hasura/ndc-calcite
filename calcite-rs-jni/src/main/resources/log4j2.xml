@@ -1,13 +1,14 @@
-<!-- log4j2.xml -->
+<?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d [%t] %-5p %c{1} - %m%n" />
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
     </Appenders>
     <Loggers>
-        <Root level="DEBUG">
-            <AppenderRef ref="Console" />
+        <Logger name="io.opentelemetry" level="trace"/>
+        <Root level="warn">
+            <AppenderRef ref="Console"/>
         </Root>
     </Loggers>
 </Configuration>

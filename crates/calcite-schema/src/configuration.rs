@@ -10,6 +10,7 @@ use crate::error::{
 use crate::version5;
 use crate::version::VersionTag;
 use schemars::{gen::SchemaSettings, schema::RootSchema};
+use crate::version5::CalciteRefSingleton;
 
 
 pub fn generate_latest_schema() -> RootSchema {
@@ -64,10 +65,11 @@ pub async fn introspect(
     input: ParsedConfiguration,
     _context_path: &PathBuf,
     environment: impl Environment,
+    calcite_ref: &CalciteRefSingleton
 ) -> anyhow::Result<ParsedConfiguration> {
     match input {
         ParsedConfiguration::Version5(config) => Ok(ParsedConfiguration::Version5(
-            version5::introspect(config, environment).await?,
+            version5::introspect(&config, environment, calcite_ref).await?,
         )),
     }
 }

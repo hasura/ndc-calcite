@@ -126,6 +126,28 @@ pub struct Type {
     pub attributes: Option<Vec<Type>>,
 }
 
+#[derive(Eq, PartialEq, JsonSchema, Serialize, Deserialize, Clone, Debug)]
+pub struct FieldDef {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub th: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub selector: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub skip: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pattern: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "matchGroup")]
+    pub match_group: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "selectedElement")]
+    pub selected_element: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "type")]
+    pub r#type: Option<String>,
+}
 /// Represents a table.
 ///
 /// ## Fields
@@ -142,9 +164,21 @@ pub struct Table {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub factory: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub url: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub index: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "tableName")]
+    pub table_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub operand: Option<Operand>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub columns: Option<Vec<Column>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename="fieldDefs")]
+    pub field_defs: Option<Vec<FieldDef>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sql: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

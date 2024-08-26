@@ -4,6 +4,7 @@
     "schemas": [
       {
         "name": "default",
+        "cache": true,
         "type": "jdbc",
         "jdbcUser": "<username>",
         "jdbcPassword": "<password>",

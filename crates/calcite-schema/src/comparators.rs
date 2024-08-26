@@ -23,7 +23,7 @@ use ndc_models::{ComparisonOperatorDefinition, ComparisonOperatorName, Type, Typ
 ///
 /// ```
 // ANCHOR: string_comparators
-#[tracing::instrument]
+#[tracing::instrument(skip(numeric_comparison_operators))]
 pub fn string_comparators(
     numeric_comparison_operators: &BTreeMap<ComparisonOperatorName, ComparisonOperatorDefinition>,
 ) -> BTreeMap<ComparisonOperatorName, ComparisonOperatorDefinition> {
@@ -81,7 +81,7 @@ pub fn string_comparators(
 /// }
 /// ```
 // ANCHOR: numeric_comparators
-#[tracing::instrument]
+#[tracing::instrument(skip(underlying))]
 pub fn numeric_comparators(underlying: String) -> BTreeMap<ComparisonOperatorName, ComparisonOperatorDefinition> {
     let numeric_comparison_operators = BTreeMap::from_iter([
         ("_eq".into(), ComparisonOperatorDefinition::Equal),

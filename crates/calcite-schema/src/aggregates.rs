@@ -13,7 +13,7 @@
 //! Aggregates could be extended here.
 
 use std::collections::BTreeMap;
-
+use tracing::{Level};
 use ndc_models::{AggregateFunctionDefinition, AggregateFunctionName, Type};
 
 /// Generates numeric aggregate functions for a given underlying type.
@@ -25,7 +25,7 @@ use ndc_models::{AggregateFunctionDefinition, AggregateFunctionName, Type};
 /// # Returns
 ///
 /// A `BTreeMap` containing aggregate function definitions for `sum`, `max`, `avg`, and `min`.
-#[tracing::instrument]
+#[tracing::instrument(skip(underlying_type))]
 pub fn numeric_aggregates(
     underlying_type: &str,
 ) -> BTreeMap<AggregateFunctionName, AggregateFunctionDefinition> {
@@ -42,12 +42,12 @@ pub fn numeric_aggregates(
     BTreeMap::from_iter(aggregate_functions)
 }
 
-#[tracing::instrument]
+#[tracing::instrument(skip(underlying_type), level=Level::DEBUG)]
 fn aggregate_function_definition(underlying_type: &str) -> AggregateFunctionDefinition {
     AggregateFunctionDefinition {
         result_type: Type::Nullable {
             underlying_type: Box::new(Type::Named {
-                name: underlying_type.into(),
+                name: underlying_type.into()
             }),
         },
     }
