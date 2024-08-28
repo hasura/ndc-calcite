@@ -10,7 +10,10 @@ use calcite::connector::calcite::Calcite;
 /// collection, and starts a server.
 #[tokio::main]
 pub async fn main() -> ExitCode {
-    env_logger::init();
+    #[cfg(debug_assertions)]
+    {
+        env_logger::init();
+    }
     match default_main::<Calcite>().await {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
