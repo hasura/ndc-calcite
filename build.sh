@@ -1,8 +1,8 @@
 # prevents local build artifacts being added to image
-cd calcite-rs-jni
-mvn clean
-cd calcite
-./gradlew clean
+#cd calcite-rs-jni
+#mvn clean
+#cd calcite
+#./gradlew clean
 
 # create a tag name from the last connector release
 cd ../..

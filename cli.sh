@@ -1,4 +1,4 @@
-export LOCAL_PATH=/Users/kennethstott/Documents/GitHub/ndc-calcite/config-test
+export LOCAL_PATH=./config-test
 export HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH=/etc/connector
 rm -rf ${LOCAL_PATH}
 mkdir -p ${LOCAL_PATH}

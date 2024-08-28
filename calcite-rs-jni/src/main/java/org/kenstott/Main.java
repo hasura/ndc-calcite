@@ -1,11 +1,6 @@
 package org.kenstott;
 
-
-import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * The Main class is the entry point of the application.
@@ -26,7 +21,7 @@ public class Main {
             String x = query.getModels();
             System.out.println(x);
             String z1 = query.queryModels("""
-                    SELECT min(PlaylistId) AS "PlaylistId_min_5667", max(PlaylistId) AS "PlaylistId_max_6029" FROM "emr"."playlists"  LIMIT 10
+                    SELECT "default"."genres"."Name" AS "name","default"."genres"."GenreId" AS "GenreId" FROM "default"."genres" WHERE "GenreId" IN (1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
                     """
             );
             System.out.println(z1);

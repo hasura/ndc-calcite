@@ -3,21 +3,95 @@
   "$schema": "schema.json",
   "model": {
     "version": "1.0",
-    "defaultSchema": "DEFAULT",
+    "defaultSchema": "default",
     "schemas": [
       {
         "type": "jdbc",
-        "name": "emr",
+        "name": "default",
+        "cache": true,
         "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
-        "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/jdbc/chinook.db"
+        "jdbcUrl": "jdbc:sqlite:./chinook.db"
       }
     ]
   },
   "model_file_path": "./model.json",
   "fixes": true,
+  "supportJsonObject": true,
   "metadata": {
+    "tracks": {
+      "schema": "default",
+      "name": "tracks",
+      "columns": {
+        "Milliseconds": {
+          "name": "Milliseconds",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "TrackId": {
+          "name": "TrackId",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "UnitPrice": {
+          "name": "UnitPrice",
+          "scalarType": "FLOAT",
+          "nullable": false
+        },
+        "Composer": {
+          "name": "Composer",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "MediaTypeId": {
+          "name": "MediaTypeId",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "GenreId": {
+          "name": "GenreId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Name": {
+          "name": "Name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "AlbumId": {
+          "name": "AlbumId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Bytes": {
+          "name": "Bytes",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [
+        "TrackId"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableName": "tracks",
+          "pkColumnName": "TrackId",
+          "pkName": "",
+          "fkTableName": "invoice_items",
+          "fkColumnName": "TrackId",
+          "fkName": ""
+        },
+        {
+          "pkTableName": "tracks",
+          "pkColumnName": "TrackId",
+          "pkName": "",
+          "fkTableName": "playlist_track",
+          "fkColumnName": "TrackId",
+          "fkName": ""
+        }
+      ]
+    },
     "media_types": {
-      "schema": "emr",
+      "schema": "default",
       "name": "media_types",
       "columns": {
         "MediaTypeId": {
@@ -36,24 +110,106 @@
       ],
       "exportedKeys": [
         {
-          "pkTableSchema": "emr",
           "pkTableName": "media_types",
           "pkColumnName": "MediaTypeId",
           "pkName": "",
-          "fkTableSchema": "emr",
           "fkTableName": "tracks",
           "fkColumnName": "MediaTypeId",
           "fkName": ""
         }
       ]
     },
+    "customers": {
+      "schema": "default",
+      "name": "customers",
+      "columns": {
+        "Company": {
+          "name": "Company",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "State": {
+          "name": "State",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "SupportRepId": {
+          "name": "SupportRepId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "LastName": {
+          "name": "LastName",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Phone": {
+          "name": "Phone",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Fax": {
+          "name": "Fax",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Email": {
+          "name": "Email",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Country": {
+          "name": "Country",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Address": {
+          "name": "Address",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "PostalCode": {
+          "name": "PostalCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "FirstName": {
+          "name": "FirstName",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "City": {
+          "name": "City",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "CustomerId": {
+          "name": "CustomerId",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [
+        "CustomerId"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableName": "customers",
+          "pkColumnName": "CustomerId",
+          "pkName": "",
+          "fkTableName": "invoices",
+          "fkColumnName": "CustomerId",
+          "fkName": ""
+        }
+      ]
+    },
     "invoice_items": {
-      "schema": "emr",
+      "schema": "default",
       "name": "invoice_items",
       "columns": {
-        "UnitPrice": {
-          "name": "UnitPrice",
-          "scalarType": "FLOAT",
+        "InvoiceLineId": {
+          "name": "InvoiceLineId",
+          "scalarType": "INTEGER",
           "nullable": false
         },
         "Quantity": {
@@ -61,14 +217,14 @@
           "scalarType": "INTEGER",
           "nullable": false
         },
-        "InvoiceLineId": {
-          "name": "InvoiceLineId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
         "InvoiceId": {
           "name": "InvoiceId",
           "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "UnitPrice": {
+          "name": "UnitPrice",
+          "scalarType": "FLOAT",
           "nullable": false
         },
         "TrackId": {
@@ -83,18 +239,18 @@
       "exportedKeys": []
     },
     "artists": {
-      "schema": "emr",
+      "schema": "default",
       "name": "artists",
       "columns": {
-        "Name": {
-          "name": "Name",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
         "ArtistId": {
           "name": "ArtistId",
           "scalarType": "INTEGER",
           "nullable": false
+        },
+        "Name": {
+          "name": "Name",
+          "scalarType": "VARCHAR",
+          "nullable": true
         }
       },
       "primaryKeys": [
@@ -102,131 +258,33 @@
       ],
       "exportedKeys": [
         {
-          "pkTableSchema": "emr",
           "pkTableName": "artists",
           "pkColumnName": "ArtistId",
           "pkName": "",
-          "fkTableSchema": "emr",
           "fkTableName": "albums",
           "fkColumnName": "ArtistId",
           "fkName": ""
         }
       ]
     },
-    "employees": {
-      "schema": "emr",
-      "name": "employees",
-      "columns": {
-        "Country": {
-          "name": "Country",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "FirstName": {
-          "name": "FirstName",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "EmployeeId": {
-          "name": "EmployeeId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "LastName": {
-          "name": "LastName",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "Email": {
-          "name": "Email",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "HireDate": {
-          "name": "HireDate",
-          "scalarType": "TIMESTAMP",
-          "nullable": true
-        },
-        "Title": {
-          "name": "Title",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "State": {
-          "name": "State",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "City": {
-          "name": "City",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "PostalCode": {
-          "name": "PostalCode",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Phone": {
-          "name": "Phone",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "ReportsTo": {
-          "name": "ReportsTo",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "Address": {
-          "name": "Address",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Fax": {
-          "name": "Fax",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "BirthDate": {
-          "name": "BirthDate",
-          "scalarType": "TIMESTAMP",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [
-        "EmployeeId"
-      ],
-      "exportedKeys": [
-        {
-          "pkTableSchema": "emr",
-          "pkTableName": "employees",
-          "pkColumnName": "EmployeeId",
-          "pkName": "",
-          "fkTableSchema": "emr",
-          "fkTableName": "customers",
-          "fkColumnName": "SupportRepId",
-          "fkName": ""
-        },
-        {
-          "pkTableSchema": "emr",
-          "pkTableName": "employees",
-          "pkColumnName": "EmployeeId",
-          "pkName": "",
-          "fkTableSchema": "emr",
-          "fkTableName": "employees",
-          "fkColumnName": "ReportsTo",
-          "fkName": ""
-        }
-      ]
-    },
     "invoices": {
-      "schema": "emr",
+      "schema": "default",
       "name": "invoices",
       "columns": {
+        "CustomerId": {
+          "name": "CustomerId",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
         "InvoiceId": {
           "name": "InvoiceId",
           "scalarType": "INTEGER",
           "nullable": false
+        },
+        "BillingState": {
+          "name": "BillingState",
+          "scalarType": "VARCHAR",
+          "nullable": true
         },
         "BillingPostalCode": {
           "name": "BillingPostalCode",
@@ -238,19 +296,14 @@
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "BillingState": {
-          "name": "BillingState",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
         "BillingCity": {
           "name": "BillingCity",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "CustomerId": {
-          "name": "CustomerId",
-          "scalarType": "INTEGER",
+        "Total": {
+          "name": "Total",
+          "scalarType": "FLOAT",
           "nullable": false
         },
         "InvoiceDate": {
@@ -262,11 +315,6 @@
           "name": "BillingAddress",
           "scalarType": "VARCHAR",
           "nullable": true
-        },
-        "Total": {
-          "name": "Total",
-          "scalarType": "FLOAT",
-          "nullable": false
         }
       },
       "primaryKeys": [
@@ -274,11 +322,9 @@
       ],
       "exportedKeys": [
         {
-          "pkTableSchema": "emr",
           "pkTableName": "invoices",
           "pkColumnName": "InvoiceId",
           "pkName": "",
-          "fkTableSchema": "emr",
           "fkTableName": "invoice_items",
           "fkColumnName": "InvoiceId",
           "fkName": ""
@@ -286,18 +332,18 @@
       ]
     },
     "genres": {
-      "schema": "emr",
+      "schema": "default",
       "name": "genres",
       "columns": {
-        "Name": {
-          "name": "Name",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
         "GenreId": {
           "name": "GenreId",
           "scalarType": "INTEGER",
           "nullable": false
+        },
+        "Name": {
+          "name": "Name",
+          "scalarType": "VARCHAR",
+          "nullable": true
         }
       },
       "primaryKeys": [
@@ -305,147 +351,17 @@
       ],
       "exportedKeys": [
         {
-          "pkTableSchema": "emr",
           "pkTableName": "genres",
           "pkColumnName": "GenreId",
           "pkName": "",
-          "fkTableSchema": "emr",
           "fkTableName": "tracks",
           "fkColumnName": "GenreId",
           "fkName": ""
         }
       ]
     },
-    "playlists": {
-      "schema": "emr",
-      "name": "playlists",
-      "columns": {
-        "PlaylistId": {
-          "name": "PlaylistId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "Name": {
-          "name": "Name",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [
-        "PlaylistId"
-      ],
-      "exportedKeys": [
-        {
-          "pkTableSchema": "emr",
-          "pkTableName": "playlists",
-          "pkColumnName": "PlaylistId",
-          "pkName": "",
-          "fkTableSchema": "emr",
-          "fkTableName": "playlist_track",
-          "fkColumnName": "PlaylistId",
-          "fkName": ""
-        }
-      ]
-    },
-    "playlist_track": {
-      "schema": "emr",
-      "name": "playlist_track",
-      "columns": {
-        "PlaylistId": {
-          "name": "PlaylistId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "TrackId": {
-          "name": "TrackId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [
-        "PlaylistId",
-        "TrackId"
-      ],
-      "exportedKeys": []
-    },
-    "tracks": {
-      "schema": "emr",
-      "name": "tracks",
-      "columns": {
-        "Name": {
-          "name": "Name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "MediaTypeId": {
-          "name": "MediaTypeId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "AlbumId": {
-          "name": "AlbumId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "Composer": {
-          "name": "Composer",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "TrackId": {
-          "name": "TrackId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "UnitPrice": {
-          "name": "UnitPrice",
-          "scalarType": "FLOAT",
-          "nullable": false
-        },
-        "GenreId": {
-          "name": "GenreId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "Bytes": {
-          "name": "Bytes",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "Milliseconds": {
-          "name": "Milliseconds",
-          "scalarType": "INTEGER",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [
-        "TrackId"
-      ],
-      "exportedKeys": [
-        {
-          "pkTableSchema": "emr",
-          "pkTableName": "tracks",
-          "pkColumnName": "TrackId",
-          "pkName": "",
-          "fkTableSchema": "emr",
-          "fkTableName": "invoice_items",
-          "fkColumnName": "TrackId",
-          "fkName": ""
-        },
-        {
-          "pkTableSchema": "emr",
-          "pkTableName": "tracks",
-          "pkColumnName": "TrackId",
-          "pkName": "",
-          "fkTableSchema": "emr",
-          "fkTableName": "playlist_track",
-          "fkColumnName": "TrackId",
-          "fkName": ""
-        }
-      ]
-    },
     "albums": {
-      "schema": "emr",
+      "schema": "default",
       "name": "albums",
       "columns": {
         "Title": {
@@ -469,68 +385,85 @@
       ],
       "exportedKeys": [
         {
-          "pkTableSchema": "emr",
           "pkTableName": "albums",
           "pkColumnName": "AlbumId",
           "pkName": "",
-          "fkTableSchema": "emr",
           "fkTableName": "tracks",
           "fkColumnName": "AlbumId",
           "fkName": ""
         }
       ]
     },
-    "customers": {
-      "schema": "emr",
-      "name": "customers",
+    "playlists": {
+      "schema": "default",
+      "name": "playlists",
       "columns": {
-        "Company": {
-          "name": "Company",
+        "Name": {
+          "name": "Name",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "City": {
-          "name": "City",
-          "scalarType": "VARCHAR",
+        "PlaylistId": {
+          "name": "PlaylistId",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [
+        "PlaylistId"
+      ],
+      "exportedKeys": [
+        {
+          "pkTableName": "playlists",
+          "pkColumnName": "PlaylistId",
+          "pkName": "",
+          "fkTableName": "playlist_track",
+          "fkColumnName": "PlaylistId",
+          "fkName": ""
+        }
+      ]
+    },
+    "employees": {
+      "schema": "default",
+      "name": "employees",
+      "columns": {
+        "BirthDate": {
+          "name": "BirthDate",
+          "scalarType": "TIMESTAMP",
           "nullable": true
         },
-        "State": {
-          "name": "State",
-          "scalarType": "VARCHAR",
+        "HireDate": {
+          "name": "HireDate",
+          "scalarType": "TIMESTAMP",
           "nullable": true
         },
-        "SupportRepId": {
-          "name": "SupportRepId",
+        "ReportsTo": {
+          "name": "ReportsTo",
           "scalarType": "INTEGER",
           "nullable": true
-        },
-        "Country": {
-          "name": "Country",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "PostalCode": {
-          "name": "PostalCode",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "LastName": {
-          "name": "LastName",
-          "scalarType": "VARCHAR",
-          "nullable": false
         },
         "Fax": {
           "name": "Fax",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "Email": {
-          "name": "Email",
-          "scalarType": "VARCHAR",
+        "EmployeeId": {
+          "name": "EmployeeId",
+          "scalarType": "INTEGER",
           "nullable": false
         },
         "Address": {
           "name": "Address",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Phone": {
+          "name": "Phone",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Country": {
+          "name": "Country",
           "scalarType": "VARCHAR",
           "nullable": true
         },
@@ -539,32 +472,79 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "CustomerId": {
-          "name": "CustomerId",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "Phone": {
-          "name": "Phone",
+        "Email": {
+          "name": "Email",
           "scalarType": "VARCHAR",
           "nullable": true
+        },
+        "PostalCode": {
+          "name": "PostalCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "State": {
+          "name": "State",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Title": {
+          "name": "Title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "City": {
+          "name": "City",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "LastName": {
+          "name": "LastName",
+          "scalarType": "VARCHAR",
+          "nullable": false
         }
       },
       "primaryKeys": [
-        "CustomerId"
+        "EmployeeId"
       ],
       "exportedKeys": [
         {
-          "pkTableSchema": "emr",
-          "pkTableName": "customers",
-          "pkColumnName": "CustomerId",
+          "pkTableName": "employees",
+          "pkColumnName": "EmployeeId",
           "pkName": "",
-          "fkTableSchema": "emr",
-          "fkTableName": "invoices",
-          "fkColumnName": "CustomerId",
+          "fkTableName": "customers",
+          "fkColumnName": "SupportRepId",
+          "fkName": ""
+        },
+        {
+          "pkTableName": "employees",
+          "pkColumnName": "EmployeeId",
+          "pkName": "",
+          "fkTableName": "employees",
+          "fkColumnName": "ReportsTo",
           "fkName": ""
         }
       ]
+    },
+    "playlist_track": {
+      "schema": "default",
+      "name": "playlist_track",
+      "columns": {
+        "PlaylistId": {
+          "name": "PlaylistId",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "TrackId": {
+          "name": "TrackId",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [
+        "PlaylistId",
+        "TrackId"
+      ],
+      "exportedKeys": []
     }
   }
 }

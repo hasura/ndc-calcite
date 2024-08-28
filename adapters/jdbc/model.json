@@ -1,12 +1,13 @@
 {
   "version": "1.0",
-  "defaultSchema": "DEFAULT",
+  "defaultSchema": "default",
   "schemas": [
     {
+      "name": "default",
+      "cache": true,
       "type": "jdbc",
-      "name": "emr",
       "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
-      "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/jdbc/chinook.db"
+      "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite3/adapters/jdbc/chinook.db"
     }
   ]
 }
