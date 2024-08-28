@@ -102,8 +102,8 @@ fn build_foreign_keys(table_metadata: &TableMetadata, models_data_map: &HashMap<
 
     for (_, foreign_metadata) in models_data_map {
         for foreign_key in foreign_metadata.clone().exported_keys.unwrap_or_default() {
-            if foreign_key.fk_table_catalog == table_metadata.catalog
-                && foreign_key.fk_table_schema == table_metadata.schema
+            if foreign_key.fk_table_catalog == table_metadata.physical_catalog
+                && foreign_key.fk_table_schema == table_metadata.physical_schema
                 && foreign_key.fk_table_name == table_metadata.name {
 
                 let primary_table_name = foreign_key.pk_table_name.clone();

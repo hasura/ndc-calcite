@@ -7,18 +7,12 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
+import org.apache.calcite.adapter.jdbc.JdbcTable;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
-import org.apache.calcite.tools.FrameworkConfig;
-import org.apache.calcite.tools.Frameworks;
-import org.apache.calcite.tools.Planner;
-import org.apache.calcite.tools.RuleSets;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -73,17 +67,21 @@ class ColumnMetadata {
 }
 
 class TableMetadata {
-    public TableMetadata(String catalog, String schema, String name, String description, ArrayList<String> primaryKeys, ArrayList<ExportedKey> exportedKeys) {
-        this.catalog = catalog;
+    public TableMetadata(String catalog, String schema, String name, String description, ArrayList<String> primaryKeys, ArrayList<ExportedKey> exportedKeys, String physicalCatalog, String physicalSchema) {
+        this.catalog = catalog == null ? "" : catalog;
         this.schema = schema;
         this.name = name;
         this.description = description;
         this.primaryKeys = primaryKeys;
         this.exportedKeys = exportedKeys;
+        this.physicalSchema = physicalSchema;
+        this.physicalCatalog = physicalCatalog;
     }
 
     String catalog;
+    String physicalCatalog;
     String schema;
+    String physicalSchema;
     String name;
     String description;
     ArrayList<String> primaryKeys = new ArrayList<>();
@@ -138,12 +136,8 @@ public class CalciteQuery {
         info.setProperty("model", modelPath);
         try {
             Class.forName("org.apache.calcite.jdbc.Driver");
-//            FrameworkConfig config = Frameworks.newConfigBuilder()
-//                    .ruleSets(RuleSets.ofList()) // or an empty rule set to disable all optimizations
-//                    .build();
             connection = DriverManager.getConnection("jdbc:calcite:", info);
             rootSchema = connection.unwrap(CalciteConnection.class).getRootSchema().unwrap(CalciteSchema.class);
-//            Planner planner = Frameworks.getPlanner(config);
             span.setStatus(StatusCode.OK);
         } catch (SQLException | ClassNotFoundException e) {
             span.setAttribute("error", e.toString());
@@ -201,13 +195,21 @@ public class CalciteQuery {
                                     String remarks = tables.getString("REMARKS");
                                     ArrayList<String> primaryKeys = new ArrayList<>();
                                     ArrayList<ExportedKey> exportedKeys = new ArrayList<ExportedKey>();
-                                    try (ResultSet pks = metaData1.getPrimaryKeys(catalog, schemaName, tableName)) {
+                                    String localCatalogName = catalog;
+                                    String localSchemaName = schemaName;
+                                    if (schema instanceof JdbcSchema) {
+                                        JdbcTable underlyingTable = (JdbcTable) ((JdbcSchema) schema).getTable(tableName);
+                                        assert underlyingTable != null;
+                                        localCatalogName = underlyingTable.jdbcCatalogName == null ? catalog : underlyingTable.jdbcCatalogName;
+                                        localSchemaName = underlyingTable.jdbcSchemaName == null ? schemaName : underlyingTable.jdbcSchemaName;
+                                    }
+                                    try (ResultSet pks = metaData1.getPrimaryKeys(localCatalogName, localSchemaName, tableName)) {
                                         while (pks.next()) {
                                             primaryKeys.add(pks.getString("COLUMN_NAME"));
                                         }
                                     }
                                     try {
-                                        try (ResultSet eks = metaData1.getExportedKeys(catalog, schemaName, tableName)) {
+                                        try (ResultSet eks = metaData1.getExportedKeys(localCatalogName, localSchemaName, tableName)) {
                                             while (eks.next()) {
                                                 exportedKeys.add(
                                                         new ExportedKey(
@@ -226,7 +228,7 @@ public class CalciteQuery {
                                             }
                                         }
                                     } catch (SQLException e) { /* ignore */ }
-                                    list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys));
+                                    list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys, localCatalogName, localSchemaName));
                                 }
                             } catch (Exception e) {
                                 span.setAttribute("Error", e.toString());
@@ -273,6 +275,7 @@ public class CalciteQuery {
                         entry("VARCHAR NOT NULL", "VARCHAR"),
                         entry("JavaType(class java.util.ArrayList)", "LIST"),
                         entry("JavaType(class org.apache.calcite.adapter.file.ComparableArrayList)", "LIST"),
+                        entry("ANY ARRAY", "LIST"),
                         entry("JavaType(class java.util.LinkedHashMap)", "MAP"),
                         entry("JavaType(class org.apache.calcite.adapter.file.ComparableLinkedHashMap)", "MAP"),
                         entry("JavaType(class java.lang.String)", "VARCHAR"),
@@ -316,6 +319,8 @@ public class CalciteQuery {
                         mappedType = "TIMESTAMP";
                     } else if (dataTypeName.toLowerCase().contains("decimal")) {
                         mappedType = "FLOAT";
+                    } else if (dataTypeName.toLowerCase().startsWith("any")) {
+                        mappedType = "VARBINARY";
                     } else {
                         span.setAttribute(dataTypeName, "unknown column type");
                         mappedType = "VARCHAR";

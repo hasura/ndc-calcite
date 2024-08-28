@@ -307,6 +307,12 @@ pub struct ExportedKey {
 #[derive(JsonSchema, Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct TableMetadata {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "physicalCatalog")]
+    pub physical_catalog: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "physicalSchema")]
+    pub physical_schema: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub catalog: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub schema: Option<String>,
