@@ -87,7 +87,7 @@ fn select(
                     field_statements.push(field_statement);
                 }
             }
-            Field::Relationship { relationship, .. } => {
+            Field::Relationship { relationship, arguments, .. } => {
                 if supports_json_object {
                     field_statements.push( format!("'{}', 1", key));
                 } else {
@@ -183,11 +183,11 @@ fn generate_aggregate_statement(name: &FieldName, aggregate_expr: String, config
 #[tracing::instrument(skip(configuration, column, field_path), level=Level::DEBUG)]
 fn aggregate_column_name(configuration: &ParsedConfiguration, column: &FieldName, field_path: &Option<Vec<FieldName>>) -> String {
     let column_name = create_column_name(configuration, column, field_path);
-    if configuration.supports_json_object.unwrap_or_else(|| false) {
+    // if configuration.supports_json_object.unwrap_or_else(|| false) {
         format!("\"{}\"", column_name)
-    } else {
-        column_name
-    }
+    // } else {
+    //     column_name
+    // }
 }
 
 #[tracing::instrument(skip(configuration, query), level=Level::DEBUG)]
@@ -198,11 +198,11 @@ fn aggregates(configuration: &ParsedConfiguration, query: &Query) -> Vec<String>
             let aggregate_expr = match aggregate {
                 Aggregate::ColumnCount { column, distinct, field_path } => {
                     let column_name = aggregate_column_name(configuration, column, field_path);
-                    format!("COUNT({}\"{}\")", if *distinct { "DISTINCT " } else { "" }, column_name)
+                    format!("COUNT({}{})", if *distinct { "DISTINCT " } else { "" }, column_name)
                 }
                 Aggregate::SingleColumn { column, field_path, function } => {
                     let column_name = aggregate_column_name(configuration, column, field_path);
-                    format!("{}(\"{}\")", function, column_name)
+                    format!("{}({})", function, column_name)
                 }
                 Aggregate::StarCount {} => "COUNT(*)".to_string(),
             };
