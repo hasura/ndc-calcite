@@ -63,7 +63,7 @@ public class SQLiteSqlDialect extends SqlDialect {
         // This could be extended to account for all WHERE...IN clauses optimized
         // by Calcite, that need to be rewritten to be compliant with SQLite syntax.
         if (call.getOperator().getName().equalsIgnoreCase("SELECT")) {
-            String regex = "^.*SELECT\\s+(`\\w+`\\.`(\\w+)`\\s+AS\\s+`(\\w+)`,?\\s*)*(`\\w+`\\.`(\\w+)`\\s+)FROM.+\\s+FROM `(\\w+).*\\s+.*\\s+FROM \\(VALUES\\s+(\\(.*\\)\\s*,?\\s*)+\\).*$";
+            String regex = "^.*SELECT\\s+(`\\w+`\\.`(\\w+)`\\s+AS\\s+`(\\w+)`,?\\s*)*`(\\w+)`\\.`(\\w+)`\\s+FROM\\s+.*\\s+INNER JOIN.*\\s+FROM\\s+\\(VALUES\\s+(\\(.*\\)\\s*,?\\s*)+\\).*$";
             Pattern pattern = Pattern.compile(regex,
                     Pattern.DOTALL + Pattern.MULTILINE
             );
@@ -75,9 +75,9 @@ public class SQLiteSqlDialect extends SqlDialect {
 
             if (matcher.find()) {
                 // Extract table name
-                tableName = matcher.group(6);
+                tableName = matcher.group(4);
                 idColumn = matcher.group(5);
-                Pattern selectList = Pattern.compile("`t`\\.`(\\w+)`\\s+AS\\s+`(\\w+)`");
+                Pattern selectList = Pattern.compile("`\\w+`\\.`(\\w+)`\\s+AS\\s+`(\\w+)`");
                 Matcher selectMatcher = selectList.matcher(call.toString());
                 while (selectMatcher.find()) {
                     selectItems.add(String.format("\"%s\" AS \"%s\"", selectMatcher.group(1), selectMatcher.group(2)));
@@ -85,7 +85,7 @@ public class SQLiteSqlDialect extends SqlDialect {
                 selectItems.add(String.format("\"%s\"", idColumn));
 
                 // Extract values
-                String[] valueArray = matcher.group(7).split("\\),\\s*\\(");
+                String[] valueArray = matcher.group(6).split("\\),\\s*\\(");
                 for (String value : valueArray) {
                     value = value.trim();
                     if (value.startsWith("(")) {
