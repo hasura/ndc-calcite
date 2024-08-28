@@ -1,10 +1,10 @@
 # prevents local build artifacts being added to image
-#cd calcite-rs-jni
-#mvn clean
-#cd calcite
-#./gradlew clean
+cd calcite-rs-jni
+mvn clean
+cd calcite
+./gradlew clean
 
-# create a tag name from the last connector release
+ create a tag name from the last connector release
 cd ../..
 release_info=$(curl -L \
   -H "Accept: application/vnd.github+json" \
@@ -14,7 +14,7 @@ release_info=$(curl -L \
 TAG=$(echo "$release_info" | grep 'tag_name' | awk -F':' '{print $2}' | tr -d ' "",')
 
 # build arm & amd versions
-docker build . --platform linux/arm64,linux/amd64 -t kstott/meta_connector:latest
+docker build . --no-cache --platform linux/arm64,linux/amd64 -t kstott/meta_connector:latest
 #docker buildx build --platform linux/arm64 --output type=oci,dest=./image.tar .
 docker tag kstott/meta_connector:latest kstott/meta_connector:"$TAG"
 

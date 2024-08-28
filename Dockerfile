@@ -5,9 +5,7 @@ RUN cargo install cargo-chef
 
 # planning stage
 FROM chef AS planner
-COPY Cargo.toml .
-COPY Cargo.lock .
-COPY crates ./crates
+COPY Cargo.toml Cargo.lock crates ./app/
 RUN cargo chef prepare --recipe-path recipe.json
 
 # caching stage
@@ -20,46 +18,40 @@ FROM chef AS builder
 COPY . .
 RUN cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
 
+# java-build stage
+FROM debian:trixie-slim AS java-build
+COPY scripts/java_env.sh ./scripts/
+RUN apt-get update && apt-get install -y openjdk-21-jdk maven ca-certificates
+RUN . /scripts/java_env_jdk.sh
+RUN java -version && mvn --version
+COPY calcite-rs-jni/ /calcite-rs-jni/
+WORKDIR /calcite-rs-jni/calcite
+RUN ./gradlew assemble --no-daemon
+WORKDIR /calcite-rs-jni
+RUN mvn clean install -DskipTests
+
+# Put all the jars into target/dependency folder
+RUN mvn dependency:copy-dependencies
+
 # runtime stage
 FROM debian:trixie-slim AS runtime
-RUN apt-get update && apt-get install -y openjdk-21-jdk maven ca-certificates &&  \
-    apt-get clean &&  \
+COPY scripts/java_env.sh ./scripts/
+
+RUN apt-get update &&  \
+    apt-get install -y coreutils openjdk-21-jre-headless ca-certificates &&  \
+    apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
-# set JAVA_HOME based on architecture
-ENV JAVA_HOME_ARM64=/usr/lib/jvm/java-21-openjdk-arm64
-ENV JAVA_HOME_AMD64=/usr/lib/jvm/java-21-openjdk-amd64
-RUN if [ "$(uname -m)" = "aarch64" ]; then \
-        echo "Setting JAVA_HOME for ARM64"; \
-        ln -s ${JAVA_HOME_ARM64} /usr/local/java_home; \
-    else \
-        echo "Setting JAVA_HOME for AMD64"; \
-        ln -s ${JAVA_HOME_AMD64} /usr/local/java_home; \
-    fi
 
-ENV JAVA_HOME=/usr/local/java_home
-ENV MAVEN_HOME=/usr/share/maven
-ENV PATH=$JAVA_HOME/bin:$MAVEN_HOME/bin:$PATH
-
-# Verify Java and Maven installations
-RUN java -version && echo $JAVA_HOME
-RUN mvn --version
+RUN . /scripts/java_env_jre.sh && \
+    mkdir -p /calcite-rs-jni/target && \
+    mkdir -p /etc/ndc-calcite
 
 COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
 COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin
-RUN mkdir -p /etc/ndc-calcite
+COPY --from=java-build /calcite-rs-jni/target/ /calcite-rs-jni/target/
 
 ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
 ENV RUST_BACKTRACE=full
-COPY calcite-rs-jni/ /calcite-rs-jni/
-WORKDIR /calcite-rs-jni/calcite
-
-RUN ./gradlew assemble --no-daemon
-WORKDIR /calcite-rs-jni
-RUN mvn clean install -DskipTests &&  \
-    mvn dependency:copy-dependencies &&  \
-    rm -rf /root/.m2 &&  \
-    rm -rf /usr/share/maven-repo &&  \
-    rm -rf /calcite-rs-jni/calcite /calcite-rs-jni/src
 
 WORKDIR /app
 
