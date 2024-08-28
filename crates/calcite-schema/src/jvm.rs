@@ -119,6 +119,7 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
         let otel_traces_exporter = env::var("OTEL_TRACES_EXPORTER").unwrap_or("".to_string());
         let otel_metrics_exporter = env::var("OTEL_METRICS_EXPORTER").unwrap_or("".to_string());
         let otel_log_level = env::var("OTEL_LOG_LEVEL").unwrap_or("".to_string());
+        let log_level = env::var("LOG_LEVEL").unwrap_or("".to_string());
         let log4j_configuration_file = env::var("LOG4J_CONFIGURATION_FILE").unwrap_or("classpath:log4j2-config.xml".to_string());
         let expanded_paths: String = jar_paths.join(":");
         let mut jvm_args = InitArgsBuilder::new()
@@ -168,6 +169,12 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
                 format!("-DOTEL_LOG_LEVEL={}", otel_log_level)
             );
             debug!("Added {} to JVM", format!("-DOTEL_LOG_LEVEL={}", otel_log_level));
+        }
+        if !log_level.is_empty() {
+            jvm_args = jvm_args.option(
+                format!("-DLOG_LEVEL={}", log_level)
+            );
+            debug!("Added {} to JVM", format!("-DLOG_LEVEL={}", log_level));
         }
         if !expanded_paths.is_empty() {
             jvm_args = jvm_args.option(
