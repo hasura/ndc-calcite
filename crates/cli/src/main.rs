@@ -6,10 +6,7 @@
 use std::{env};
 use std::path::PathBuf;
 use std::process::ExitCode;
-use std::sync::Once;
-
 use clap::Parser;
-
 use ndc_calcite_cli::*;
 use ndc_calcite_schema as configuration;
 use ndc_calcite_schema::version5::CalciteRefSingleton;
@@ -34,23 +31,10 @@ pub struct Args {
     pub subcommand: Command,
 }
 
-static INIT: Once = Once::new();
-
-pub fn init_tracing() {
-    INIT.call_once(|| {
-        tracing::subscriber::set_global_default(
-            tracing_subscriber::FmtSubscriber::builder()
-                .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
-                .finish(),
-        )
-            .unwrap();
-    });
-}
-
 #[tokio::main]
 pub async fn main() -> ExitCode {
     let calcite_singleton = CalciteRefSingleton::new();
-    init_tracing();
+    env_logger::init();
 
     // Now We log
     tracing::warn!("Tracing is setup");
