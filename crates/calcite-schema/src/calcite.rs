@@ -9,10 +9,24 @@
 extern crate serde_json;
 
 use std::collections::HashMap;
+use std::env;
 use ndc_models::{FieldName};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+fn from_env_var<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let s: String = String::deserialize(deserializer)?;
+    if s.starts_with('$') {
+        let var = &s[1..];
+        let value = env::var(var).map_err(serde::de::Error::custom)?;
+        return Ok(Some(value));
+    }
+    Ok(Some(s))
+}
 
 /// The type of the schema.
 // ANCHOR: Schema
@@ -28,23 +42,30 @@ pub struct Schema {
     pub path: Option<Vec<Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "sqlDialectFactory")]
+    #[serde(deserialize_with = "from_env_var")]
     pub sql_dialect_factory: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "jdbcUser")]
+    #[serde(deserialize_with = "from_env_var")]
     pub jdbc_user: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "jdbcPassword")]
+    #[serde(deserialize_with = "from_env_var")]
     pub jdbc_password: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "jdbcUrl")]
+    #[serde(deserialize_with = "from_env_var")]
     pub jdbc_url: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "jdbcCatalog")]
+    #[serde(deserialize_with = "from_env_var")]
     pub jdbc_catalog: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "jdbcSchema")]
+    #[serde(deserialize_with = "from_env_var")]
     pub jdbc_schema: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(deserialize_with = "from_env_var")]
     pub factory: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operand: Option<Operand>,
