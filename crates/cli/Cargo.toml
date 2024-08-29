@@ -9,6 +9,7 @@ workspace = true
 
 [dependencies]
 ndc-calcite-schema = { path = "../calcite-schema"}
+ndc-calcite-values = { path = "../values"}
 
 anyhow = { workspace = true }
 clap = { workspace = true, features = ["derive", "env"] }
@@ -20,6 +21,8 @@ tokio = { workspace = true, features = ["full"] }
 include_dir = { version = "0.7.4", features = ["default", "glob"] }
 tracing-subscriber = "0.3.18"
 tracing = "0.1.40"
+log = "0.4.22"
+env_logger = "0.11.5"
 
 [build-dependencies]
 build-data = { workspace = true }

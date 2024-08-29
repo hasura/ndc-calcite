@@ -14,9 +14,11 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tokio::fs;
 use tracing::{event, Level};
-use ndc_calcite_values::values::{CONFIGURATION_FILENAME, CONFIGURATION_JSONSCHEMA_FILENAME};
+use tracing::log::debug;
+use ndc_calcite_values::values::{CONFIGURATION_FILENAME, CONFIGURATION_JSONSCHEMA_FILENAME, DOCKER_CONNECTOR_DIR};
 
 use crate::calcite::{Model, TableMetadata};
+use crate::configuration::has_configuration;
 use crate::environment::Environment;
 use crate::error::{ParseConfigurationError, WriteParsedConfigurationError};
 use crate::jvm::{get_jvm};
@@ -90,11 +92,12 @@ pub enum Version {
 
 impl ParsedConfiguration {
     pub fn empty() -> Self {
+        debug!("Configuration is empty.");
         Self {
             version: Version::This,
             _schema: Some(CONFIGURATION_JSONSCHEMA_FILENAME.to_string()),
             model: None,
-            model_file_path: Some("/etc/connector/models/model.json".to_string()),
+            model_file_path: Some(format!("{}/models/model.json", DOCKER_CONNECTOR_DIR).to_string()),
             fixes: Some(true),
             supports_json_object: None,
             jars: None,
@@ -212,12 +215,14 @@ pub async fn parse_configuration(
     Ok(parsed_config)
 }
 
+
 /// Write the parsed configuration into a directory on disk.
 #[tracing::instrument(skip(out_dir))]
 pub async fn write_parsed_configuration(
     parsed_config: ParsedConfiguration,
-    out_dir: impl AsRef<Path>,
+    out_dir: impl AsRef<Path> + Send,
 ) -> Result<(), WriteParsedConfigurationError> {
+    debug!("has_configuration: {}", has_configuration(out_dir.as_ref()));
     let configuration_file = out_dir.as_ref().to_owned().join(CONFIGURATION_FILENAME);
     fs::create_dir_all(out_dir.as_ref()).await?;
 

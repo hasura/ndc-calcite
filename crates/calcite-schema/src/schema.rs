@@ -13,7 +13,7 @@ use ndc_models as models;
 use ndc_models::SchemaResponse;
 use tracing::{debug, event, Level};
 use ndc_calcite_values::is_running_in_container::is_running_in_container;
-use ndc_calcite_values::values::{CONFIG_FILE_NAME, DEV_CONFIG_FILE_NAME};
+use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DEV_CONFIG_FILE_NAME, DOCKER_CONNECTOR_RW};
 use crate::{collections, scalars};
 use crate::models::get_models;
 use crate::version5::ParsedConfiguration;
@@ -78,7 +78,7 @@ pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -
         procedures,
     };
     let file_path = if is_running_in_container() {
-        Path::new("/etc/connector").join(CONFIG_FILE_NAME)
+        Path::new(DOCKER_CONNECTOR_RW).join(CONFIGURATION_FILENAME)
     } else {
         Path::new(".").join(DEV_CONFIG_FILE_NAME)
     };
