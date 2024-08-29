@@ -20,7 +20,7 @@ RUN cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
 
 # java-build stage
 FROM debian:trixie-slim AS java-build
-COPY scripts/java_env.sh ./scripts/
+COPY scripts/java_env_jdk.sh ./scripts/
 RUN apt-get update && apt-get install -y openjdk-21-jdk maven ca-certificates
 RUN . /scripts/java_env_jdk.sh
 RUN java -version && mvn --version
@@ -35,16 +35,18 @@ RUN mvn dependency:copy-dependencies
 
 # runtime stage
 FROM debian:trixie-slim AS runtime
-COPY scripts/java_env.sh ./scripts/
+COPY scripts/java_env_jre.sh ./scripts/
 
 RUN apt-get update &&  \
-    apt-get install -y coreutils openjdk-21-jre-headless ca-certificates &&  \
+    apt-get install -y openjdk-21-jre-headless &&  \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
 RUN . /scripts/java_env_jre.sh && \
     mkdir -p /calcite-rs-jni/target && \
-    mkdir -p /etc/ndc-calcite
+    mkdir -p /etc/ndc-calcite && \
+    mkdir -p /app/connector && \
+    chmod -R 666 /app/connector
 
 COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
 COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin
