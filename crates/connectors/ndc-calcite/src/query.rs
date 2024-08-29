@@ -168,48 +168,15 @@ fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName
 
 #[tracing::instrument(skip(params, query_components), level=Level::DEBUG)]
 fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>, QueryError> {
-    if let Some(phrase) = &query_components.select {
-        if phrase.is_empty() && !query_components.final_aggregates.is_empty() {
-            return Ok(None);
-        }
-        let q = sql::query_collection(
-            params.config,
-            params.coll,
-            &query_components.argument_values,
-            Some(phrase.to_string()),
-            query_components.order_by.clone(),
-            query_components.pagination.clone(),
-            query_components.predicates.clone(),
-            query_components.join.clone(),
-        );
-        match calcite_query(params.config, params.state.clone().calcite_ref, &q, params.query, params.explain) {
-            Ok(value) => Ok(Some(value)),
-            Err(e) => Err(e)
-        }
-    } else {
-        Ok(None)
-    }
+    execute_query_collection(params, query_components, query_components.select.clone())
 }
 
 
 #[tracing::instrument(skip(params, query_components), level=Level::DEBUG)]
 fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -> Result<Option<IndexMap<FieldName, Value>>, QueryError> {
-    if let Some(phrase) = &query_components.aggregates {
-        if phrase.is_empty() {
-            return Ok(None);
-        }
-        let q = sql::query_collection(
-            params.config,
-            params.coll,
-            &query_components.argument_values,
-            Some(phrase.to_string()),
-            query_components.order_by.clone(),
-            query_components.pagination.clone(),
-            query_components.predicates.clone(),
-            query_components.join.clone(),
-        );
-        match calcite_query(params.config, params.state.clone().calcite_ref, &q, params.query, params.explain) {
-            Ok(collection) => {
+    match execute_query_collection(params, query_components, query_components.aggregates.clone()) {
+        Ok(collection_option) => {
+            if let Some(collection) = collection_option {
                 let mut row = collection
                     .first()
                     .cloned()
@@ -224,11 +191,11 @@ fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -
                     .map(|(k, v)| (k, v.0))
                     .collect();
                 Ok(Some(map))
+            } else {
+                Ok(None)
             }
-            Err(_) => todo!(),
         }
-    } else {
-        Ok(None)
+        Err(_) => todo!(),
     }
 }
 
@@ -368,4 +335,36 @@ fn process_child_rows(child_rows: &Vec<&Row>, mut rowset: serde_json::map::Map<S
         *value = RowFieldValue(Value::from(rowset));
     }
     Ok(())
+}
+
+#[tracing::instrument(skip(params, query_components, phrase), level=Level::DEBUG)]
+fn execute_query_collection(
+    params: QueryParams,
+    query_components: &QueryComponents,
+    phrase: Option<String>
+) -> Result<Option<Vec<Row>>, QueryError> {
+    if phrase.is_none() || phrase.clone().unwrap().is_empty() {
+        return Ok(None);
+    }
+
+    let q = sql::query_collection(
+        params.config,
+        params.coll,
+        &query_components.argument_values,
+        Some(phrase.unwrap().to_string()),
+        query_components.order_by.clone(),
+        query_components.pagination.clone(),
+        query_components.predicates.clone(),
+        query_components.join.clone(),
+    );
+
+    match calcite_query(
+        params.config,
+        params.state.clone().calcite_ref,
+        &q,
+        params.query,
+        params.explain) {
+        Ok(v) => Ok(Some(v)),
+        Err(e) => Err(e)
+    }
 }

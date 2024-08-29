@@ -9,6 +9,7 @@ use std::sync::Mutex;
 use jni::{InitArgsBuilder, JavaVM, JNIVersion};
 use once_cell::sync::OnceCell;
 use tracing::{debug, event, Level};
+
 use crate::configuration::ParsedConfiguration;
 
 static JVM: OnceCell<Mutex<JavaVM>> = OnceCell::new();
@@ -33,7 +34,7 @@ static CONFIG: OnceCell<Mutex<ParsedConfiguration>> = OnceCell::new();
 /// }
 /// ```
 // ANCHOR: get_jvm
-#[tracing::instrument(skip(), level=Level::INFO)]
+#[tracing::instrument(skip(), level = Level::INFO)]
 pub fn get_jvm() -> &'static Mutex<JavaVM> {
     {
         let jvm = JVM.get().expect("JVM is not set up.");
@@ -69,45 +70,26 @@ pub fn get_jvm() -> &'static Mutex<JavaVM> {
 /// init_jvm(&config);
 /// ```
 // ANCHOR: init_jvm
-#[tracing::instrument(skip(calcite_configuration), level=Level::INFO)]
+#[tracing::instrument(skip(calcite_configuration), level = Level::INFO)]
 pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
     let configuration = match calcite_configuration {
         ParsedConfiguration::Version5(c) => c
     };
-
-    let state_inited =  env::var("STATE_INITED").unwrap_or("false".to_string());
+    let state_inited = env::var("STATE_INITED").unwrap_or("false".to_string());
     if state_inited == "false" {
         let folder_path = env::var("JAR_DEPENDENCY_FOLDER").unwrap_or("/calcite-rs-jni/target/dependency".into());
-        let mut jar_paths: Vec<String> = Vec::new();
+        let mut jar_paths = get_jar_files(&folder_path);
         let jar_name = env::var("CALCITE_JAR").unwrap_or("/calcite-rs-jni/target/calcite-rs-jni-1.0-SNAPSHOT.jar".into());
+
         if !jar_name.is_empty() {
             jar_paths.push(jar_name.clone());
         }
-        if !folder_path.is_empty() {
-            if let Ok(entries) = fs::read_dir(folder_path) {
-                for entry in entries {
-                    if let Ok(entry) = entry {
-                        let path = entry.path();
-                        if path.is_file() && path.extension().map(|ext| ext == "jar").unwrap_or(false) {
-                            jar_paths.push(path.to_string_lossy().to_string());
-                        }
-                    }
-                }
-            }
-        }
+
         match &configuration.jars {
-            Some(jars) => {
-                if let Ok(entries) = fs::read_dir(jars) {
-                    for entry in entries {
-                        if let Ok(entry) = entry {
-                            let path = entry.path();
-                            if path.is_file() && path.extension().map(|ext| ext == "jar").unwrap_or(false) {
-                                jar_paths.push(path.to_string_lossy().to_string());
-                            }
-                        }
-                    }
-                }
-            },
+            Some(jars_path) => {
+                let jars_files = get_jar_files(jars_path);
+                jar_paths.extend(jars_files.iter().cloned());
+            }
             None => { /* handle None case if necessary */ }
         }
 
@@ -191,3 +173,23 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
     }
 }
 // ANCHOR_END: init_jvm
+
+#[tracing::instrument(level = Level::INFO)]
+fn get_jar_files(folder_path: &str) -> Vec<String> {
+    let mut jar_paths: Vec<String> = Vec::new();
+
+    if !folder_path.is_empty() {
+        if let Ok(entries) = fs::read_dir(folder_path) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_file() && path.extension().map(|ext| ext == "jar").unwrap_or(false) {
+                        jar_paths.push(path.to_string_lossy().to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    jar_paths
+}
