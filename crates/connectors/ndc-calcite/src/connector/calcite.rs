@@ -5,6 +5,7 @@
 //!
 use std::collections::BTreeMap;
 use std::{env, fs};
+use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
 use log::{info, error};
 use async_trait::async_trait;
@@ -28,7 +29,7 @@ use ndc_calcite_schema::models::get_models;
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_values::is_running_in_container::is_running_in_container;
-use ndc_calcite_values::values::{CONFIG_FILE_NAME, DEV_CONFIG_FILE_NAME};
+use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DEV_CONFIG_FILE_NAME};
 use crate::{calcite, query};
 use crate::query::QueryParams;
 
@@ -56,6 +57,14 @@ fn execute_query_with_variables(
 
 const CONFIG_ERROR_MSG: &str = "Could not find model file.";
 
+fn has_yaml_extension(filename: &str) -> bool {
+    let path = Path::new(filename);
+    match path.extension().and_then(OsStr::to_str) {
+        Some("yml") | Some("yaml") => true,
+        _ => false,
+    }
+}
+
 #[async_trait]
 impl ConnectorSetup for Calcite {
     type Connector = Self;
@@ -71,7 +80,7 @@ impl ConnectorSetup for Calcite {
 
         fn get_config_file_path(configuration_dir: impl AsRef<Path> + Send) -> PathBuf {
             if is_running_in_container() {
-                configuration_dir.as_ref().join(CONFIG_FILE_NAME)
+                configuration_dir.as_ref().join(CONFIGURATION_FILENAME)
             } else {
                 configuration_dir.as_ref().join(DEV_CONFIG_FILE_NAME)
             }
@@ -102,12 +111,18 @@ impl ConnectorSetup for Calcite {
                 .or_else(|| env::var("MODEL_FILE").ok())
                 .ok_or(ParseError::Other(Box::from(CONFIG_ERROR_MSG)))?;
 
-            let models = fs::read_to_string(model_file_path)?;
+            let models = fs::read_to_string(model_file_path.clone())?;
 
-            let model_object: Model = serde_json::from_str(&models)
-                .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+            if has_yaml_extension(&model_file_path.clone()) {
+                let model_object: Model = serde_yaml::from_str(&models)
+                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+                json_object.model = Some(model_object);
+            } else {
+                let model_object: Model = serde_json::from_str(&models)
+                    .map_err(|err| ParseError::Other(Box::from(err.to_string())))?;
+                json_object.model = Some(model_object);
+            }
 
-            json_object.model = Some(model_object);
             Ok(())
         }
 
