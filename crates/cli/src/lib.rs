@@ -3,17 +3,20 @@
 //! The CLI can do a few things. This provides a central point where those things are routed and
 //! then done, making it easier to test this crate deterministically.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use clap::Subcommand;
 use include_dir::{DirEntry, include_dir};
 use include_dir::Dir;
 use tokio::fs;
+use tracing::debug;
 
-use ndc_calcite_schema::configuration::{introspect, parse_configuration, ParsedConfiguration, upgrade_to_latest_version, write_parsed_configuration};
+use ndc_calcite_schema::configuration::{has_configuration, introspect, parse_configuration, ParsedConfiguration, upgrade_to_latest_version, write_parsed_configuration};
 use ndc_calcite_schema::environment::Environment;
 use ndc_calcite_schema::jvm::init_jvm;
 use ndc_calcite_schema::version5::CalciteRefSingleton;
+use ndc_calcite_values::is_running_in_container::is_running_in_container;
+use ndc_calcite_values::values::{DOCKER_CONNECTOR_DIR, DOCKER_CONNECTOR_RW, DOCKER_IMAGE_NAME, UNABLE_TO_WRITE_TO_FILE};
 
 mod metadata;
 
@@ -77,41 +80,43 @@ const MODELS_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/assets");
 
 #[tracing::instrument(skip(context))]
 async fn initialize(with_metadata: bool, context: &Context<impl Environment>) -> anyhow::Result<()> {
-    // refuse to initialize the directory unless it is empty
-    let mut items_in_dir = fs::read_dir(&context.context_path).await?;
-    if items_in_dir.next_entry().await?.is_some() {
+    let docker_config_path = &PathBuf::from(DOCKER_CONNECTOR_RW);
+    let config_path = if is_running_in_container() {
+        docker_config_path
+    } else {
+        &context.context_path
+    };
+    if has_configuration(config_path) {
         Err(Error::DirectoryIsNotEmpty)?;
     }
 
-    write_parsed_configuration(
-        ParsedConfiguration::initial(),
-        &context.context_path,
-    ).await?;
+    write_parsed_configuration(ParsedConfiguration::initial(), config_path, ).await?;
 
     for entry in MODELS_DIR.find("**/*").unwrap() {
         match entry {
             DirEntry::Dir(dir) => {
                 let path = dir.path();
-                fs::create_dir(&context.context_path.join(path)).await?
+                fs::create_dir(path).await?
             }
             DirEntry::File(file) => {
                 let path = file.path();
                 let contents = file.contents();
-                std::fs::write(&context.context_path.join(path), contents).expect("Unable to write file");
+                std::fs::write((config_path).join(path), contents).expect(UNABLE_TO_WRITE_TO_FILE);
             }
         }
     }
 
     // if requested, create the metadata
     if with_metadata {
-        let metadata_dir = context.context_path.join(".hasura-connector");
+        let metadata_dir = config_path.join(".hasura-connector");
         fs::create_dir(&metadata_dir).await?;
         let metadata_file = metadata_dir.join("connector-metadata.yaml");
         let docker_image = format!(
-            "docker.io/kstott/meta_connector:{}",
+            "{}:{}",
+            DOCKER_IMAGE_NAME,
             context.release_version.unwrap_or("latest")
         );
-        let update_command = format!("docker run --entry-point ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:/etc/connector {} update", docker_image);
+        let update_command = format!("docker run --entry-point ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:{} -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:{}:ro {} update", DOCKER_CONNECTOR_DIR, DOCKER_CONNECTOR_RW, docker_image);
         let metadata = metadata::ConnectorMetadataDefinition {
             packaging_definition: metadata::PackagingDefinition::PrebuiltDockerImage(
                 metadata::PrebuiltDockerImagePackaging { docker_image },
@@ -119,7 +124,7 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
             supported_environment_variables: vec![metadata::EnvironmentVariableDefinition {
                 name: "MODEL_FILE".to_string(),
                 description: "The calcite connection model file path".to_string(),
-                default_value: Some("/etc/connector/models/model.json".to_string()),
+                default_value: Some(format!("{}/models/model.json", DOCKER_CONNECTOR_DIR).to_string()),
             }],
             commands: metadata::Commands {
                 update: Some(update_command.to_string()),
@@ -128,7 +133,7 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
             cli_plugin: None,
             docker_compose_watch: vec![metadata::DockerComposeWatchItem {
                 path: "./".to_string(),
-                target: Some("/etc/connector".to_string()),
+                target: Some(DOCKER_CONNECTOR_RW.to_string()),
                 action: metadata::DockerComposeWatchAction::SyncAndRestart,
                 ignore: vec![],
             }],
@@ -145,29 +150,36 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
 /// If the directory is empty - it will initialize with the core files first.
 #[tracing::instrument(skip(context,calcite_ref_singleton))]
 async fn update(context: Context<impl Environment>, calcite_ref_singleton: &CalciteRefSingleton) -> anyhow::Result<()> {
-    let mut items_in_dir = fs::read_dir(&context.context_path).await?;
-    if !items_in_dir.next_entry().await?.is_some() {
+    let docker_config_path = &PathBuf::from(DOCKER_CONNECTOR_RW);
+    let config_path = if is_running_in_container() {
+        docker_config_path
+    } else {
+        &context.context_path
+    };
+    if !has_configuration(config_path) {
         initialize(true, &context).await?
     }
+
     // It is possible to change the file in the middle of introspection.
     // We want to detect this scenario and retry, or fail if we are unable to.
     // We do that with a few attempts.
     for _attempt in 1..=UPDATE_ATTEMPTS {
         let existing_configuration =
-            parse_configuration(&context.context_path).await?;
+            parse_configuration(config_path).await?;
         init_jvm(&existing_configuration);
+
         let output =
-            introspect(existing_configuration.clone(), &context.context_path, &context.environment, calcite_ref_singleton).await?;
+            introspect(existing_configuration.clone(), config_path, &context.environment, calcite_ref_singleton).await?;
 
         // Check that the input file did not change since we started introspecting,
         let input_again_before_write =
-            parse_configuration(&context.context_path).await?;
+            parse_configuration(config_path).await?;
 
         // and skip this attempt if it has.
         if input_again_before_write == existing_configuration {
             // In order to be sure to capture default values absent in the initial input we have to
             // always write out the updated configuration.
-            write_parsed_configuration(output, &context.context_path).await?;
+            write_parsed_configuration(output, config_path).await?;
             return Ok(());
         }
 

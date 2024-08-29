@@ -1,18 +1,21 @@
 //! Configuration for the connector.
 
 use std::path::{Path, PathBuf};
+
+use schemars::{gen::SchemaSettings, schema::RootSchema};
+use tracing::Level;
+
 use crate::environment::Environment;
 use crate::error::{
     MakeRuntimeConfigurationError, ParseConfigurationError,
     WriteParsedConfigurationError,
 };
+use crate::list_files::list_files_in_directory;
 use crate::version5;
-use crate::version::VersionTag;
-use schemars::{gen::SchemaSettings, schema::RootSchema};
 use crate::version5::CalciteRefSingleton;
-use tracing::{Level};
+use crate::version::VersionTag;
 
-#[tracing::instrument(skip(), level=Level::INFO)]
+#[tracing::instrument(skip(), level = Level::INFO)]
 pub fn generate_latest_schema() -> RootSchema {
     SchemaSettings::openapi3()
         .into_generator()
@@ -35,14 +38,15 @@ pub fn generate_latest_schema() -> RootSchema {
 pub enum ParsedConfiguration {
     Version5(version5::ParsedConfiguration),
 }
+
 type Configuration = ParsedConfiguration;
 
 impl ParsedConfiguration {
-    #[tracing::instrument(skip(), level=Level::INFO)]
+    #[tracing::instrument(skip(), level = Level::INFO)]
     pub fn initial() -> Self {
         ParsedConfiguration::Version5(version5::ParsedConfiguration::empty())
     }
-    #[tracing::instrument(skip_all, level=Level::INFO)]
+    #[tracing::instrument(skip_all, level = Level::INFO)]
     pub fn version(&self) -> VersionTag {
         match self {
             ParsedConfiguration::Version5(_) => VersionTag::Version5,
@@ -67,13 +71,20 @@ pub async fn introspect(
     input: ParsedConfiguration,
     _context_path: &PathBuf,
     environment: impl Environment,
-    calcite_ref: &CalciteRefSingleton
+    calcite_ref: &CalciteRefSingleton,
 ) -> anyhow::Result<ParsedConfiguration> {
     match input {
         ParsedConfiguration::Version5(config) => Ok(ParsedConfiguration::Version5(
             version5::introspect(&config, environment, calcite_ref).await?,
         )),
     }
+}
+
+#[tracing::instrument(skip(configuration_dir))]
+pub fn has_configuration(
+    configuration_dir: impl AsRef<Path> + Send,
+) -> bool {
+    !list_files_in_directory(configuration_dir.as_ref()).unwrap().is_empty()
 }
 
 pub async fn parse_configuration(
@@ -91,7 +102,7 @@ pub async fn parse_configuration(
 ///
 /// Each concrete supported version implementation is responsible for interpretation its format
 /// into the runtime configuration.
-#[tracing::instrument(skip(parsed_config,_environment), level=Level::INFO)]
+#[tracing::instrument(skip(parsed_config, _environment), level = Level::INFO)]
 pub fn make_runtime_configuration(
     parsed_config: ParsedConfiguration,
     _environment: impl Environment,
@@ -104,7 +115,7 @@ pub fn make_runtime_configuration(
 /// Write out a parsed configuration to a directory.
 pub async fn write_parsed_configuration(
     parsed_config: ParsedConfiguration,
-    out_dir: impl AsRef<Path>,
+    out_dir: impl AsRef<Path> + Send,
 ) -> Result<(), WriteParsedConfigurationError> {
     match parsed_config {
         ParsedConfiguration::Version5(c) => version5::write_parsed_configuration(c, out_dir).await,
@@ -115,7 +126,7 @@ pub async fn write_parsed_configuration(
 ///
 /// This is part of the configuration crate API to enable users to upgrade their configurations
 /// mechanically, using the ndc-postgres cli, when new versions are released.
-#[tracing::instrument(skip(parsed_config), level=Level::INFO)]
+#[tracing::instrument(skip(parsed_config), level = Level::INFO)]
 pub fn upgrade_to_latest_version(parsed_config: ParsedConfiguration) -> ParsedConfiguration {
     match parsed_config {
         ParsedConfiguration::Version5(_) => parsed_config,
