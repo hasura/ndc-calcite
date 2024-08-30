@@ -87,7 +87,7 @@ fn select(
                     field_statements.push(field_statement);
                 }
             }
-            Field::Relationship { relationship, arguments, .. } => {
+            Field::Relationship { relationship,  .. } => {
                 if supports_json_object {
                     field_statements.push( format!("'{}', 1", key));
                 } else {

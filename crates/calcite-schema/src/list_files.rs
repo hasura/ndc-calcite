@@ -4,8 +4,10 @@ use tracing::debug;
 #[tracing::instrument(skip())]
 pub fn list_files_in_directory(dir: &Path) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     debug!("Inspecting directory: {}", dir.display());
+    let attempts = 1;
+    let seconds = 1;
 
-    for attempt in 0..3 {
+    for attempt in 0..attempts {
         let mut file_list = Vec::new();
         for entry in std::fs::read_dir(dir)? {
             let entry = entry?;
@@ -28,9 +30,9 @@ pub fn list_files_in_directory(dir: &Path) -> Result<Vec<String>, Box<dyn std::e
         }
 
         // if no files were found, sleep for 5 seconds before trying again
-        if attempt < 2 {
-            eprintln!("No files found on attempt {}. Retrying after 5 seconds...", attempt + 1);
-            std::thread::sleep(std::time::Duration::from_secs(5));
+        if attempt < attempts - 1 {
+            eprintln!("No files found on attempt {}. Retrying after {} seconds...", attempt + 1, seconds);
+            std::thread::sleep(std::time::Duration::from_secs(seconds));
         }
     }
 

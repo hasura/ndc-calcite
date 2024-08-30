@@ -3,13 +3,12 @@
 //! The CLI can do a few things. This provides a central point where those things are routed and
 //! then done, making it easier to test this crate deterministically.
 
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 
 use clap::Subcommand;
 use include_dir::{DirEntry, include_dir};
 use include_dir::Dir;
 use tokio::fs;
-use tracing::debug;
 
 use ndc_calcite_schema::configuration::{has_configuration, introspect, parse_configuration, ParsedConfiguration, upgrade_to_latest_version, write_parsed_configuration};
 use ndc_calcite_schema::environment::Environment;
@@ -96,7 +95,7 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
         match entry {
             DirEntry::Dir(dir) => {
                 let path = dir.path();
-                fs::create_dir(path).await?
+                fs::create_dir((config_path).join(path)).await?
             }
             DirEntry::File(file) => {
                 let path = file.path();
