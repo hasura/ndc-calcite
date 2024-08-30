@@ -12,7 +12,7 @@ This adapter is based on a forked version of Calcite (the sub-repo)
 
 ```shell
  git clone --recurse-submodules https://github.com/hasura/ndc-calcite.git calcite-connectioncd calcite-connector
- cd calciate-connector
+ cd calcite-connector
  git checkout main
 ```
 
