@@ -11,7 +11,7 @@ Approximately 15 files-based data sources, and 25 JDBC based data sources.
 This adapter is based on a forked version of Calcite (the sub-repo)
 
 ```shell
- git clone --recurse-submodules https://github.com/hasura/ndc-calcite.git calcite-connectioncd calcite-connector
+ git clone --recurse-submodules https://github.com/hasura/ndc-calcite.git calcite-connector
  cd calcite-connector
  git checkout main
 ```
@@ -83,7 +83,7 @@ chmod +x ../cli.sh
 
 ### Optional Revise Calcite Adapter
 
-This will setup a SQLite connector. If you want to change the connector DO IT NOW. Got `app/connector/calcite/models/model.json` and revise the schema(s).
+This will setup a SQLite connector. If you want to change the connector DO IT NOW. Go to `app/connector/calcite/models/model.json` and revise the schema(s).
 Look at the sample models for ideas, or, get more details from [Apache Calcite](https://calcite.apache.org/docs/adapter.html).
 
 ```shell
