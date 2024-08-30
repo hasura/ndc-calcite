@@ -3,32 +3,386 @@
   "$schema": "schema.json",
   "model": {
     "version": "1.0",
-    "defaultSchema": "sales",
+    "defaultSchema": "files",
     "schemas": [
       {
         "type": "custom",
-        "name": "sales",
-        "cache": true,
+        "name": "files",
+        "sqlDialectFactory": null,
+        "jdbcUser": null,
+        "jdbcPassword": null,
+        "jdbcUrl": null,
+        "jdbcCatalog": null,
+        "jdbcSchema": null,
         "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
         "operand": {
-          "directory": "resources/test/bug"
+          "directory": "data/files"
         }
-      },
-      {
-        "name": "sales_views",
-        "cache": true,
-        "tables": [
-          {
-            "name": "female_emps",
-            "type": "view",
-            "sql": "select * from \"sales\".\"LONG_EMPS\" where \"GENDER\" = 'F'",
-            "modifiable": false
-          }
-        ]
       }
     ]
   },
-  "model_file_path": "./model.json",
+  "model_file_path": "./model.yaml",
   "fixes": true,
-  "metadata": {}
+  "metadata": {
+    "DEPTS": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "DEPTS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "yaml": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "yaml",
+      "columns": {
+        "id": {
+          "name": "id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "c": {
+          "name": "c",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "g": {
+          "name": "g",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "a": {
+          "name": "a",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "e": {
+          "name": "e",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "b": {
+          "name": "b",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "f": {
+          "name": "f",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "d": {
+          "name": "d",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "object": {
+          "name": "object",
+          "scalarType": "MAP",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "ARCHERS": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "ARCHERS",
+      "columns": {
+        "f": {
+          "name": "f",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c": {
+          "name": "c",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "id": {
+          "name": "id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "d": {
+          "name": "d",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "g": {
+          "name": "g",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "object": {
+          "name": "object",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "a": {
+          "name": "a",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "b": {
+          "name": "b",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "e": {
+          "name": "e",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "EMPS": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "EMPS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "GENDER": {
+          "name": "GENDER",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "WACKY_COLUMN_NAMES": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "WACKY_COLUMN_NAMES",
+      "columns": {
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "naME": {
+          "name": "naME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "joined at": {
+          "name": "joined at",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "2gender": {
+          "name": "2gender",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "DATES": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "DATES",
+      "columns": {
+        "JOINTIME": {
+          "name": "JOINTIME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "JOINTIMES": {
+          "name": "JOINTIMES",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "LONG_EMPS": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "LONG_EMPS",
+      "columns": {
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "GENDER": {
+          "name": "GENDER",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "SDEPTS": {
+      "physicalSchema": "files",
+      "catalog": "",
+      "schema": "files",
+      "name": "SDEPTS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
 }

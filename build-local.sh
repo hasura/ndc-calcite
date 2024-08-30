@@ -17,3 +17,8 @@ docker build . --platform linux/arm64 -t kstott/meta_connector:latest
 #docker tag kstott/meta_connector:latest kstott/meta_connector:"$TAG"
 #docker push kstott/meta_connector:latest
 #docker push kstott/meta_connector:"$TAG"
+
+cd calcite-rs-jni/calcite
+./gradlew assemble
+cd ..
+mvn install -DskipTests

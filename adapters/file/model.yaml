@@ -1,0 +1,8 @@
+version: "1.0"
+defaultSchema: "files"
+schemas:
+  - type: "custom"
+    name: "files"
+    factory: "org.apache.calcite.adapter.file.FileSchemaFactory"
+    operand:
+      directory: "data/files"

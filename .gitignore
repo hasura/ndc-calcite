@@ -20,3 +20,4 @@ target/
 /adapters/hive/beeline.conf/
 /adapters/hive/hadoop_data/
 
+/test-connector/
