@@ -75,7 +75,7 @@ ddn connector-link add calcite --configure-connector-token secret --configure-ho
 ### Add metadata to the connector
 
 This script is one-and-done, you can't redo without resetting back to prior state.
-You might consider, committing after before running this, to facilitate a rollback.
+You might consider, committing before running this, to facilitate a rollback.
 ```shell
 chmod +x ../cli.sh
 ../cli.sh ./app/connector/calcite 8081 secret
