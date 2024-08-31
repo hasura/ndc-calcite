@@ -88,7 +88,7 @@ Look at the sample models for ideas, or, get more details from [Apache Calcite](
 
 ```shell
 chmod +x ../cli-update-model.sh
-../cli-update-model.sh
+../cli-update-model.sh ./app/connector/calcite
 ```
 
 ### Start supergraph
