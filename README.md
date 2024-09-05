@@ -72,6 +72,12 @@ mkdir ./app/connector
 ddn connector-link add calcite --configure-connector-token secret --configure-host http://local.hasura.dev:8081 --subgraph app/subgraph.yaml --target-env-file .env
 ```
 
+### Remove cached images.
+
+```shell
+docker image prune -af
+```
+
 ### Add metadata to the connector
 
 This script is one-and-done, you can't redo without resetting back to prior state.
