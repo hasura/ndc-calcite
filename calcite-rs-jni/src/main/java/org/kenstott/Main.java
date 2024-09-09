@@ -1,5 +1,6 @@
 package org.kenstott;
 
+import java.io.IOException;
 import java.sql.Connection;
 
 /**
@@ -8,9 +9,9 @@ import java.sql.Connection;
  * and perform queries on the models.
  */
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
-        String modelPath = "../adapters/jdbc/model.json";
+        String modelPath = "../adapters/file/model.yaml";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -21,7 +22,7 @@ public class Main {
             String x = query.getModels();
             System.out.println(x);
             String z1 = query.queryModels("""
-                    SELECT "default"."genres"."Name" AS "name","default"."genres"."GenreId" AS "GenreId" FROM "default"."genres" WHERE "GenreId" IN (1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,3,3,3,3,3,3,1,1,1,1,1,1,1,1,1,1,1,1,1,1)
+                    SELECT * from "HR"."EMP"
                     """
             );
             System.out.println(z1);
