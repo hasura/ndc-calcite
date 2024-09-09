@@ -13,6 +13,7 @@
 //! - Cassandra (tested)
 //! - CSV (tested)
 //! - JSON (tested)
+//! - XLSX (tested)
 //! - Druid
 //! - ElasticSearch
 //! - Geode
