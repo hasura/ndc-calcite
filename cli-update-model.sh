@@ -10,7 +10,7 @@ export HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH="$(cd "$(dirname "$1")"; pwd -P)/$(b
 #mkdir -p $HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
 #rm -rf ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}
 #mkdir -p ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}
-docker run --entrypoint ndc-calcite-cli -e "OTEL_LOG_LEVEL=trace" -e "OTEL_LOGS_EXPORTER=console" -e "OTEL_TRACES_EXPORTER=console" -e "RUST_LOG=debug" -e "LOG_LEVEL=all" -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/app/output -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/etc/connector:ro docker.io/ghcr.io/hasura/meta_connector:latest update
+docker run --entrypoint ndc-calcite-cli -e "OTEL_LOG_LEVEL=trace" -e "OTEL_LOGS_EXPORTER=console" -e "OTEL_TRACES_EXPORTER=console" -e "RUST_LOG=debug" -e "LOG_LEVEL=all" -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/app/output -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/etc/connector:ro ghcr.io/hasura/meta_connector:latest update
 
 #echo "include:\n  - path: ${filepath}/compose.yaml" > temp.yml
 #echo "$content" >> temp.yml
