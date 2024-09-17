@@ -187,7 +187,7 @@ impl Connector for Calcite {
         {
             let java_vm = get_jvm().lock().unwrap();
             let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_calcite_query_engine(configuration, &mut env);
+            calcite = calcite::create_query_engine(configuration, &mut env);
             let env = java_vm.attach_current_thread_as_daemon().unwrap();
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }
@@ -330,7 +330,7 @@ fn init_state(
         let calcite_ref;
         {
             let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_calcite_query_engine(configuration, &mut env);
+            calcite = calcite::create_query_engine(configuration, &mut env);
             let env = java_vm.attach_current_thread_as_daemon().unwrap();
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }

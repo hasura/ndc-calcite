@@ -18,7 +18,7 @@ use tracing::{event, Level, Span};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 use ndc_calcite_schema::jvm::get_jvm;
-use ndc_calcite_schema::version5::create_calcite_connection;
+use ndc_calcite_schema::version5::create_jvm_connection;
 use ndc_calcite_schema::version5::ParsedConfiguration;
 
 pub type Row = IndexMap<FieldName, RowFieldValue>;
@@ -44,22 +44,22 @@ pub type Row = IndexMap<FieldName, RowFieldValue>;
 /// use jni::JNIEnv;
 /// use jni::objects::JObject;
 /// use tracing::Level;
-/// use ndc_calcite_schema::version5::{create_calcite_connection, ParsedConfiguration};
+/// use ndc_calcite_schema::version5::{create_jvm_connection, ParsedConfiguration};
 ///
 /// #[tracing::instrument(skip(configuration, env))]
-/// pub fn create_calcite_query_engine<'a>(configuration: &ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
+/// pub fn create_query_engine<'a>(configuration: &ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
 ///     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
 ///     let instance = env.new_object(class, "()V", &[]).unwrap();
-///     let _ = create_calcite_connection(configuration, &instance, env);
+///     let _ = create_jvm_connection(configuration, &instance, env);
 ///     event!(Level::INFO, "Instantiated Calcite Query Engine");
 ///     return instance;
 /// }
 /// ```
 #[tracing::instrument(skip(configuration, env), level = Level::INFO)]
-pub fn create_calcite_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
+pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
     let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
     let instance = env.new_object(class, "()V", &[]).unwrap();
-    let _ = create_calcite_connection(configuration, &instance, env);
+    let _ = create_jvm_connection(configuration, &instance, env);
     event!(Level::INFO, "Instantiated Calcite Query Engine");
     return instance;
 }
