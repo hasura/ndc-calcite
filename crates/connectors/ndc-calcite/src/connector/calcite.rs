@@ -7,7 +7,6 @@ use std::collections::BTreeMap;
 use std::{env, fs};
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
-use log::{info, error};
 use async_trait::async_trait;
 use dotenv;
 use jni::objects::GlobalRef;
@@ -19,7 +18,7 @@ use ndc_sdk::connector::{
 };
 use ndc_sdk::json_response::JsonResponse;
 use serde_json::Value;
-use tracing::{info_span, Level, span, Span};
+use tracing::{event, info_span, Level, span, Span};
 use tracing::Instrument;
 
 use crate::capabilities::calcite_capabilities;
@@ -41,7 +40,7 @@ pub struct CalciteState {
     pub calcite_ref: GlobalRef,
 }
 
-#[tracing::instrument(skip(config, coll, args, coll_rel, query, vars, state, explain))]
+#[tracing::instrument(skip(config, coll, args, coll_rel, query, vars, state), level=Level::INFO)]
 fn execute_query_with_variables(
     config: &ParsedConfiguration,
     coll: &CollectionName,
@@ -273,7 +272,6 @@ impl Connector for Calcite {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::QueryResponse>, QueryError> {
-        // println!("{:?}", serde_json::to_string_pretty(&request));
         let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
         let mut row_sets = vec![];
         let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
@@ -297,11 +295,11 @@ impl Connector for Calcite {
                 &false
             ) {
                 Ok(row_set) => {
-                    info!("execute_query_with_variables was successful");
+                    event!(Level::INFO, result = "execute_query_with_variables was successful");
                     row_set
                 },
                 Err(e) => {
-                    error!("Error executing query: {:?}", e);
+                    event!(Level::ERROR, "Error executing query: {:?}", e);
                     return Err(e.into());
                 },
             };

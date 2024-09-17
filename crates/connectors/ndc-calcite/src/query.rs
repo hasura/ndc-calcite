@@ -11,9 +11,9 @@ use ndc_models::{ArgumentName, CollectionName, ComparisonOperatorName, Compariso
 use ndc_sdk::connector::QueryError;
 use ndc_sdk::models;
 use serde_json::{Number, Value};
-use tracing::{debug, Level};
+use tracing::{event, Level};
 
-use crate::calcite::{calcite_query, Row};
+use crate::calcite::{connector_query, Row};
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use crate::connector::calcite::CalciteState;
 use crate::sql;
@@ -113,9 +113,9 @@ pub fn orchestrate_query(
                         let sub_relationship = query_params.coll_rel.get(relationship).unwrap();
                         let (primary_keys, foreign_keys, relationship_type) = parse_relationship(sub_relationship)?;
                         let relationship_value = generate_value_from_rows(rows, &sub_relationship)?;
-                        debug!("Primary Keys: {:?}, Values: {:?}", primary_keys, relationship_value);
+                        event!(Level::DEBUG, "Primary Keys: {:?}, Values: {:?}", primary_keys, relationship_value);
                         let predicate_expression = generate_predicate(&primary_keys, relationship_value)?;
-                        debug!("Predicate expression: {:?}", predicate_expression);
+                        event!(Level::DEBUG, "Predicate expression: {:?}", predicate_expression);
                         let revised_query = revise_query(query.clone(), predicate_expression, &primary_keys)?;
                         let res_relationship_rows = execute_query(query_params.clone(), arguments, &sub_relationship, &revised_query)?;
                         if RelationshipType::Object == relationship_type {
@@ -123,7 +123,7 @@ pub fn orchestrate_query(
                         } else {
                             rows_data = process_array_relationship(rows_data, &field_name, &res_relationship_rows, &primary_keys, &foreign_keys, &query)?
                         }
-                        debug!("Result of relationship: {:?}", serde_json::to_string_pretty(&rows_data))
+                        event!(Level::DEBUG, "Result of relationship: {:?}", serde_json::to_string_pretty(&rows_data))
                     }
                 }
             }
@@ -166,13 +166,13 @@ fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName
     Ok((pks, fks, relationship_type))
 }
 
-#[tracing::instrument(skip(params, query_components), level=Level::DEBUG)]
+#[tracing::instrument(skip(params, query_components), level=Level::INFO)]
 fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>, QueryError> {
     execute_query_collection(params, query_components, query_components.select.clone())
 }
 
 
-#[tracing::instrument(skip(params, query_components), level=Level::DEBUG)]
+#[tracing::instrument(skip(params, query_components), level=Level::INFO)]
 fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -> Result<Option<IndexMap<FieldName, Value>>, QueryError> {
     match execute_query_collection(params, query_components, query_components.aggregates.clone()) {
         Ok(collection_option) => {
@@ -195,11 +195,14 @@ fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -
                 Ok(None)
             }
         }
-        Err(_) => todo!(),
+        Err(e) => {
+            event!(Level::ERROR, "{}", e);
+            Err(e)
+        }
     }
 }
 
-#[tracing::instrument(skip(pks, value), level=Level::DEBUG)]
+#[tracing::instrument(skip(pks, value), level=Level::INFO)]
 fn generate_predicate(pks: &Vec<(FieldName, FieldName)>, value: Value) -> Result<Expression, QueryError> {
     let (_, name) = pks[0].clone();
     Ok(Expression::BinaryComparisonOperator {
@@ -213,7 +216,7 @@ fn generate_predicate(pks: &Vec<(FieldName, FieldName)>, value: Value) -> Result
     })
 }
 
-#[tracing::instrument(skip(query, predicate, pks), level=Level::DEBUG)]
+#[tracing::instrument(skip(query, predicate, pks), level=Level::INFO)]
 fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, FieldName)>) -> Result<Box<Query>, QueryError> {
     let mut revised_query = query.clone();
     revised_query.predicate = Some(predicate);
@@ -234,7 +237,7 @@ fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, 
     Ok(revised_query)
 }
 
-#[tracing::instrument(skip(params, arguments, sub_relationship, revised_query), level=Level::DEBUG)]
+#[tracing::instrument(skip(params, arguments, sub_relationship, revised_query), level=Level::INFO)]
 fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>, QueryError> {
     let fk_rows = orchestrate_query(QueryParams {
         config: params.config,
@@ -249,26 +252,26 @@ fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, Relatio
     Ok(fk_rows.rows.unwrap())
 }
 
-#[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks), level=Level::DEBUG)]
+#[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks), level=Level::INFO)]
 fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>) -> Result<Option<Vec<Row>>, QueryError> {
     let modified_rows: Vec<Row> = rows.clone().into_iter().map(|mut row| {
-        debug!("fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
+        event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
         let pk_value = row.get(fks[0]).unwrap().0.clone();
         let rowset = serde_json::map::Map::new();
         if let Some(value) = row.get_mut(field_name) {
-            debug!("value: {:?}", value);
+            event!(Level::DEBUG, "value: {:?}", value);
             if let RowFieldValue(_) = *value {
                 let (key, name) = pks[0].clone();
-                debug!("key: {:?}, name: {:?}", key, name);
+                event!(Level::DEBUG, "key: {:?}, name: {:?}", key, name);
                 let mut child_rows = Vec::new();
                 for x in fk_rows {
                     if let Some(value) = x.get(&key) {
-                        debug!("value: {:?}", value);
+                        event!(Level::DEBUG, "value: {:?}", value);
                         if value.0 == pk_value {
                             child_rows.push(x);
                         }
                     } else {
-                        debug!("value: {:?}", value);
+                        event!(Level::DEBUG, "value: {:?}", value);
                     }
                 }
                 if child_rows.len() > 1 {
@@ -285,16 +288,16 @@ fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: 
 #[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks, query), level=Level::DEBUG)]
 fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>, query: &Query) -> Result<Option<Vec<Row>>, QueryError> {
     let modified_rows: Vec<Row> = rows.clone().unwrap().into_iter().map(|mut row| {
-        debug!("fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
+        event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
         let rowset = serde_json::map::Map::new();
         let offset = query.offset.unwrap_or(0);
         let limit = query.limit.unwrap_or(0);
         let pk_value = row.get(fks[0]).unwrap().0.clone();
         if let Some(value) = row.get_mut(field_name) {
-            debug!("value: {:?}", value);
+            event!(Level::DEBUG, "value: {:?}", value);
             if let RowFieldValue(_) = *value {
                 let (key, name) = pks[0].clone();
-                debug!("key: {:?}, name: {:?}", key, name);
+                event!(Level::DEBUG, "key: {:?}, name: {:?}", key, name);
                 let mut child_rows = Vec::new();
                 for x in fk_rows {
                     if let Some(sub_value) = x.get(&key) {
@@ -307,7 +310,7 @@ fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk
                     let max_rows = (offset + limit).min(child_rows.len() as u32);
                     child_rows = child_rows[offset as usize..max_rows as usize].to_vec();
                 }
-                debug!("Key: {:?}, Name: {:?}, Child Rows: {:?}", key, name, child_rows);
+                event!(Level::DEBUG, "Key: {:?}, Name: {:?}, Child Rows: {:?}", key, name, child_rows);
                 process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
             }
         }
@@ -337,7 +340,7 @@ fn process_child_rows(child_rows: &Vec<&Row>, mut rowset: serde_json::map::Map<S
     Ok(())
 }
 
-#[tracing::instrument(skip(params, query_components, phrase), level=Level::DEBUG)]
+#[tracing::instrument(skip(params, query_components), level=Level::INFO)]
 fn execute_query_collection(
     params: QueryParams,
     query_components: &QueryComponents,
@@ -358,7 +361,7 @@ fn execute_query_collection(
         query_components.join.clone(),
     );
 
-    match calcite_query(
+    match connector_query(
         params.config,
         params.state.clone().calcite_ref,
         &q,

@@ -3,9 +3,8 @@ package org.kenstott;
 import com.google.gson.*;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.*;
+import io.opentelemetry.context.Context;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.adapter.jdbc.JdbcTable;
 import org.apache.calcite.jdbc.CalciteConnection;
@@ -152,6 +151,7 @@ public class CalciteQuery {
     }
 
     private Collection<TableMetadata> getTables() {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
         Span span = tracer.spanBuilder("getTables").startSpan();
         try {
             DatabaseMetaData metaData = connection.getMetaData();
@@ -249,6 +249,7 @@ public class CalciteQuery {
     }
 
     private Map<String, ColumnMetadata> getTableColumnInfo(TableMetadata table) {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
         Span span = tracer.spanBuilder("getTables").startSpan();
         Map<String, ColumnMetadata> columns = new HashMap<>();
         ResultSet columnsSet;
@@ -364,6 +365,7 @@ public class CalciteQuery {
      * @return A JSON string representing the models.
      */
     public String getModels() throws SQLException {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
         Span span = tracer.spanBuilder("getModels").startSpan();
         try {
             Gson gson = new Gson();
@@ -388,11 +390,31 @@ public class CalciteQuery {
     /**
      * Executes a SQL query on the database and returns the result as a JSON string.
      *
-     * @param query The SQL query to execute.
+     * @param query        The SQL query to execute.
      * @return A JSON string representing the result of the query.
      */
     public String queryModels(String query) {
-        Span span = tracer.spanBuilder("queryModels").startSpan();
+        return queryModels(query, "", "");
+    }
+
+    /**
+     * Executes a SQL query on the database and returns the result as a JSON string.
+     *
+     * @param query The SQL query to execute.
+     * @return A JSON string representing the result of the query.
+     */
+    public String queryModels(String query, String parentTraceId, String parentSpanId) {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
+        SpanContext parentSpanContext = SpanContext.createFromRemoteParent(
+                parentTraceId,
+                parentSpanId,
+                TraceFlags.getDefault(),
+                TraceState.getDefault()
+            );
+        Context context = Context.current().with(Span.wrap(parentSpanContext));
+        Span span = tracer.spanBuilder("queryModels")
+                .setParent(context)
+                .startSpan();
         try {
             Statement statement = connection.createStatement();
             span.setAttribute("query", query);
@@ -490,8 +512,18 @@ public class CalciteQuery {
         }
     }
 
-    public String queryPlanModels(String query) {
-        Span span = tracer.spanBuilder("queryPlanModels").startSpan();
+    public String queryPlanModels(String query, String parentTraceId, String parentSpanId) {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
+        SpanContext parentSpanContext = SpanContext.createFromRemoteParent(
+                parentTraceId,
+                parentSpanId,
+                TraceFlags.getDefault(),
+                TraceState.getDefault()
+        );
+        Context context = Context.current().with(Span.wrap(parentSpanContext));
+        Span span = tracer.spanBuilder("queryPlanModels")
+                .setParent(context)
+                .startSpan();
         try {
             Statement statement = connection.createStatement();
             span.setAttribute("query", query);
