@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 use jni::{InitArgsBuilder, JavaVM, JNIVersion};
 use once_cell::sync::OnceCell;
-use tracing::{debug, event, Level};
+use tracing::{event, Level};
 
 use crate::configuration::ParsedConfiguration;
 
@@ -94,6 +94,8 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
         }
 
         let log4j2_debug = env::var("LOG4J2_DEBUG").unwrap_or("false".to_string());
+        let otel_exporter_otlp_traces_endpoint = env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").unwrap_or_default();
+        let otel_exporter_otlp_metrics_endpoint = env::var("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT").unwrap_or_default();
         let otel_metric_export_interval = env::var("OTEL_METRIC_EXPORT_INTERVAL").unwrap_or_default();
         let otel_exporter_otlp_endpoint = env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or("http://local.hasura.dev:4317".to_string());
         let otel_service_name = env::var("OTEL_SERVICE_NAME").unwrap_or("".to_string());
@@ -110,59 +112,71 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
             .option("--add-opens=java.base/java.nio=ALL-UNNAMED")
             .option("-Dotel.java.global-autoconfigure.enabled=true")
             .option(format!("-Dlog4j.configurationFile={}", log4j_configuration_file));
+        if !otel_exporter_otlp_traces_endpoint.is_empty() {
+            jvm_args = jvm_args.option(
+                format!("-Dotel.exporter.otlp.traces.endpoint={}", otel_exporter_otlp_traces_endpoint)
+            );
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.exporter.otlp.traces.endpoint={}", otel_exporter_otlp_traces_endpoint));
+        }
+        if !otel_exporter_otlp_metrics_endpoint.is_empty() {
+            jvm_args = jvm_args.option(
+                format!("-Dotel.exporter.otlp.metrics.endpoint={}", otel_exporter_otlp_metrics_endpoint)
+            );
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.exporter.otlp.metrics.endpoint={}", otel_exporter_otlp_metrics_endpoint));
+        }
         if !otel_exporter_otlp_endpoint.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_EXPORTER_OTLP_ENDPOINT={}", otel_exporter_otlp_endpoint)
+                format!("-Dotel.exporter.otlp.endpoint={}", otel_exporter_otlp_endpoint)
             );
-            debug!("Added {} to JVM", format!("-DOTEL_EXPORTER_OTLP_ENDPOINT={}", otel_exporter_otlp_endpoint));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.exporter.otlp.endpoint={}", otel_exporter_otlp_endpoint));
         }
         if !otel_service_name.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_SERVICE_NAME={}", otel_service_name)
+                format!("-Dotel.service.name={}", otel_service_name)
             );
-            debug!("Added {} to JVM", format!("-DOTEL_SERVICE_NAME={}", otel_service_name));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.service.name={}", otel_service_name));
         }
         if !otel_logs_exporter.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_LOGS_EXPORTER={}", otel_logs_exporter)
+                format!("-Dotel.logs.exporter={}", otel_logs_exporter)
             );
-            debug!("Added {} to JVM", format!("-DOTEL_LOGS_EXPORTER={}", otel_logs_exporter));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.logs.exporter={}", otel_logs_exporter));
         }
         if !otel_traces_exporter.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_TRACES_EXPORTER={}", otel_traces_exporter)
+                format!("-Dotel.traces.exporter={}", otel_traces_exporter)
             );
-            debug!("Added {} to JVM", format!("-DOTEL_TRACES_EXPORTER={}", otel_traces_exporter));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.traces.exporter={}", otel_traces_exporter));
         }
         if !otel_metrics_exporter.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_METRICS_EXPORTER={}", otel_metrics_exporter)
+                format!("-Dotel.metrics.exporter={}", otel_metrics_exporter)
             );
-            debug!("Added {} to JVM", format!("-DOTEL_METRICS_EXPORTER={}", otel_metrics_exporter));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.metrics.exporter={}", otel_metrics_exporter));
         }
         if !otel_metric_export_interval.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_METRIC_EXPORT_INTERVAL={}", otel_metric_export_interval)
+                format!("-Dotel.metric.export.interval={}", otel_metric_export_interval)
             );
-            debug!("Added {} to JVM", format!("-DOTEL_METRIC_EXPORT_INTERVAL={}", otel_metric_export_interval));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.metric.export.interval={}", otel_metric_export_interval));
         }
         if !otel_log_level.is_empty() {
             jvm_args = jvm_args.option(
-                format!("-DOTEL_LOG_LEVEL={}", otel_log_level)
+                format!("-Dotel.log.level={}", otel_log_level)
             );
-            debug!("Added {} to JVM", format!("-DOTEL_LOG_LEVEL={}", otel_log_level));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.log.level={}", otel_log_level));
         }
         if !log_level.is_empty() {
             jvm_args = jvm_args.option(
                 format!("-DLOG_LEVEL={}", log_level)
             );
-            debug!("Added {} to JVM", format!("-DLOG_LEVEL={}", log_level));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-DLOG_LEVEL={}", log_level));
         }
         if !expanded_paths.is_empty() {
             jvm_args = jvm_args.option(
                 format!("-Djava.class.path={}", &expanded_paths)
             );
-            debug!("Added {} to JVM", format!("-Djava.class.path={}", &expanded_paths));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Djava.class.path={}", &expanded_paths));
         }
         let jvm_args = jvm_args.build().unwrap();
         let jvm = JavaVM::new(jvm_args).unwrap();
