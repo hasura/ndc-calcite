@@ -14,7 +14,7 @@ use ndc_models::{FieldName, RowFieldValue};
 use ndc_sdk::connector::QueryError;
 use opentelemetry::trace::{TraceContextExt};
 use serde_json::Value;
-use tracing::{event, Level, Span};
+use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
 use ndc_calcite_schema::jvm::get_jvm;
@@ -130,10 +130,10 @@ pub fn connector_query(
 ) -> Result<Vec<Row>, QueryError> {
 
     // This method of retrieving current span context is not working!!!
-    let new_span = Span::current();
-    let span_context = new_span.context().span().span_context().clone();
-    let trace_id = span_context.trace_id();
-    let span_id = span_context.span_id();
+    let span = tracing::Span::current();
+    let otel_context = span.context();
+    let span_id = otel_context.span().span_context().span_id();
+    let trace_id = otel_context.span().span_context().trace_id();
 
     let jvm = get_jvm().lock().unwrap();
     let mut java_env = jvm.attach_current_thread().unwrap();
