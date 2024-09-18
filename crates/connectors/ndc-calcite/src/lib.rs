@@ -37,7 +37,7 @@
 //! - StarRocks
 //! - Snowflake
 //! - Presto
-//! - Trino
+//! - Trino (tested)
 //! - Phoenix
 //! - Parracel
 //! - NeoView
