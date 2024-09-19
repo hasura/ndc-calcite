@@ -35,7 +35,8 @@
 //! - Vertica
 //! - Sybase
 //! - StarRocks
-//! - Snowflake
+//! - Snowflake (tested)
+//! - Databricks
 //! - Presto
 //! - Trino (tested)
 //! - Phoenix

@@ -109,7 +109,7 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
         let mut jvm_args = InitArgsBuilder::new()
             .version(JNIVersion::V8)
             .option(format!("-Dlog4j2.debug={}", log4j2_debug))
-            .option("--add-opens=java.base/java.nio=ALL-UNNAMED")
+            .option("--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED")
             .option("-Dotel.java.global-autoconfigure.enabled=true")
             .option(format!("-Dlog4j.configurationFile={}", log4j_configuration_file));
         if !otel_exporter_otlp_traces_endpoint.is_empty() {
