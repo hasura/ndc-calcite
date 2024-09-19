@@ -36,7 +36,7 @@
 //! - Sybase
 //! - StarRocks
 //! - Snowflake (tested)
-//! - Databricks
+//! - Databricks (tested)
 //! - Presto
 //! - Trino (tested)
 //! - Phoenix
