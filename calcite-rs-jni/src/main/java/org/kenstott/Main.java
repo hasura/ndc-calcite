@@ -11,7 +11,7 @@ import java.sql.Connection;
 public class Main {
     public static void main(String[] args) throws IOException {
 
-        String modelPath = "../adapters/file/model.yaml";
+        String modelPath = "../adapters/file/model2.yaml";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -22,7 +22,7 @@ public class Main {
             String x = query.getModels();
             System.out.println(x);
             String z1 = query.queryModels("""
-                    SELECT * from "HR"."EMP"
+                    SELECT * from "FILE"."TEST"
                     """
             );
             System.out.println(z1);
