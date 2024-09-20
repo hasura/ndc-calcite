@@ -11,9 +11,9 @@
 //! The full list is here:
 //! - Arrow (tested)
 //! - Cassandra (tested)
-//! - CSV (tested)
-//! - JSON (tested)
-//! - XLSX (tested)
+//! - CSV (tested, file://, http(s):// s3://, w/in-memory caching)
+//! - JSON (tested, file://, http(s):// s3://, w/in-memory caching)
+//! - XLSX (tested, file://, http(s):// s3://, w/in-memory caching)
 //! - Druid
 //! - ElasticSearch
 //! - Geode
