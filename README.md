@@ -52,6 +52,8 @@ chmod +x test.sh
 ./test.sh # populate metadata
 ./test.sh # run the tests
 ```
+
+## Instruction for Testing with a Supergraph using Docker
 ### Build the docker image
 
 ```shell
@@ -59,7 +61,7 @@ chmod +x build-local.sh
 ./build-local.sh
 ```
 
-### Create a supergraph
+### Create a Supergraph
 
 ```shell
 ddn supergraph init test-connector
@@ -200,3 +202,50 @@ And you should see this:
   }
 }
 ```
+
+## Instructions for Testing with Supergraph using a standalone connector instance
+
+### Start the standalone instance
+
+```shell
+chmod +x run-local-connector.sh
+./run-local-connector.sh file
+```
+You can start any adapter by using the names of the adapter with the `./adapters` directory.
+
+### Create a Supergraph
+
+```shell
+ddn supergraph init test-connector
+cd test-connector
+```
+
+### Create the connector HML file
+
+```shell
+ddn connector-link add calcite --configure-host http://local.hasura.dev:8080
+sed -i.bak -e '11,13d' ./app/metadata/calcite.hml
+```
+### Start the Supergraph
+```shell
+ddn run docker-start
+```
+### Introspect and add all resources
+```shell
+ddn connector-link update calcite --add-all-resources
+```
+
+### Build the Supergraph
+```shell
+ddn supergraph build local
+```
+
+### Restart the Supergraph
+```shell
+docker compose down
+ddn run docker-start
+```
+
+### View in console
+
+[Click here to launch Console View](https://console.hasura.io/local/graphql?url=http://localhost:3000)

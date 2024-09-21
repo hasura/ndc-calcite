@@ -1,0 +1,2 @@
+cd adapters/$1
+LOG_LEVEL=debug OTEL_METRICS_EXPORTER=console OTEL_TRACES_EXPORTER=console OTEL_LOG_EXPORTER=consol RUST_LOG=trace cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration=.
