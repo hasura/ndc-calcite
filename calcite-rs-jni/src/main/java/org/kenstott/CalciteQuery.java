@@ -280,6 +280,7 @@ public class CalciteQuery {
                         entry("JavaType(class java.util.ArrayList)", "LIST"),
                         entry("JavaType(class org.apache.calcite.adapter.file.ComparableArrayList)", "LIST"),
                         entry("ANY ARRAY", "LIST"),
+                        entry("VARCHAR NOT NULL ARRAY", "LIST"),
                         entry("JavaType(class java.util.LinkedHashMap)", "MAP"),
                         entry("JavaType(class org.apache.calcite.adapter.file.ComparableLinkedHashMap)", "MAP"),
                         entry("JavaType(class java.lang.String)", "VARCHAR"),
@@ -329,6 +330,8 @@ public class CalciteQuery {
                         mappedType = "VARBINARY";
                     } else if (dataTypeName.toLowerCase().endsWith("map")) {
                         mappedType = "MAP";
+                    } else if (dataTypeName.toLowerCase().endsWith("array")) {
+                        mappedType = "LIST";
                     } else if (dataTypeName.toLowerCase().contains("for json")) {
                         mappedType = "JSON";
                     } else {
@@ -483,6 +486,14 @@ public class CalciteQuery {
                             case Types.DATE:
                             case Types.TIMESTAMP:
                                 jsonObject.addProperty(label, String.valueOf(resultSet.getDate(i)));
+                                break;
+                            case Types.ARRAY: {
+                                Array array = resultSet.getArray(i);
+                                Object[] objectArray = (Object[]) array.getArray();
+                                JsonArray jArray = new JsonArray();
+                                Arrays.stream(objectArray).forEach(value -> jArray.add(String.valueOf(value)));
+                                jsonObject.add(label, jArray);
+                            }
                                 break;
                             default:
                                 Object columnValue = resultSet.getObject(i);
