@@ -234,6 +234,8 @@ public class CalciteQuery {
                                 span.setAttribute("Error", e.toString());
                             }
                         }
+                    } catch(Exception e) {
+                        System.err.println(e.toString());
                     }
                 }
             }
@@ -270,6 +272,7 @@ public class CalciteQuery {
                 boolean nullable = columnsSet.getBoolean("NULLABLE");
                 Map<String, String> remapTypes = Map.ofEntries(
                         entry("CHAR", "CHAR"),
+                        entry("CHAR(1)", "VARCHAR"),
                         entry("VARCHAR", "VARCHAR"),
                         entry("VARCHAR(65536)", "VARCHAR"),
                         entry("VARCHAR(65536) NOT NULL", "VARCHAR"),
@@ -283,6 +286,8 @@ public class CalciteQuery {
                         entry("JavaType(class java.lang.Integer)", "INTEGER"),
                         entry("INTEGER NOT NULL", "INTEGER"),
                         entry("INTEGER", "INTEGER"),
+                        entry("JSON", "JSON"),
+                        entry("JSONB", "JSON"),
                         entry("SMALLINT NOT NULL", "INTEGER"),
                         entry("SMALLINT", "INTEGER"),
                         entry("TINYINT NOT NULL", "INTEGER"),
@@ -314,7 +319,7 @@ public class CalciteQuery {
                 );
                 String mappedType = remapTypes.get(dataTypeName);
                 if (mappedType == null) {
-                    if (dataTypeName.toLowerCase().contains("varchar")) {
+                    if (dataTypeName.toLowerCase().contains("varchar") && !dataTypeName.toLowerCase().endsWith("map")) {
                         mappedType = "VARCHAR";
                     } else if (dataTypeName.toLowerCase().contains("timestamp")) {
                         mappedType = "TIMESTAMP";
@@ -322,6 +327,10 @@ public class CalciteQuery {
                         mappedType = "FLOAT";
                     } else if (dataTypeName.toLowerCase().startsWith("any")) {
                         mappedType = "VARBINARY";
+                    } else if (dataTypeName.toLowerCase().endsWith("map")) {
+                        mappedType = "MAP";
+                    } else if (dataTypeName.toLowerCase().contains("for json")) {
+                        mappedType = "JSON";
                     } else {
                         span.setAttribute(dataTypeName, "unknown column type");
                         mappedType = "VARCHAR";
