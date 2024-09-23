@@ -33,7 +33,7 @@
 //! - Infobright
 //! - TeraData
 //! - Vertica
-//! - Sybase
+//! - Sybase (tested)
 //! - StarRocks
 //! - Snowflake (tested)
 //! - Databricks (tested)

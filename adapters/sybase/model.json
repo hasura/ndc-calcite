@@ -1,13 +1,15 @@
 {
   "version": "1.0",
-  "defaultSchema": "db2",
+  "defaultSchema": "sample",
   "schemas": [
     {
-      "name": "db2",
+      "name": "sample",
       "type": "jdbc",
-        "jdbcUrl": "jdbc:db2://192.168.86.233:50000/testdb",
-      "jdbcUser": "db2inst1",
-      "jdbcPassword": "mypassword"
+      "jdbcUrl": "jdbc:sybase:Tds:192.168.86.233:5000",
+      "jdbcUser": "sa",
+      "jdbcPassword": "zzzzz",
+      "jdbcCatalog": "sample",
+      "jdbcSchema": "dbo"
       }
   ]
 }
