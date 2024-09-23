@@ -222,8 +222,7 @@ You can start any adapter by using the names of the adapter with the `./adapters
 ### Create a Supergraph
 
 ```shell
-ddn supergraph init test-connector
-cd test-connector
+ddn supergraph init test-connector && cd test-connector
 ```
 
 ### Create the connector HML file
