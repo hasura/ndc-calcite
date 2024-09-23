@@ -13,10 +13,33 @@
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <calcite.version>1.38.0-SNAPSHOT</calcite.version>
-        <opentelemetry.version>1.40.0</opentelemetry.version>
+        <opentelemetry.version>1.42.1</opentelemetry.version>
     </properties>
 
     <dependencies>
+        <!-- Apache POI dependencies for excel files handling -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>5.3.0</version> <!-- Or any other appropriate version -->
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.3.0</version> <!-- Or any other appropriate version -->
+        </dependency>
+
+        <!-- Jackson dependencies for JSON processing -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.17.2</version> <!-- Or any other appropriate version -->
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.2</version> <!-- Or any other appropriate version -->
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -297,7 +320,7 @@
         <dependency>
             <groupId>io.trino</groupId>
             <artifactId>trino-jdbc</artifactId>
-            <version>453</version>
+            <version>457</version>
         </dependency>
         <dependency>
             <groupId>com.teradata.jdbc</groupId>
@@ -378,6 +401,18 @@
             <artifactId>h2</artifactId>
             <version>2.2.220</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.snowflake/snowflake-jdbc -->
+        <dependency>
+            <groupId>net.snowflake</groupId>
+            <artifactId>snowflake-jdbc</artifactId>
+            <version>3.19.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.databricks/databricks-jdbc -->
+        <dependency>
+            <groupId>com.databricks</groupId>
+            <artifactId>databricks-jdbc</artifactId>
+            <version>2.6.40</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
@@ -403,11 +438,11 @@
             <artifactId>redshift-jdbc42</artifactId>
             <version>2.1.0.29</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/io.opentelemetry.semconv/opentelemetry-semconv-incubating -->
         <dependency>
-            <groupId>io.opentelemetry</groupId>
+            <groupId>io.opentelemetry.semconv</groupId>
             <artifactId>opentelemetry-semconv</artifactId>
-            <version>1.20.0-alpha</version>
-            <scope>runtime</scope>
+            <version>1.27.0-alpha</version>
         </dependency>
         <dependency>
             <groupId>jdk.tools</groupId>

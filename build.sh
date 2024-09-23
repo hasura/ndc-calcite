@@ -14,10 +14,10 @@ release_info=$(curl -L \
 TAG=$(echo "$release_info" | grep 'tag_name' | awk -F':' '{print $2}' | tr -d ' "",')
 
 # build arm & amd versions
-docker build . --no-cache --platform linux/arm64,linux/amd64 -t kstott/meta_connector:latest
+docker build . --no-cache --platform linux/arm64,linux/amd64 -t ghcr.io/hasura/meta_connector:latest
 #docker buildx build --platform linux/arm64 --output type=oci,dest=./image.tar .
-docker tag kstott/meta_connector:latest kstott/meta_connector:"$TAG"
+docker tag ghcr.io/hasura/meta_connector:"$TAG"
 
 # push to docker hub
-docker push kstott/meta_connector:latest
-docker push kstott/meta_connector:"$TAG"
+docker push ghcr.io/hasura/meta_connector:latest
+docker push ghcr.io/hasura/meta_connector:"$TAG"

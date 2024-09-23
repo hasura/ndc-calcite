@@ -19,7 +19,7 @@ jobs:
     - uses: docker/build-push-action@v5
       with:
         context: .
-        tags: kstott/meta_connector:latest
+        tags: ghcr.io/hasura/meta_connector:latest
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max

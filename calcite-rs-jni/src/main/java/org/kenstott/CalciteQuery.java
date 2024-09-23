@@ -3,9 +3,8 @@ package org.kenstott;
 import com.google.gson.*;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.StatusCode;
-import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.*;
+import io.opentelemetry.context.Context;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.adapter.jdbc.JdbcTable;
 import org.apache.calcite.jdbc.CalciteConnection;
@@ -152,6 +151,7 @@ public class CalciteQuery {
     }
 
     private Collection<TableMetadata> getTables() {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
         Span span = tracer.spanBuilder("getTables").startSpan();
         try {
             DatabaseMetaData metaData = connection.getMetaData();
@@ -234,6 +234,8 @@ public class CalciteQuery {
                                 span.setAttribute("Error", e.toString());
                             }
                         }
+                    } catch(Exception e) {
+                        System.err.println(e.toString());
                     }
                 }
             }
@@ -249,6 +251,7 @@ public class CalciteQuery {
     }
 
     private Map<String, ColumnMetadata> getTableColumnInfo(TableMetadata table) {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
         Span span = tracer.spanBuilder("getTables").startSpan();
         Map<String, ColumnMetadata> columns = new HashMap<>();
         ResultSet columnsSet;
@@ -269,6 +272,7 @@ public class CalciteQuery {
                 boolean nullable = columnsSet.getBoolean("NULLABLE");
                 Map<String, String> remapTypes = Map.ofEntries(
                         entry("CHAR", "CHAR"),
+                        entry("CHAR(1)", "VARCHAR"),
                         entry("VARCHAR", "VARCHAR"),
                         entry("VARCHAR(65536)", "VARCHAR"),
                         entry("VARCHAR(65536) NOT NULL", "VARCHAR"),
@@ -276,12 +280,15 @@ public class CalciteQuery {
                         entry("JavaType(class java.util.ArrayList)", "LIST"),
                         entry("JavaType(class org.apache.calcite.adapter.file.ComparableArrayList)", "LIST"),
                         entry("ANY ARRAY", "LIST"),
+                        entry("VARCHAR NOT NULL ARRAY", "LIST"),
                         entry("JavaType(class java.util.LinkedHashMap)", "MAP"),
                         entry("JavaType(class org.apache.calcite.adapter.file.ComparableLinkedHashMap)", "MAP"),
                         entry("JavaType(class java.lang.String)", "VARCHAR"),
                         entry("JavaType(class java.lang.Integer)", "INTEGER"),
                         entry("INTEGER NOT NULL", "INTEGER"),
                         entry("INTEGER", "INTEGER"),
+                        entry("JSON", "JSON"),
+                        entry("JSONB", "JSON"),
                         entry("SMALLINT NOT NULL", "INTEGER"),
                         entry("SMALLINT", "INTEGER"),
                         entry("TINYINT NOT NULL", "INTEGER"),
@@ -313,7 +320,7 @@ public class CalciteQuery {
                 );
                 String mappedType = remapTypes.get(dataTypeName);
                 if (mappedType == null) {
-                    if (dataTypeName.toLowerCase().contains("varchar")) {
+                    if (dataTypeName.toLowerCase().contains("varchar") && !dataTypeName.toLowerCase().endsWith("map")) {
                         mappedType = "VARCHAR";
                     } else if (dataTypeName.toLowerCase().contains("timestamp")) {
                         mappedType = "TIMESTAMP";
@@ -321,6 +328,12 @@ public class CalciteQuery {
                         mappedType = "FLOAT";
                     } else if (dataTypeName.toLowerCase().startsWith("any")) {
                         mappedType = "VARBINARY";
+                    } else if (dataTypeName.toLowerCase().endsWith("map")) {
+                        mappedType = "MAP";
+                    } else if (dataTypeName.toLowerCase().endsWith("array")) {
+                        mappedType = "LIST";
+                    } else if (dataTypeName.toLowerCase().contains("for json")) {
+                        mappedType = "JSON";
                     } else {
                         span.setAttribute(dataTypeName, "unknown column type");
                         mappedType = "VARCHAR";
@@ -364,6 +377,7 @@ public class CalciteQuery {
      * @return A JSON string representing the models.
      */
     public String getModels() throws SQLException {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
         Span span = tracer.spanBuilder("getModels").startSpan();
         try {
             Gson gson = new Gson();
@@ -388,11 +402,31 @@ public class CalciteQuery {
     /**
      * Executes a SQL query on the database and returns the result as a JSON string.
      *
-     * @param query The SQL query to execute.
+     * @param query        The SQL query to execute.
      * @return A JSON string representing the result of the query.
      */
     public String queryModels(String query) {
-        Span span = tracer.spanBuilder("queryModels").startSpan();
+        return queryModels(query, "", "");
+    }
+
+    /**
+     * Executes a SQL query on the database and returns the result as a JSON string.
+     *
+     * @param query The SQL query to execute.
+     * @return A JSON string representing the result of the query.
+     */
+    public String queryModels(String query, String parentTraceId, String parentSpanId) {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
+        SpanContext parentSpanContext = SpanContext.createFromRemoteParent(
+                parentTraceId,
+                parentSpanId,
+                TraceFlags.getDefault(),
+                TraceState.getDefault()
+            );
+        Context context = Context.current().with(Span.wrap(parentSpanContext));
+        Span span = tracer.spanBuilder("queryModels")
+                .setParent(context)
+                .startSpan();
         try {
             Statement statement = connection.createStatement();
             span.setAttribute("query", query);
@@ -453,6 +487,14 @@ public class CalciteQuery {
                             case Types.TIMESTAMP:
                                 jsonObject.addProperty(label, String.valueOf(resultSet.getDate(i)));
                                 break;
+                            case Types.ARRAY: {
+                                Array array = resultSet.getArray(i);
+                                Object[] objectArray = (Object[]) array.getArray();
+                                JsonArray jArray = new JsonArray();
+                                Arrays.stream(objectArray).forEach(value -> jArray.add(String.valueOf(value)));
+                                jsonObject.add(label, jArray);
+                            }
+                                break;
                             default:
                                 Object columnValue = resultSet.getObject(i);
                                 boolean isArrayList = columnValue instanceof ArrayList;
@@ -490,8 +532,18 @@ public class CalciteQuery {
         }
     }
 
-    public String queryPlanModels(String query) {
-        Span span = tracer.spanBuilder("queryPlanModels").startSpan();
+    public String queryPlanModels(String query, String parentTraceId, String parentSpanId) {
+        Tracer tracer = openTelemetry.getTracer("calcite-driver");
+        SpanContext parentSpanContext = SpanContext.createFromRemoteParent(
+                parentTraceId,
+                parentSpanId,
+                TraceFlags.getDefault(),
+                TraceState.getDefault()
+        );
+        Context context = Context.current().with(Span.wrap(parentSpanContext));
+        Span span = tracer.spanBuilder("queryPlanModels")
+                .setParent(context)
+                .startSpan();
         try {
             Statement statement = connection.createStatement();
             span.setAttribute("query", query);

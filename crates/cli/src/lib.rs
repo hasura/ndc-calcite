@@ -95,12 +95,12 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
         match entry {
             DirEntry::Dir(dir) => {
                 let path = dir.path();
-                fs::create_dir((config_path).join(path)).await?
+                fs::create_dir(config_path.join(path)).await?
             }
             DirEntry::File(file) => {
                 let path = file.path();
                 let contents = file.contents();
-                std::fs::write((config_path).join(path), contents).expect(UNABLE_TO_WRITE_TO_FILE);
+                std::fs::write(config_path.join(path), contents).expect(UNABLE_TO_WRITE_TO_FILE);
             }
         }
     }

@@ -1,9 +1,9 @@
 use std::path::Path;
-use tracing::debug;
+use tracing::{event, Level};
 
 #[tracing::instrument(skip())]
 pub fn list_files_in_directory(dir: &Path) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    debug!("Inspecting directory: {}", dir.display());
+    event!(Level::DEBUG, "Inspecting directory: {}", dir.display());
     let attempts = 1;
     let seconds = 1;
 
@@ -13,12 +13,12 @@ pub fn list_files_in_directory(dir: &Path) -> Result<Vec<String>, Box<dyn std::e
             let entry = entry?;
             let path = entry.path();
             if path.is_dir() {
-                debug!("Found directory: {}", path.display());
+                event!(Level::DEBUG, "Found directory: {}", path.display());
                 // If path is a directory, call the function recursively
                 let mut more = list_files_in_directory(&path)?;
                 file_list.append(&mut more);
             } else if path.is_file() {
-                debug!("Found file: {}", path.display());
+                event!(Level::DEBUG, "Found file: {}", path.display());
                 // Convert PathBuf to string and add to the list
                 let path_string = path.to_str().unwrap().to_string();
                 file_list.push(path_string);

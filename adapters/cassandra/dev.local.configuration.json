@@ -8,13 +8,22 @@
       {
         "type": "custom",
         "name": "twissandra",
+        "sqlDialectFactory": null,
+        "jdbcUser": null,
+        "jdbcPassword": null,
+        "jdbcUrl": null,
+        "jdbcCatalog": null,
+        "jdbcSchema": null,
         "factory": "org.apache.calcite.adapter.cassandra.CassandraSchemaFactory",
         "operand": {
-          "host": "localhost",
-          "port": 9042,
-          "password": "cassandra",
-          "username": "cassandra",
-          "keyspace": "my_keyspace"
+          "host": "cassandra.us-west-1.amazonaws.com",
+          "port": 9142,
+          "password": "thfXHbP4KMRH8Je//SsoISZyOq/SNE3ltg40WIreGhcfGNVKsLqFwZwSQfc=",
+          "username": "athenauser-at-528956693660",
+          "keyspace": "content_data",
+          "ssl": true,
+          "dc": "us-west-1",
+          "pathToRootCert": "/Users/kennethstott/Documents/GitHub/calcite-connector/adapters/cassandra/root.crt"
         }
       }
     ]
@@ -22,28 +31,180 @@
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "musicplaylist": {
+    "news_articles": {
+      "physicalSchema": "twissandra",
+      "catalog": "",
       "schema": "twissandra",
-      "name": "musicplaylist",
+      "name": "news_articles",
       "columns": {
-        "songname": {
-          "name": "songname",
+        "publish_date": {
+          "name": "publish_date",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "author_id": {
+          "name": "author_id",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "songid": {
-          "name": "songid",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "singer": {
-          "name": "singer",
+        "article_id": {
+          "name": "article_id",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "year": {
-          "name": "year",
-          "scalarType": "INTEGER",
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "comments": {
+          "name": "comments",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "title": {
+          "name": "title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "tags": {
+          "name": "tags",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "alias": {
+          "name": "alias",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "content": {
+          "name": "content",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "news_articles_by_id": {
+      "physicalSchema": "twissandra",
+      "catalog": "",
+      "schema": "twissandra",
+      "name": "news_articles_by_id",
+      "columns": {
+        "article_id": {
+          "name": "article_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "tags": {
+          "name": "tags",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "publish_date": {
+          "name": "publish_date",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "comments": {
+          "name": "comments",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "alias": {
+          "name": "alias",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "title": {
+          "name": "title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "content": {
+          "name": "content",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "news_articles_by_source": {
+      "physicalSchema": "twissandra",
+      "catalog": "",
+      "schema": "twissandra",
+      "name": "news_articles_by_source",
+      "columns": {
+        "alias": {
+          "name": "alias",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "tags": {
+          "name": "tags",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "title": {
+          "name": "title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "article_id": {
+          "name": "article_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "comments": {
+          "name": "comments",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "publish_date": {
+          "name": "publish_date",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "content": {
+          "name": "content",
+          "scalarType": "VARCHAR",
           "nullable": true
         }
       },

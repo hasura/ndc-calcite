@@ -253,7 +253,7 @@ pub struct Operand {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssl: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub dc: Option<bool>,
+    pub dc: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "pathToCert")]
     pub path_to_cert: Option<String>,

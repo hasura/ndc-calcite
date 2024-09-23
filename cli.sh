@@ -10,7 +10,7 @@ echo $HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
 mkdir -p $HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH
 #rm -rf ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}
 #mkdir -p ${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}
-docker run --entrypoint ndc-calcite-cli -e "OTEL_LOG_LEVEL=trace" -e "OTEL_LOGS_EXPORTER=console" -e "OTEL_TRACES_EXPORTER=console" -e "RUST_LOG=debug" -e "LOG_LEVEL=all" -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/app/output -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/etc/connector:ro docker.io/kstott/meta_connector:latest update
+docker run --entrypoint ndc-calcite-cli -e "OTEL_LOG_LEVEL=trace" -e "OTEL_LOGS_EXPORTER=console" -e "OTEL_TRACES_EXPORTER=console" -e "RUST_LOG=debug" -e "LOG_LEVEL=all" -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/app/output -v "${HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}":/etc/connector:ro ghcr.io/hasura/meta_connector:latest update
 
 # echo "include:\n  - path: ${filepath}/compose.yaml" > temp.yml
 cat <<EOF > temp.yml
@@ -21,9 +21,11 @@ echo "$content" >> temp.yml
 mv temp.yml compose.yaml
 
 global_env=$(cat << EOF
+
 ${SUBGRAPH}_${CONNECTOR}_HASURA_SERVICE_TOKEN_SECRET=$3
-${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_METRICS_ENDPOINT="http://local.hasura.dev:4318"
+${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_METRICS_ENDPOINT="http://local.hasura.dev:4317"
 ${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT="http://local.hasura.dev:4317"
+${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_ENDPOINT="http://local.hasura.dev:4317"
 EOF
 )
 echo "$global_env" >> .env
@@ -35,7 +37,7 @@ services:
     build:
       context: .
       dockerfile_inline: |-
-        FROM kstott/meta_connector:latest
+        FROM ghcr.io/hasura/meta_connector:latest
         COPY ./ /etc/connector
     develop:
       watch:
@@ -45,6 +47,8 @@ services:
     environment:
       HASURA_SERVICE_TOKEN_SECRET: \$${SUBGRAPH}_${CONNECTOR}_HASURA_SERVICE_TOKEN_SECRET
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: \$${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+      OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: \$${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+      OTEL_EXPORTER_OTLP_ENDPOINT: \$${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_ENDPOINT
       OTEL_SERVICE_NAME: \$${SUBGRAPH}_${CONNECTOR}_OTEL_SERVICE_NAME
     extra_hosts:
       - local.hasura.dev=host-gateway
@@ -71,6 +75,10 @@ definition:
       fromEnv: ${SUBGRAPH}_${CONNECTOR}_HASURA_SERVICE_TOKEN_SECRET
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:
       fromEnv: ${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:
+      fromEnv: ${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+    OTEL_EXPORTER_OTLP_ENDPOINT:
+      fromEnv: ${SUBGRAPH}_${CONNECTOR}_OTEL_EXPORTER_OTLP_ENDPOINT
     OTEL_SERVICE_NAME:
       fromEnv: ${SUBGRAPH}_${CONNECTOR}_OTEL_SERVICE_NAME
 EOF

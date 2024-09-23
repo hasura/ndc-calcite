@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y openjdk-21-jdk maven ca-certificates
 RUN . /scripts/java_env_jdk.sh
 RUN java -version && mvn --version
 COPY calcite-rs-jni/ /calcite-rs-jni/
+RUN mkdir -p /root/.m2 /root/.gradle
+VOLUME /root/.m2 /root/.gradle
 WORKDIR /calcite-rs-jni/calcite
 RUN ./gradlew assemble --no-daemon
 WORKDIR /calcite-rs-jni

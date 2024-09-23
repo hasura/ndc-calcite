@@ -6,7 +6,6 @@ use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use log::debug;
 use ndc_models::{Aggregate, ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ErrorResponse, ExistsInCollection, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, UnaryComparisonOperator, VariableName};
 use ndc_sdk::connector::QueryError;
 use ndc_sdk::models;
@@ -156,7 +155,7 @@ fn pagination(query: &Query) -> Result<Vec<String>, QueryError> {
         pagination_statements.push(format!("OFFSET {}", query.offset.unwrap()))
     }
     if pagination_statements.is_empty() {
-        debug!("No pagination.");
+        event!(Level::DEBUG, "No pagination.");
     }
     Ok(pagination_statements)
 }
@@ -453,7 +452,7 @@ fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
     path.join(".")
 }
 
-#[tracing::instrument(skip(configuration,_arguments, select, order_by, pagination, where_clause, join_clause),level=Level::INFO)]
+#[tracing::instrument(skip(configuration,_arguments),level=Level::INFO)]
 pub fn query_collection(
     configuration: &ParsedConfiguration,
     collection_name: &CollectionName,
@@ -545,7 +544,7 @@ pub fn query_collection(
     arguments,
     query,
     variables
-), level=Level::INFO)]
+), level=Level::DEBUG)]
 pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents, QueryError> {
     let mut argument_values = BTreeMap::new();
     for (argument_name, argument_value) in arguments {

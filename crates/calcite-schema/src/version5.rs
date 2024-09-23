@@ -41,7 +41,7 @@ impl CalciteRefSingleton {
             crate::configuration::ParsedConfiguration::Version5(config) => {
                  let java_vm = get_jvm().lock().unwrap();
                  let env = java_vm.attach_current_thread_as_daemon().map_err(| _ | "Could not attach thread to JVM") ?;
-                 let calcite_ref = create_calcite_query_engine(&config, env).map_err(| _ | "Could not create Calcite Query Engine") ?;
+                 let calcite_ref = create_query_engine(&config, env).map_err(|_ | "Could not create Calcite Query Engine") ?;
                  self.calcite_ref.set(calcite_ref).map_err(| _ | "Calcite Query Engine already initialized")
              }
         }
@@ -107,7 +107,7 @@ impl ParsedConfiguration {
 }
 
 #[tracing::instrument(skip(configuration, calcite_query, env), level=Level::INFO)]
-pub fn create_calcite_connection<'a, 'b>(
+pub fn create_jvm_connection<'a, 'b>(
     configuration: &'a ParsedConfiguration,
     calcite_query: &'b JObject,
     env: &'b mut JNIEnv<'a>,
@@ -136,7 +136,7 @@ pub fn create_calcite_connection<'a, 'b>(
 }
 
 #[tracing::instrument(skip(configuration, env), level=Level::INFO)]
-pub fn create_calcite_query_engine<'a>(
+pub fn create_query_engine<'a>(
     configuration: &'a ParsedConfiguration,
     mut env: JNIEnv<'a>
 ) -> Result<GlobalRef, Error> {
@@ -151,7 +151,7 @@ pub fn create_calcite_query_engine<'a>(
         Err(e) => return Err(e),
     };
 
-    match create_calcite_connection(configuration, &instance, &mut env) {
+    match create_jvm_connection(configuration, &instance, &mut env) {
         Ok(_) => {
             event!(Level::INFO, "Instantiated Calcite Query Engine");
             Ok(env.new_global_ref(instance)?)

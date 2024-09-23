@@ -11,8 +11,9 @@
 //! The full list is here:
 //! - Arrow (tested)
 //! - Cassandra (tested)
-//! - CSV (tested)
-//! - JSON (tested)
+//! - CSV (tested, file://, http(s):// s3://, w/in-memory caching)
+//! - JSON (tested, file://, http(s):// s3://, w/in-memory caching)
+//! - XLSX (tested, file://, http(s):// s3://, w/in-memory caching)
 //! - Druid
 //! - ElasticSearch
 //! - Geode
@@ -34,9 +35,10 @@
 //! - Vertica
 //! - Sybase
 //! - StarRocks
-//! - Snowflake
+//! - Snowflake (tested)
+//! - Databricks (tested)
 //! - Presto
-//! - Trino
+//! - Trino (tested)
 //! - Phoenix
 //! - Parracel
 //! - NeoView

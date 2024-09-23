@@ -68,7 +68,7 @@ pub fn collections(
     Ok((object_types, collection_infos))
 }
 
-#[tracing::instrument(skip(column_metadata), level=Level::DEBUG)]
+#[tracing::instrument(skip(column_metadata), level=Level::INFO)]
 fn build_fields(column_metadata: &HashMap<FieldName, ColumnMetadata>) -> BTreeMap<FieldName, ObjectField> {
     column_metadata.iter().map(|(column_name, column_metadata)| {
         let scalar_type = TypeName::from(column_metadata.scalar_type.clone());
@@ -87,7 +87,7 @@ fn build_fields(column_metadata: &HashMap<FieldName, ColumnMetadata>) -> BTreeMa
     }).collect()
 }
 
-#[tracing::instrument(skip(table_metadata), level=Level::DEBUG)]
+#[tracing::instrument(skip(table_metadata), level=Level::INFO)]
 fn build_uniqueness_constraints(table_metadata: &TableMetadata) -> BTreeMap<String, UniquenessConstraint> {
     let mut unique_constraints = BTreeMap::new();
     unique_constraints.insert("PK".into(), UniquenessConstraint {
@@ -96,7 +96,7 @@ fn build_uniqueness_constraints(table_metadata: &TableMetadata) -> BTreeMap<Stri
     unique_constraints
 }
 
-#[tracing::instrument(skip(table_metadata, models_data_map), level=Level::DEBUG)]
+#[tracing::instrument(skip(table_metadata, models_data_map), level=Level::INFO)]
 fn build_foreign_keys(table_metadata: &TableMetadata, models_data_map: &HashMap<CollectionName, TableMetadata>) -> BTreeMap<String, ForeignKeyConstraint> {
     let mut foreign_key_constraints: BTreeMap<String, ForeignKeyConstraint> = Default::default();
 
