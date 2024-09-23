@@ -208,7 +208,7 @@ And you should see this:
 ### Start the standalone instance
 
 ```shell
-./run-local-connector.sh file
+./run-connector-local.sh file
 ```
 You can start any adapter by using the names of the adapter with the `./adapters` directory.
 
