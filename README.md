@@ -208,7 +208,6 @@ And you should see this:
 ### Start the standalone instance
 
 ```shell
-chmod +x run-local-connector.sh
 ./run-local-connector.sh file
 ```
 You can start any adapter by using the names of the adapter with the `./adapters` directory.
@@ -216,15 +215,13 @@ You can start any adapter by using the names of the adapter with the `./adapters
 ### Create a Supergraph
 
 ```shell
-ddn supergraph init test-connector
-cd test-connector
+ddn supergraph init test-connector && cd test-connector
 ```
 
 ### Create the connector HML file
 
 ```shell
-ddn connector-link add calcite --configure-host http://local.hasura.dev:8080
-sed -i.bak -e '11,13d' ./app/metadata/calcite.hml
+ddn connector-link add calcite --configure-host http://local.hasura.dev:8080 && sed -i.bak -e '11,13d' ./app/metadata/calcite.hml
 ```
 ### Start the Supergraph
 ```shell
@@ -242,8 +239,7 @@ ddn supergraph build local
 
 ### Restart the Supergraph
 ```shell
-docker compose down
-ddn run docker-start
+docker compose down && ddn run docker-start
 ```
 
 ### View in console
