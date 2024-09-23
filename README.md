@@ -214,8 +214,8 @@ And you should see this:
 ### Start the standalone instance
 
 ```shell
-chmod +x run-local-connector.sh
-./run-local-connector.sh file
+chmod +x run-connector-local.sh
+./run-connector-local.sh file
 ```
 You can start any adapter by using the names of the adapter with the `./adapters` directory.
 
