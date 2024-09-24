@@ -21,3 +21,5 @@ target/
 /adapters/hive/hadoop_data/
 
 /test-connector/
+adapters/file/data/files/
+adapters/file/dev.local.configuration.json
