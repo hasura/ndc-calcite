@@ -62,6 +62,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-plus</artifactId>
+            <version>${calcite.version}</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/calcite/plus/build/libs/calcite-plus-${calcite.version}.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.calcite</groupId>
             <artifactId>calcite-linq4j</artifactId>
             <version>${calcite.version}</version>
             <scope>system</scope>
