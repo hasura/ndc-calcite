@@ -14,43 +14,54 @@
 //! - CSV (tested, file://, http(s):// s3://, w/in-memory caching)
 //! - JSON (tested, file://, http(s):// s3://, w/in-memory caching)
 //! - XLSX (tested, file://, http(s):// s3://, w/in-memory caching)
-//! - Druid
-//! - ElasticSearch
-//! - Geode
+//! - Druid (growing, niche, high interest)
+//! - ElasticSearch (dup)
+//! - Geode (growing, niche, high interest)
 //! - InnoDB (MySQL)
-//! - MongoDB
-//! - Redis
+//! - MongoDB (dup)
+//! - Redis (todo)
 //! - Solr
-//! - Spark
-//! - Splunk
+//! - Spark (todo)
+//! - Splunk (todo)
 //! - Kafka  (tested - with caveats)
 //! - SQLite (tested)
-//! - MSSql
-//! - MySql
-//! - Oracle
-//! - Netezza
+//! - MSSql (dup)
+//! - MySql (dup)
+//! - Oracle (dup)
+//! - Netezza (declining, not interesting)
 //! - Redshift (tested)
-//! - Infobright
-//! - TeraData
-//! - Vertica
+//! - Infobright (abandoned, not interesting)
+//! - TeraData (very commercially viable, todo)
+//! - Vertica (very commercially viable, todo)
 //! - Sybase (tested)
-//! - StarRocks
+//! - StarRocks (todo)
 //! - Snowflake (tested)
 //! - Databricks (tested)
 //! - Presto
+//! - OS (interesting)
+//! - Pig (HDFS Map-Reduce, interesting)
 //! - Trino (tested)
-//! - Phoenix
-//! - Parracel
-//! - NeoView
-//! - LucidDB
-//! - InterBase
-//! - Ingres
-//! - Informix
-//! - HSQLDB
+//! - Phoenix (dup)
+//! - Parracel (???)
+//! - NeoView (abandoned, not interesting)
+//! - LucidDB (abandoned, not interesting)
+//! - InterBase (interesting)
+//! - Ingres (declining, not interesting)
+//! - Informix (niche, interesting)
+//! - HSQLDB (not interesting)
 //! - HIVE (JDBC, tested)
 //! - H2 (tested)
 //! - DB2 (tested)
-//! - PostreSQL (tested)
+//! - PostreSQL (dup, tested)
+//! - Access (interesting)
+//! - Exasol (growing, interesting)
+//! - Firebolt (growing, interesting)
+//! - SQLStream (growing, interesting)
+//! - Jethro (declining, no interest)
+//! - Firebird (interesting)
+//! - Big Query (interesting)
+//! - Clickhouse (dup)
+//!
 //!
 //! This NDC cannot run independently. Calcite is a JVM-based library. There is a companion java
 //! project that generates a JAR to interface between this Rust-based NDC and Apache Calcite. The Java project
