@@ -14,7 +14,7 @@
         "port": 9142,
         "ssl": true,
         "dc": "us-west-1",
-        "pathToRootCert": "/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/cassandra/root.crt"
+        "pathToRootCert": "./root.crt"
       }
     }
   ]
