@@ -49,11 +49,14 @@ Then run it again to actually perform the test.
 
 ```shell
 chmod +x test.sh
-./test.sh # populate metadata
-./test.sh # run the tests
+./test.sh file # populate metadata
+./test.sh file # run the tests
 ```
 
 ## Instruction for Testing with a Supergraph using Docker
+
+**NOTE Perform all of these operations from the root of the repo!!!**
+
 ### Build the docker image
 
 ```shell
@@ -204,6 +207,8 @@ And you should see this:
 ```
 
 ## Instructions for Testing with Supergraph using a standalone connector instance
+
+**NOTE Perform all of these operations from the root of the repo!!!**
 
 ### Start the standalone instance
 
