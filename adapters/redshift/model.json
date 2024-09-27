@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "defaultSchema": "default",
+  "schemas": [
+    {
+      "name": "default",
+      "type": "jdbc",
+      "jdbcCatalog": "sales_db",
+      "jdbcSchema": "public",
+      "jdbcUrl": "jdbc:redshift://test-cluster.c2zsmph7aucw.us-east-1.redshift.amazonaws.com:5439/sales_db?user=admin&password=YourSecurePassword1"
+    }
+  ]
+}
