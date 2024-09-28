@@ -21,3 +21,7 @@ target/
 /adapters/hive/hadoop_data/
 
 /test-connector/
+/adapters/file/data/files/2022CbpOceanEconomyTable__2022CbpIaOceanEconomy.json
+/adapters/file/data/files/2022CbpOceanEconomyTable__Notes.json
+/grafana/tempo-data/*
+
