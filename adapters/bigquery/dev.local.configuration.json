@@ -1,0 +1,51 @@
+{
+  "version": "5",
+  "$schema": "schema.json",
+  "model": {
+    "version": "1.0",
+    "defaultSchema": "TEST",
+    "schemas": [
+      {
+        "type": "jdbc",
+        "name": "TEST",
+        "sqlDialectFactory": null,
+        "jdbcUser": "kenneth.stott@gmail.com",
+        "jdbcPassword": "",
+        "jdbcUrl": "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443;ProjectId=concise-volt-436619-g5;OAuthType=0;OAuthServiceAcctEmail=kenneth.stott@gmail.com;OAuthPvtKeyPath=/Users/kennethstott/Documents/GitHub/calcite-connector/adapters/bigquery/key.json;DatasetId=test",
+        "jdbcCatalog": "concise-volt-436619-g5",
+        "jdbcSchema": "test",
+        "factory": null
+      }
+    ]
+  },
+  "model_file_path": "./model.json",
+  "fixes": true,
+  "metadata": {
+    "sales": {
+      "physicalCatalog": "concise-volt-436619-g5",
+      "physicalSchema": "test",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "sales",
+      "columns": {
+        "AlbumId": {
+          "name": "AlbumId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "ArtistId": {
+          "name": "ArtistId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Title": {
+          "name": "Title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
+}
