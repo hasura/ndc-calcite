@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "defaultSchema": "splunk",
+  "schemas": [
+    {
+      "name": "splunk",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.splunk.SplunkSchemaFactory",
+      "operand": {
+        "url": "http://localhost:8089",
+        "username": "admin",
+        "password": "changeme"
+      },
+      "tables": [
+        {
+          "name": "splunk_table",
+          "type": "custom",
+          "factory": "org.apache.calcite.adapter.splunk.SplunkTableFactory",
+          "operand": {
+            "search": "search index=_internal | head 10"
+          }
+        }
+      ]
+    }
+  ]
+}

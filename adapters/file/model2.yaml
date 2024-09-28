@@ -1,0 +1,10 @@
+version: "1.0"
+defaultSchema: FILE
+schemas:
+  - type: custom
+    name: FILE
+    factory: org.apache.calcite.adapter.file.FileSchemaFactory
+    operand:
+      tables:
+        - name: TEST
+          url: s3://kenstott/Customer.csv

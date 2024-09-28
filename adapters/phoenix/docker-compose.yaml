@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  hbase:
+    image: harisekhon/hbase
+    container_name: hbase
+    ports:
+      - "2181:2181"
+      - "8080:8080"
+      - "8085:8085"
+      - "9090:9090"
+      - "9095:9095"
+      - "16000:16000"
+      - "16010:16010"
+      - "16201:16201"
+    environment:
+      HBASE_MANAGES_ZK: "true"
+
+  phoenix:
+    image: openjdk:8
+    container_name: phoenix
+    depends_on:
+      - hbase
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./phoenix:/phoenix
+    command: >
+      /bin/bash -c "
+      wget https://archive.apache.org/dist/phoenix/phoenix-5.1.3/phoenix-hbase-2.1-5.1.3-bin.tar.gz &&
+      tar -xzf phoenix-hbase-2.1-5.1.3-bin.tar.gz -C /phoenix &&
+      cp /phoenix/phoenix-5.1.3/phoenix-5.1.3-server.jar /opt/hbase/lib/ &&
+      /opt/hbase/bin/start-hbase.sh &&
+      tail -f /opt/hbase/logs/hbase--master-*.log
+      "

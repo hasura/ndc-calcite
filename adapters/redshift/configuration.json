@@ -2,5 +2,6 @@
   "version": "5",
   "$schema": "schema.json",
   "model_file_path": "./model.json",
-  "fixes": true
+  "fixes": true,
+  "supportJsonObject": true
 }

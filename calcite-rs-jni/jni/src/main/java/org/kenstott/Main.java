@@ -1,7 +1,10 @@
 package org.kenstott;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 /**
  * The Main class is the entry point of the application.
@@ -9,9 +12,15 @@ import java.sql.Connection;
  * and perform queries on the models.
  */
 public class Main {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException {
 
-        String modelPath = "../adapters/file/model2.yaml";
+//        String jdbcUrl = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443?ProjectId=MyProject26996&OAuthType=0&OAuthServiceAcctEmail=kenneth.stott@gmail.com";
+//        String encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString());
+//        System.out.println(encodedUrl);
+//        Class.forName("com.simba.googlebigquery.jdbc42.Driver");
+//        Connection conn = DriverManager.getConnection(jdbcUrl);
+
+        String modelPath = "../../adapters/bigquery/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -21,11 +30,16 @@ public class Main {
             calciteConnection = query.createCalciteConnection(modelPath);
             String x = query.getModels();
             System.out.println(x);
-            String z1 = query.queryModels("""
-                    SELECT * from "FILE"."TEST"
-                    """
-            );
+            String q1 = """
+                    SELECT * from "sales" LIMIT 10
+                    """;
+            String z1 = query.queryModels(q1);
             System.out.println(z1);
+//            String z2 = query.queryModels("""
+//                    SELECT "CustomerId" from "FILE"."TEST"
+//                    """
+//            );
+//            System.out.println(z2);
             calciteConnection.close();
             calciteConnection = null;
         } catch (Exception e) {

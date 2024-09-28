@@ -134,6 +134,7 @@ public class CalciteQuery {
         Properties info = new Properties();
         info.setProperty("model", modelPath);
         try {
+            Class.forName("com.simba.googlebigquery.jdbc42.Driver");
             Class.forName("org.apache.calcite.jdbc.Driver");
             connection = DriverManager.getConnection("jdbc:calcite:", info);
             rootSchema = connection.unwrap(CalciteConnection.class).getRootSchema().unwrap(CalciteSchema.class);

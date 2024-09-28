@@ -2,7 +2,9 @@
   <configuration default="false" name="Run ndc-calcite-file" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
     <option name="command" value="run --package ndc-calcite --bin ndc-calcite -- serve --configuration=." />
     <option name="workingDirectory" value="file://$PROJECT_DIR$/adapters/file" />
-    <envs />
+    <envs>
+      <env name="OTEL_EXPORTER_OTLP_ENDPOINT" value="http://local.hasura.dev:4317" />
+    </envs>
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />
     <option name="requiredFeatures" value="true" />

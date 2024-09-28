@@ -42,7 +42,7 @@
 //! - Pig (HDFS Map-Reduce, interesting)
 //! - Trino (tested)
 //! - Phoenix (dup)
-//! - Parracel (???)
+//! - Paraccel (abandoned)
 //! - NeoView (abandoned, not interesting)
 //! - LucidDB (abandoned, not interesting)
 //! - InterBase (interesting)
@@ -59,7 +59,7 @@
 //! - SQLStream (growing, interesting)
 //! - Jethro (declining, no interest)
 //! - Firebird (interesting)
-//! - Big Query (interesting)
+//! - Big Query (tested)
 //! - Clickhouse (dup)
 //!
 //!
