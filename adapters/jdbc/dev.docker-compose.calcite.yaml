@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile_inline: |-
-        FROM meta_connector:latest
+        FROM ndc-calcite:latest
         COPY ./ /etc/connector
     develop:
       watch:
