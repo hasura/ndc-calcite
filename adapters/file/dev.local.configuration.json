@@ -3,11 +3,11 @@
   "$schema": "schema.json",
   "model": {
     "version": "1.0",
-    "defaultSchema": "files",
+    "defaultSchema": "default",
     "schemas": [
       {
         "type": "custom",
-        "name": "files",
+        "name": "default",
         "sqlDialectFactory": null,
         "jdbcUser": null,
         "jdbcPassword": null,
@@ -16,57 +16,27 @@
         "jdbcSchema": null,
         "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
         "operand": {
-          "directory": "data/files"
+          "directory": "./data"
         }
       }
     ]
   },
-  "model_file_path": "./model.yaml",
+  "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "DEPTS": {
-      "physicalSchema": "files",
+    "files.ARCHERS": {
+      "physicalSchema": "default",
       "catalog": "",
-      "schema": "files",
-      "name": "DEPTS",
+      "schema": "default",
+      "name": "files.ARCHERS",
       "columns": {
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "NAME": {
-          "name": "NAME",
+        "a": {
+          "name": "a",
           "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "yaml": {
-      "physicalSchema": "files",
-      "catalog": "",
-      "schema": "files",
-      "name": "yaml",
-      "columns": {
-        "id": {
-          "name": "id",
-          "scalarType": "INTEGER",
           "nullable": true
         },
         "c": {
           "name": "c",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "g": {
-          "name": "g",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "a": {
-          "name": "a",
           "scalarType": "VARCHAR",
           "nullable": true
         },
@@ -80,51 +50,6 @@
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "f": {
-          "name": "f",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "d": {
-          "name": "d",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "object": {
-          "name": "object",
-          "scalarType": "MAP",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "ARCHERS": {
-      "physicalSchema": "files",
-      "catalog": "",
-      "schema": "files",
-      "name": "ARCHERS",
-      "columns": {
-        "f": {
-          "name": "f",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "c": {
-          "name": "c",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "id": {
-          "name": "id",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "d": {
-          "name": "d",
-          "scalarType": "LIST",
-          "nullable": true
-        },
         "g": {
           "name": "g",
           "scalarType": "LIST",
@@ -135,39 +60,49 @@
           "scalarType": "MAP",
           "nullable": true
         },
-        "a": {
-          "name": "a",
+        "f": {
+          "name": "f",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "b": {
-          "name": "b",
-          "scalarType": "VARCHAR",
+        "d": {
+          "name": "d",
+          "scalarType": "LIST",
           "nullable": true
         },
-        "e": {
-          "name": "e",
-          "scalarType": "VARCHAR",
+        "id": {
+          "name": "id",
+          "scalarType": "INTEGER",
           "nullable": true
         }
       },
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "EMPS": {
-      "physicalSchema": "files",
+    "files.EMPS": {
+      "physicalSchema": "default",
       "catalog": "",
-      "schema": "files",
-      "name": "EMPS",
+      "schema": "default",
+      "name": "files.EMPS",
       "columns": {
-        "DEPTNO": {
-          "name": "DEPTNO",
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "EMPNO": {
+          "name": "EMPNO",
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
           "nullable": true
         },
         "JOINEDAT": {
@@ -175,33 +110,8 @@
           "scalarType": "DATE",
           "nullable": true
         },
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "CITY": {
-          "name": "CITY",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
         "AGE": {
           "name": "AGE",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "EMPNO": {
-          "name": "EMPNO",
           "scalarType": "INTEGER",
           "nullable": true
         },
@@ -209,35 +119,10 @@
           "name": "GENDER",
           "scalarType": "VARCHAR",
           "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "WACKY_COLUMN_NAMES": {
-      "physicalSchema": "files",
-      "catalog": "",
-      "schema": "files",
-      "name": "WACKY_COLUMN_NAMES",
-      "columns": {
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
-          "nullable": true
         },
-        "naME": {
-          "name": "naME",
+        "NAME": {
+          "name": "NAME",
           "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
           "nullable": true
         },
         "DEPTNO": {
@@ -245,19 +130,164 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "joined at": {
-          "name": "joined at",
-          "scalarType": "DATE",
-          "nullable": true
-        },
         "CITY": {
           "name": "CITY",
           "scalarType": "VARCHAR",
           "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "files.yaml": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "files.yaml",
+      "columns": {
+        "b": {
+          "name": "b",
+          "scalarType": "VARCHAR",
+          "nullable": true
         },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
+        "object": {
+          "name": "object",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "f": {
+          "name": "f",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "e": {
+          "name": "e",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c": {
+          "name": "c",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "id": {
+          "name": "id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "g": {
+          "name": "g",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "a": {
+          "name": "a",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "d": {
+          "name": "d",
+          "scalarType": "LIST",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "files.SDEPTS": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "files.SDEPTS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "files.Connections_2": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "files.Connections_2",
+      "columns": {
+        "URL": {
+          "name": "URL",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Email Address": {
+          "name": "Email Address",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Position": {
+          "name": "Position",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Last Name": {
+          "name": "Last Name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Company": {
+          "name": "Company",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "First Name": {
+          "name": "First Name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Connected On": {
+          "name": "Connected On",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "files.2022CbpOceanEconomyTable__2022CbpIaOceanEconomy": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "files.2022CbpOceanEconomyTable__2022CbpIaOceanEconomy",
+      "columns": {
+        "2022 CBP Island Areas Ocean Economy Tabulation": {
+          "name": "2022 CBP Island Areas Ocean Economy Tabulation",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "files.WACKY_COLUMN_NAMES": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "files.WACKY_COLUMN_NAMES",
+      "columns": {
+        "naME": {
+          "name": "naME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
           "nullable": true
         },
         "2gender": {
@@ -265,24 +295,54 @@
           "scalarType": "VARCHAR",
           "nullable": true
         },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "joined at": {
+          "name": "joined at",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
         "AGE": {
           "name": "AGE",
           "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
           "nullable": true
         }
       },
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "DATES": {
-      "physicalSchema": "files",
+    "files.DATES": {
+      "physicalSchema": "default",
       "catalog": "",
-      "schema": "files",
-      "name": "DATES",
+      "schema": "default",
+      "name": "files.DATES",
       "columns": {
-        "JOINTIME": {
-          "name": "JOINTIME",
-          "scalarType": "VARCHAR",
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
           "nullable": true
         },
         "JOINTIMES": {
@@ -290,9 +350,9 @@
           "scalarType": "TIMESTAMP",
           "nullable": true
         },
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
+        "JOINTIME": {
+          "name": "JOINTIME",
+          "scalarType": "VARCHAR",
           "nullable": true
         },
         "JOINEDAT": {
@@ -304,30 +364,85 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "LONG_EMPS": {
-      "physicalSchema": "files",
+    "files.2022CbpOceanEconomyTable__Notes": {
+      "physicalSchema": "default",
       "catalog": "",
-      "schema": "files",
-      "name": "LONG_EMPS",
+      "schema": "default",
+      "name": "files.2022CbpOceanEconomyTable__Notes",
       "columns": {
-        "EMPID": {
-          "name": "EMPID",
+        "County Business Patterns (CBP) Ocean Economy Table: 2022": {
+          "name": "County Business Patterns (CBP) Ocean Economy Table: 2022",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "files.DEPTS": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "files.DEPTS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
           "scalarType": "INTEGER",
           "nullable": true
         },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "files.LONG_EMPS": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "files.LONG_EMPS",
+      "columns": {
         "CITY": {
           "name": "CITY",
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
           "nullable": true
         },
         "EMPNO": {
           "name": "EMPNO",
           "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "GENDER": {
+          "name": "GENDER",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
           "nullable": true
         },
         "MANAGER": {
@@ -338,46 +453,6 @@
         "AGE": {
           "name": "AGE",
           "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "JOINEDAT": {
-          "name": "JOINEDAT",
-          "scalarType": "DATE",
-          "nullable": true
-        },
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "GENDER": {
-          "name": "GENDER",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "SDEPTS": {
-      "physicalSchema": "files",
-      "catalog": "",
-      "schema": "files",
-      "name": "SDEPTS",
-      "columns": {
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
           "nullable": true
         }
       },

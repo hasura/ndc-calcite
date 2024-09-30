@@ -1,6 +1,7 @@
 {
   "version": "5",
   "$schema": "schema.json",
+  "model_file_path": "./model.yaml",
   "fixes": true,
-  "model_file": "./model"
+  "supportJsonObject": true
 }

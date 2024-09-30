@@ -77,9 +77,9 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
     };
     let state_inited = env::var("STATE_INITED").unwrap_or("false".to_string());
     if state_inited == "false" {
-        let folder_path = env::var("JAR_DEPENDENCY_FOLDER").unwrap_or("/calcite-rs-jni/target/dependency".into());
+        let folder_path = env::var("JAR_DEPENDENCY_FOLDER").unwrap_or("/calcite-rs-jni/jni/target/dependency".into());
         let mut jar_paths = get_jar_files(&folder_path);
-        let jar_name = env::var("CALCITE_JAR").unwrap_or("/calcite-rs-jni/target/calcite-rs-jni-1.0-SNAPSHOT.jar".into());
+        let jar_name = env::var("CALCITE_JAR").unwrap_or("/calcite-rs-jni/jni/target/calcite-rs-jni-1.0-SNAPSHOT.jar".into());
 
         if !jar_name.is_empty() {
             jar_paths.push(jar_name.clone());

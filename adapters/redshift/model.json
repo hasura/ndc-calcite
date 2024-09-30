@@ -4,6 +4,7 @@
   "schemas": [
     {
       "name": "default",
+      "cache": true,
       "type": "jdbc",
       "jdbcCatalog": "sales_db",
       "jdbcSchema": "public",

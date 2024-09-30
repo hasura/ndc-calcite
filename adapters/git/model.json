@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "defaultSchema": "git",
+  "schemas": [
+    {
+      "name": "git",
+      "type": "jdbc",
+      "jdbcDriver": "com.github.fzakaria.calcite.adapter.git.GitDriver",
+      "jdbcUrl": "jdbc:git:?directory=%2FUsers%2Fkennethstott%2FDocuments%2FGitHub%2Fcalcite-connector"
+    }
+  ]
+}
