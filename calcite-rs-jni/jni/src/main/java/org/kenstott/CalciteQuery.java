@@ -12,6 +12,8 @@ import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -127,12 +129,12 @@ public class CalciteQuery {
      * @param modelPath The path to the model file.
      * @return The created Calcite connection.
      */
-    public Connection createCalciteConnection(String modelPath) {
+    public Connection createCalciteConnection(String modelPath) throws IOException {
         CalciteQuery.setClassLoader();
         Span span = tracer.spanBuilder("createCalciteConnection").startSpan();
         span.setAttribute("modelPath", modelPath);
         Properties info = new Properties();
-        info.setProperty("model", modelPath);
+        info.setProperty("model", ConfigPreprocessor.preprocessConfig(modelPath));
         try {
             Class.forName("com.simba.googlebigquery.jdbc42.Driver");
             Class.forName("org.apache.calcite.jdbc.Driver");
