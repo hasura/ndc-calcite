@@ -227,7 +227,7 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
     // for each env var present in the map from the metadata file, replace the placeholder in the model file
     for (key, value) in &env_var_map {
         // include the identifiers with the env var to avoid replacing the wrong value
-        let env_var_identifier = format!("<$>{}<$>", key);
+        let env_var_identifier = format!("<$>{}", key);
         model_file_value = model_file_value.replace(&env_var_identifier, value);
     }
     // check if there is any placeholder left in the model file, which means
