@@ -7,7 +7,6 @@ use std::path::PathBuf;
 
 use std::collections::BTreeMap;
 use anyhow::Ok;
-use serde::{Deserialize, Serialize};
 use clap::Subcommand;
 use include_dir::{DirEntry, include_dir};
 use include_dir::Dir;
@@ -148,39 +147,19 @@ async fn initialize(with_metadata: bool, context: &Context<impl Environment>) ->
     Ok(())
 }
 
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Model {
-    pub version: String,
-    pub default_schema: String,
-    pub schemas: Vec<Schema>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Schema {
-    pub name: String,
-    pub r#type: String,
-    pub factory: String,
-    pub operand: BTreeMap<String, serde_json::Value>,
-}
-
 /// Update the configuration in the current directory by introspecting the database.
 ///
 /// If the directory is empty - it will initialize with the core files first.
 #[tracing::instrument(skip(context,calcite_ref_singleton))]
 async fn update(context: Context<impl Environment>, calcite_ref_singleton: &CalciteRefSingleton) -> anyhow::Result<()> {
-        // ---------------------------------------------------------------------------------------------
-    // ---------------------------------------------------------------------------------------------
-
+    // Read the `connector-metadata.yaml` file and create a map of supported environment variables
     let metadata_yaml_file = context.context_path.join(".hasura-connector/connector-metadata.yaml");
     let metadata = if metadata_yaml_file.exists() {
         let metadata_yaml = fs::read_to_string(metadata_yaml_file).await?;
-        Some(serde_yaml::from_str::<metadata::ConnectorMetadataDefinition>(&metadata_yaml)?)
+        Ok(Some(serde_yaml::from_str::<metadata::ConnectorMetadataDefinition>(&metadata_yaml)?))
     } else {
-        None
-    };
+        Err(anyhow::Error::msg("Metadata file does not exist"))
+    }?;
     let supported_env_vars = metadata
         .as_ref()
         .map(|m| m.supported_environment_variables.clone())
@@ -189,6 +168,7 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
     let mut env_var_map = BTreeMap::new();
     for env_var in supported_env_vars.iter() {
         match (env_var.required, &env_var.default_value) {
+            // if required and no default value, throw an error
             (true, None) => {
                 let variable_value = context.environment.read(&Variable::new(env_var.name.clone())).map_err(|err| {
                     match err {
@@ -203,6 +183,9 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
                 env_var_map.insert(env_var.name.clone(), variable_value);
                 dbg!("case 1", &env_var_map);
             }
+            // if required and default value:
+            //   1. return the default value if the env var is not present
+            //   2. throw an error if there is a problem reading the env var
             (true, Some(default)) => {
                 let variable_value = context.environment.read(&Variable::new(env_var.name.clone()));
                 let variable_value_result = {
@@ -212,169 +195,73 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
                         Err(anyhow::Error::msg(format!("Error reading the env var: {}", env_var.name.clone())))
                     }
                 }?;
-                // .map_err(|err| {
-                //     match err {
-                //         ndc_postgres_configuration::environment::Error::NonUnicodeValue(os_string) => {
-                //             Err(anyhow::Error::msg(format!("Non-Unicode value: {:?}", os_string)))
-                //         }
-                //         ndc_postgres_configuration::environment::Error::VariableNotPresent(variable) => {
-                //             // TODO(PY): figure out how to throw an error in one case and return a default value in another
-                //             Ok(default.to_string())
-                //         }
-                //     }
-                // })?;
                 env_var_map.insert(env_var.name.clone(), variable_value_result);
                 dbg!("case 2", &env_var_map);
             }
+            // if not required and no default is present, return an empty value
+            // if the env var is not present.
+            // Note: if the type of the env var is not string, and the
+            // model file has a non-string placeholder (e.g. <$>FOO), it'll
+            // return just a space which will lead to a JSON parsing error.
+            // So, default values for non-string env vars are required.
             (false, None) => {
                 let variable_value = context.environment.read(&Variable::new(env_var.name.clone())).unwrap_or_default();
                 env_var_map.insert(env_var.name.clone(), variable_value);
                 dbg!("case 3", &env_var_map);
             }
+            // if not required and default value is present, return the default value
             (false, Some(default)) => {
                 let variable_value = context.environment.read(&Variable::new(env_var.name.clone())).unwrap_or(default.to_string());
                 env_var_map.insert(env_var.name.clone(), variable_value);
                 dbg!("case 4", &env_var_map);
             }
         }
-        // let env_var_value = context.environment.read(&Variable::new(env_var.name.clone()));
-        // let bar = {
-        //     if env_var.required {
-        //         match env_var_value {
-        //             Ok(value) => Ok(value),
-        //             Err(err) => {
-        //                 match err {
-        //                     ndc_postgres_configuration::environment::Error::NonUnicodeValue(os_string) => {
-        //                         return anyhow::Error(format!("Non-Unicode value: {:?}", os_string));
-        //                     }
-        //                     ndc_postgres_configuration::environment::Error::VariableNotPresent(variable) => {
-        //                         anyhow::Error("Variable not present: {:?}", variable);
-        //                     }
-        //                 }
-        //             }
-        //         }
-        //     } else {
-        //         env_var_value.unwrap_or_default()
-        //     }
-        };
-        // let foo = env_var_value.err();
-        // if let Some(err) = foo {
-        //     match err {
-        //         ndc_postgres_configuration::environment::Error::NonUnicodeValue(os_string) => {
-        //             anyhow::Error("Non-Unicode value: {:?}", os_string);
-        //         }
-        //         ndc_postgres_configuration::environment::Error::VariableNotPresent(variable) => {
-        //             anyhow::Error("Variable not present: {:?}", variable);
-        //         }
-        //     }
-        // }
-        // env_var_map.insert(env_var.name.clone(), env_var_value);
-    // }
+    };
 
-    // ------------------------------------------
+    // Replace the placeholders in the model file with the environment variables
 
     let model_file = context.context_path.join(".hasura-connector/model.json");
-    let mut model = if model_file.exists() {
-        let model_json = fs::read_to_string(model_file.clone()).await?;
-        // Some(serde_json::from_str::<serde_json::Value>(&model_json)?)
-        Ok(model_json)
+    let mut model_file_value = if model_file.exists() {
+        let model_json_stringified = fs::read_to_string(model_file.clone()).await?;
+        Ok(model_json_stringified)
     } else {
-        // "".to_string()
         Err(anyhow::Error::msg("Model file does not exist"))
     }?;
 
-    dbg!("model", &model);
+    dbg!("model", &model_file_value);
 
+    // for each env var present in the map from the metadata file, replace the placeholder in the model file
     for (key, value) in &env_var_map {
-        // dbg!(&key, &value);
-        let env_var_identifier = format!("<$>{}", key);
+        // include the identifiers with the env var to avoid replacing the wrong value
+        let env_var_identifier = format!("<$>{}<$>", key);
         dbg!(&env_var_identifier);
         // dbg!("model before", &model);
-        model = model.replace(&env_var_identifier, value);
+        model_file_value = model_file_value.replace(&env_var_identifier, value);
 
         // dbg!("model replaced", &model);
     }
-    dbg!("model after", &model);
-    let final_model_string:Result<String, anyhow::Error> = if model.contains("<$>") {
+    dbg!("model after", &model_file_value);
+    // check if there is any placeholder left in the model file, which means
+    // there is an extra env var which is not allowed i the metadata or there is
+    // a mismatch between the two files.
+    let final_model_string = if model_file_value.contains("<$>") {
         Err(anyhow::Error::msg("Some environment variables are not replaced"))
     } else {
-        Ok(model)
-    };
-    let blah = final_model_string?;
-    dbg!(&blah);
-    let new_model: serde_json::Value = serde_json::from_str(&blah).map_err(|err| 
+        Ok(model_file_value)
+    }?;
+    // let blah = final_model_string?;
+    // dbg!(&blah);
+    // convert the final model value to JSON value
+    let updated_model: serde_json::Value = serde_json::from_str(&final_model_string).map_err(|err| 
         anyhow::Error::msg(format!("Not a valid JSON (the default value of a non string env variable might be missing): {}", err))
     )?;
-    dbg!("new_model", &new_model);
+    dbg!("updated_model", &updated_model);
     fs::write(
         model_file,
-        serde_json::to_string_pretty(&new_model).unwrap(),
+        serde_json::to_string_pretty(&updated_model).unwrap(),
     ).await?;
-    // let foo = "{\"FOO\": BAR}";
-    // let bar = "FOO".to_string();
-    // let baz = foo.replace(&bar, "BAZ");
-    // dbg!(&baz);
 
-    //------------------------------------------------------------------------------
-
-    // let model_data: Model = model
-    //     .as_ref()
-    //     .map(|m| serde_json::from_value(m.clone()))
-    //     .unwrap()?;
-
-    // let updated_schemas = model_data
-    //     .schemas
-    //     .iter()
-    //     .map(|schema| {
-    //         let mut map = schema.operand.clone();
-    //         // TODO(PY): get the env vars and replace with value
-    //         for (key, value) in &schema.operand {
-    //             if let serde_json::Value::String(s) = value {
-    //                 if s.starts_with("$") {
-    //                     let env_var_name = &s[1..];
-    //                     dbg!(&env_var_name);
-    //                     // TODO(PY): figure out how to convert the env var value to number etc
-    //                     // let env_var_value = context.environment.read(&Variable::new(env_var_name.to_string()));
-    //                     // let env_var_value = env_var_value.unwrap_or_default();
-    //                     let empty_string = "".to_string();
-    //                     let env_var_value = env_var_map.get(env_var_name).unwrap_or(&empty_string);
-    //                     let env_var_json_value = serde_json::to_value(env_var_value.clone()).unwrap_or_default();
-    //                     map.insert(key.clone(), env_var_json_value);
-    //                     // if let Some(env_var) = supported_env_vars.iter().find(|v| v.name == env_var_name)
-    //                     // {
-    //                     //     map.insert(key.clone(), serde_json::Value::String(env_var.default_value.clone().unwrap_or_default()));
-    //                     // }
-    //                 }
-    //             }
-    //         }
-    //         let single_schema = Schema {
-    //             name: schema.name.clone(),
-    //             r#type: schema.r#type.clone(),
-    //             factory: schema.factory.clone(),
-    //             operand: map,
-    //         };
-    //         single_schema
-    //     })
-    //     .collect::<Vec<_>>();
-
-    // dbg!(&updated_schemas);
-    // let updated_model = Model {
-    //     version: model_data.version.clone(),
-    //     default_schema: model_data.default_schema.clone(),
-    //     schemas: updated_schemas,
-    // };
-    // dbg!(&updated_model);
-
-    // fs::write(
-    //     model_file,
-    //     serde_json::to_string_pretty(&serde_json::to_value(updated_model)?).unwrap(),
-    // ).await?;
-
-
-    // ---------------------------------------------------------------------------------------------
-    // ---------------------------------------------------------------------------------------------
-
-    dbg!("update");
+    // Introspect the database
     let docker_config_path = &PathBuf::from(DOCKER_CONNECTOR_RW);
     let config_path = if is_running_in_container() {
         docker_config_path
