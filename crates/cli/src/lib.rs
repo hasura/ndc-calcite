@@ -181,7 +181,6 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
                     }
                 })?;
                 env_var_map.insert(env_var.name.clone(), variable_value);
-                dbg!("case 1", &env_var_map);
             }
             // if required and default value:
             //   1. return the default value if the env var is not present
@@ -196,7 +195,6 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
                     }
                 }?;
                 env_var_map.insert(env_var.name.clone(), variable_value_result);
-                dbg!("case 2", &env_var_map);
             }
             // if not required and no default is present, return an empty value
             // if the env var is not present.
@@ -207,13 +205,11 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
             (false, None) => {
                 let variable_value = context.environment.read(&Variable::new(env_var.name.clone())).unwrap_or_default();
                 env_var_map.insert(env_var.name.clone(), variable_value);
-                dbg!("case 3", &env_var_map);
             }
             // if not required and default value is present, return the default value
             (false, Some(default)) => {
                 let variable_value = context.environment.read(&Variable::new(env_var.name.clone())).unwrap_or(default.to_string());
                 env_var_map.insert(env_var.name.clone(), variable_value);
-                dbg!("case 4", &env_var_map);
             }
         }
     };
@@ -228,19 +224,12 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
         Err(anyhow::Error::msg("Model file does not exist"))
     }?;
 
-    dbg!("model", &model_file_value);
-
     // for each env var present in the map from the metadata file, replace the placeholder in the model file
     for (key, value) in &env_var_map {
         // include the identifiers with the env var to avoid replacing the wrong value
         let env_var_identifier = format!("<$>{}<$>", key);
-        dbg!(&env_var_identifier);
-        // dbg!("model before", &model);
         model_file_value = model_file_value.replace(&env_var_identifier, value);
-
-        // dbg!("model replaced", &model);
     }
-    dbg!("model after", &model_file_value);
     // check if there is any placeholder left in the model file, which means
     // there is an extra env var which is not allowed i the metadata or there is
     // a mismatch between the two files.
@@ -249,17 +238,17 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
     } else {
         Ok(model_file_value)
     }?;
-    // let blah = final_model_string?;
-    // dbg!(&blah);
     // convert the final model value to JSON value
     let updated_model: serde_json::Value = serde_json::from_str(&final_model_string).map_err(|err| 
         anyhow::Error::msg(format!("Not a valid JSON (the default value of a non string env variable might be missing): {}", err))
     )?;
-    dbg!("updated_model", &updated_model);
+    
     fs::write(
         model_file,
         serde_json::to_string_pretty(&updated_model).unwrap(),
     ).await?;
+
+
 
     // Introspect the database
     let docker_config_path = &PathBuf::from(DOCKER_CONNECTOR_RW);
