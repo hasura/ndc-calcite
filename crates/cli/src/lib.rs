@@ -188,13 +188,16 @@ async fn update(context: Context<impl Environment>, calcite_ref_singleton: &Calc
             //   2. throw an error if there is a problem reading the env var
             (true, Some(default)) => {
                 let variable_value = context.environment.read(&Variable::new(env_var.name.clone()));
-                let variable_value_result = {
-                    if variable_value == Err(ndc_calcite_schema::environment::Error::VariableNotPresent(Variable::new(env_var.name.clone()))) {
-                        Ok(default.to_string())
-                    } else {
-                        Err(anyhow::Error::msg(format!("Error reading the env var: {}", env_var.name.clone())))
+                let variable_value_result = match variable_value {
+                    Result::Ok(value) => Result::Ok(value),
+                    Err(err) => {
+                        if err == (ndc_calcite_schema::environment::Error::VariableNotPresent(Variable::new(env_var.name.clone()))) {
+                            Ok(default.to_string())
+                        } else {
+                            Err(anyhow::Error::msg(format!("Error reading the env var: {}", env_var.name.clone())))
                     }
-                }?;
+                }
+            }?;
                 env_var_map.insert(env_var.name.clone(), variable_value_result);
             }
             // if not required and no default is present, return an empty value
