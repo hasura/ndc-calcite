@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - dventimihasura/add-gh-actions
     tags:
       - 'v*'
 jobs:
