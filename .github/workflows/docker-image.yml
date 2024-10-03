@@ -19,20 +19,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Gradle build
-        uses: gradle/gradle-build-action@v2
         working-directory: calcite-rs-jni
         run: ./gradlew assemble
       - name: Maven build
-        uses: maven/maven-build-action@v3
         working-directory: calcite-rs-jni
         run: mvn clean install dependency:copy-dependencies
       - name: Build the Connector and CLI Plugin
-        uses: cargo-actions/cargo-build@v1
         run: cargo build --bin ndc-calcite --bin ndc-calcite-cli
       - name: Build the docker image
-        uses: docker/build-push-action@v3
         run: docker build -t ghcr.io/hasura/ndc-calcite:latest .
-
 
   # build:
 
