@@ -1,26 +1,52 @@
 name: Docker Image CI
-
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+    branches:
+      - main
+    tags:
+      - 'v*'
 jobs:
-
   build:
-
+    name: Build Connector
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Gradle build
+        uses: gradle/gradle-build-action@v2
+        working-directory: calcite-rs-jni
+        run: ./gradlew assemble
+      - name: Maven build
+        uses: maven/maven-build-action@v3
+        working-directory: calcite-rs-jni
+        run: mvn clean install dependency:copy-dependencies
+      - name: Build the Connector and CLI Plugin
+        uses: cargo-actions/cargo-build@v1
+        run: cargo build --bin ndc-calcite --bin ndc-calcite-cli
+      - name: Build the docker image
+        uses: docker/build-push-action@v3
+        run: docker build -t ghcr.io/hasura/ndc-calcite:latest .
 
-    steps: 
-    - uses: actions/checkout@v3
-    - uses: docker/setup-qemu-action@v3
-    - uses: docker/setup-buildx-action@v3
-    - uses: docker/build-push-action@v5
-      with:
-        context: .
-        tags: ghcr.io/hasura/ndc-calcite:latest
-        platforms: linux/amd64,linux/arm64
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+
+  # build:
+
+  #   runs-on: ubuntu-latest
+
+  #   steps: 
+  #   - uses: actions/checkout@v3
+  #   - uses: docker/setup-qemu-action@v3
+  #   - uses: docker/setup-buildx-action@v3
+  #   - uses: docker/build-push-action@v5
+  #     with:
+  #       context: .
+  #       tags: ghcr.io/hasura/ndc-calcite:latest
+  #       platforms: linux/amd64,linux/arm64
+  #       cache-from: type=gha
+  #       cache-to: type=gha,mode=max
     
