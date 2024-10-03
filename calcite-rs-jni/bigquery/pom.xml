@@ -309,13 +309,13 @@
             <scope>system</scope>
             <systemPath>${project.basedir}/jars/gson-2.10.1.jar</systemPath>
         </dependency>
-        <dependency>
-            <groupId>guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>32.1.3</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/jars/guava-32.1.3-jre.jar</systemPath>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>guava</groupId>-->
+<!--            <artifactId>guava</artifactId>-->
+<!--            <version>27.0-jre</version>-->
+<!--            <scope>system</scope>-->
+<!--            <systemPath>${project.basedir}/jars/guava-32.1.3-jre.jar</systemPath>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>httpclient</groupId>
             <artifactId>httpclient</artifactId>
@@ -464,11 +464,11 @@
                 <artifactId>org.eclipse.jgit</artifactId>
                 <version>7.0.0.202409031743-r</version>
             </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>33.3.0-jre</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>com.google.guava</groupId>-->
+<!--                <artifactId>guava</artifactId>-->
+<!--                <version>33.3.0-jre</version>-->
+<!--            </dependency>-->
             <dependency>
                 <groupId>com.github.seancfoley</groupId>
                 <artifactId>ipaddress</artifactId>

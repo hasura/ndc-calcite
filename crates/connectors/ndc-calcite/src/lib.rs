@@ -10,6 +10,7 @@
 //!
 //! The full list is here:
 //! - Arrow (tested)
+//! - Parquet (testes)
 //! - Cassandra (tested)
 //! - CSV (tested, file://, http(s):// s3://, w/in-memory caching)
 //! - JSON (tested, file://, http(s):// s3://, w/in-memory caching)
@@ -59,7 +60,7 @@
 //! - SQLStream (growing, interesting)
 //! - Jethro (declining, no interest)
 //! - Firebird (interesting)
-//! - Big Query (tested)
+//! - Big Query (tested, dup)
 //! - Clickhouse (dup)
 //!
 //!

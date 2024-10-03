@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "defaultSchema": "ARROW",
+  "defaultSchema": "default",
   "schemas": [
     {
-      "name": "ARROW",
+      "name": "default",
       "type": "custom",
       "factory": "org.apache.calcite.adapter.arrow.ArrowSchemaFactory",
       "operand": {
-        "directory": "resources/arrow"
+        "directory": "/Users/kennethstott/Documents/GitHub/calcite-connector/adapters/arrow/resources/arrow"
       }
     }
   ]
