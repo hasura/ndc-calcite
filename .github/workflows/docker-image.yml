@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          git clone --recurse-submodules git@github.com:hasura/ndc-calcite.git
+          cd ndc-calcite
+          git checkout main
           cd calcite-rs-jni
           chmod +x build.sh
           ./build.sh
