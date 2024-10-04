@@ -36,8 +36,8 @@ jobs:
       - name: Build the Connector and CLI Plugin
         run: |
           cargo build --bin ndc-calcite --bin ndc-calcite-cli
-      # - name: Build the docker image
-      #   uses: docker/build-push-action@v4
+      - name: Build the docker image
+        uses: docker/build-push-action@v4
 
           
 
