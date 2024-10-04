@@ -11,7 +11,10 @@ jobs:
     name: Build Connector
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build
+        run: |
           git clone --recurse-submodules git@github.com:hasura/ndc-calcite.git
           cd ndc-calcite
           git checkout main
