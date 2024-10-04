@@ -1,26 +1,43 @@
 name: Docker Image CI
-
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
+    branches:
+      - main
+      - dventimihasura/add-gh-actions
+    tags:
+      - 'v*'
 jobs:
-
   build:
-
+    name: Build Connector
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Sources
+        uses: actions/checkout@v3
+        with:
+          submodules: 'recursive'
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: 'temurin'
+          architecture: x64
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+      - name: Build with Gradle
+        working-directory: calcite-rs-jni/calcite
+        run: |
+          ./gradlew clean
+          ./gradlew assemble
+      - name: Copy Maven dependencies
+        working-directory: calcite-rs-jni
+        run: |
+          mvn clean install
+          mvn dependency:copy-dependencies
+      - name: Build the Connector and CLI Plugin
+        run: |
+          cargo build --bin ndc-calcite --bin ndc-calcite-cli
+      - name: Build the docker image
+        uses: docker/build-push-action@v4
 
-    steps: 
-    - uses: actions/checkout@v3
-    - uses: docker/setup-qemu-action@v3
-    - uses: docker/setup-buildx-action@v3
-    - uses: docker/build-push-action@v5
-      with:
-        context: .
-        tags: ghcr.io/hasura/ndc-calcite:latest
-        platforms: linux/amd64,linux/arm64
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-    
+          
+
