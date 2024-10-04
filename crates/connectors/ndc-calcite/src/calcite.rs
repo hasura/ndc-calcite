@@ -13,6 +13,7 @@ use ndc_models as models;
 use ndc_models::{FieldName, RowFieldValue};
 use ndc_sdk::connector::QueryError;
 use opentelemetry::trace::{TraceContextExt};
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
@@ -22,6 +23,10 @@ use ndc_calcite_schema::version5::create_jvm_connection;
 use ndc_calcite_schema::version5::ParsedConfiguration;
 
 pub type Row = IndexMap<FieldName, RowFieldValue>;
+
+fn is_json_string<T: DeserializeOwned>(s: &str) -> bool {
+    serde_json::from_str::<T>(s).is_ok()
+}
 
 /// Creates a Calcite query engine.
 ///
@@ -156,19 +161,17 @@ pub fn connector_query(
     match result.unwrap() {
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
-            let json_rows: Result<Vec<String>, _> = serde_json::from_str(&json_string);
-            let json_rows = match json_rows {
-                Ok(rows) => rows,
-                Err(_) => {
-                    event!(Level::ERROR, error = format!("Error unwrapping this query result: {:?}", json_string));
-                    return Err(QueryError::Other(Box::new(CalciteError { message: String::from("Invalid response from Calcite.") }), serde_json::from_str(&json_string).unwrap_or_default()));
+            let rows: Vec<Row> = match serde_json::from_str::<Vec<String>>(&json_string) {
+                Ok(json_rows) => {
+                    parse_to_row(json_rows)
+                },
+                Err(_) => match serde_json::from_str::<Vec<Row>>(&json_string) {
+                    Ok(vec) => vec,
+                    Err(error) => {
+                        let err = CalciteError { message: format!("Failed to deserialize JSON: {}", error) };
+                        return Err(QueryError::Other(Box::new(err), Value::Null));
+                    }
                 }
-            };
-            let rows = parse_to_row(json_rows);
-            let rows = if config.fixes.unwrap_or(false) && !*explain {
-                fix_rows(rows, query_metadata)
-            } else {
-                rows
             };
             event!(Level::DEBUG, result = format!("Completed Query. Retrieved {} rows. Result: {:?}", rows.len().to_string(), serde_json::to_string_pretty(&rows)));
             Ok(rows)

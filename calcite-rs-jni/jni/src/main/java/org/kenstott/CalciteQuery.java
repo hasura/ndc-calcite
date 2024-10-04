@@ -12,7 +12,13 @@ import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joda.time.DateTime;
 
+import java.io.File;
+import java.math.BigDecimal;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -98,7 +104,7 @@ public class CalciteQuery {
     private static Logger logger = LogManager.getLogger(CalciteQuery.class);
 
     static {
-        System.setProperty("log4j.configurationFile", "classpath:log4j2-config.xml");
+//        System.setProperty("log4j.configurationFile", "classpath:log4j2-config.xml");
         logger = LogManager.getLogger(CalciteQuery.class);
     }
 
@@ -136,12 +142,13 @@ public class CalciteQuery {
         Properties info = new Properties();
         info.setProperty("model", ConfigPreprocessor.preprocessConfig(modelPath));
         try {
-            Class.forName("com.simba.googlebigquery.jdbc42.Driver");
+//            Class.forName("com.simba.googlebigquery.jdbc42.Driver");
             Class.forName("org.apache.calcite.jdbc.Driver");
+//            Class.forName("org.apache.parquet.hadoop.api.ReadSupport");
             connection = DriverManager.getConnection("jdbc:calcite:", info);
             rootSchema = connection.unwrap(CalciteConnection.class).getRootSchema().unwrap(CalciteSchema.class);
             span.setStatus(StatusCode.OK);
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (Exception e) {
             span.setAttribute("error", e.toString());
             span.setStatus(StatusCode.ERROR);
             throw new RuntimeException(e);
@@ -449,80 +456,52 @@ public class CalciteQuery {
                 span.setStatus(StatusCode.OK);
                 return result;
             } else {
+
                 span.setAttribute("Using JSON_OBJECT() method", false);
-                JsonArray jsonArray = new JsonArray();
-                ResultSetMetaData metaData = resultSet.getMetaData();
-                int columnCount = metaData.getColumnCount();
-                while (resultSet.next()) {
-                    JsonObject jsonObject = new JsonObject();
-                    for (int i = 1; i <= columnCount; i++) {
-                        String label = metaData.getColumnLabel(i);
-                        int columnType = metaData.getColumnType(i);
-                        switch (columnType) {
-                            case Types.CHAR:
-                            case Types.LONGNVARCHAR:
-                            case Types.VARCHAR:
-                            case Types.LONGVARBINARY:
-                            case Types.VARBINARY:
-                            case Types.DECIMAL:
-                            case Types.BINARY:
-                                jsonObject.addProperty(label, resultSet.getString(i));
-                                break;
-                            case Types.BIGINT:
-                            case Types.INTEGER:
-                            case Types.SMALLINT:
-                            case Types.TINYINT:
-                            case Types.BIT:
-                                jsonObject.addProperty(label, resultSet.getInt(i));
-                                break;
-                            case Types.BOOLEAN:
-                                jsonObject.addProperty(label, resultSet.getBoolean(i));
-                                break;
-                            case Types.REAL:
-                            case Types.FLOAT:
-                                jsonObject.addProperty(label, resultSet.getFloat(i));
-                                break;
-                            case Types.NUMERIC:
-                            case Types.DOUBLE:
-                                jsonObject.addProperty(label, resultSet.getDouble(i));
-                                break;
-                            case Types.DATE:
-                            case Types.TIMESTAMP:
-                                jsonObject.addProperty(label, String.valueOf(resultSet.getDate(i)));
-                                break;
-                            case Types.ARRAY: {
-                                Array array = resultSet.getArray(i);
-                                Object[] objectArray = (Object[]) array.getArray();
-                                JsonArray jArray = new JsonArray();
-                                Arrays.stream(objectArray).forEach(value -> jArray.add(String.valueOf(value)));
-                                jsonObject.add(label, jArray);
+                // Java's inbuilt DateTimeFormatter doesn't have any predefined format for RFC 3339
+                DateTimeFormatter rfcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH).withZone(ZoneId.of("UTC"));
+                DateTimeFormatter rfcDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH).withZone(ZoneId.of("UTC"));
+
+                List<Map<String, Object>> rows = new ArrayList<>();
+
+                try {
+                    ResultSetMetaData metaData = resultSet.getMetaData();
+                    int columnCount = metaData.getColumnCount();
+
+                    while (resultSet.next()) {
+                        Map<String, Object> columns = new LinkedHashMap<>();
+                        for (int i = 1; i <= columnCount; i++) {
+                            Object value = resultSet.getObject(i);
+
+                            // handling Dates and Timestamps
+                            if (value instanceof java.sql.Date sqlDate) {
+                                java.util.Date utilDate = new java.util.Date(sqlDate.getTime());
+                                String rfcDateString = rfcDateFormat.format(utilDate.toInstant());
+                                columns.put(metaData.getColumnLabel(i), rfcDateString);
                             }
-                                break;
-                            default:
-                                Object columnValue = resultSet.getObject(i);
-                                boolean isArrayList = columnValue instanceof ArrayList;
-                                boolean isHashMap = columnValue instanceof HashMap;
-                                if (columnValue == null) {
-                                    jsonObject.addProperty(label, (String) null);
-                                } else if (isArrayList) {
-                                    JsonArray nestedArray = gson.toJsonTree(columnValue).getAsJsonArray();
-                                    jsonObject.add(label, nestedArray);
-                                } else if (isHashMap) {
-                                    JsonObject nestedJsonObject = JsonParser.parseString(gson.toJson(columnValue)).getAsJsonObject();
-                                    jsonObject.add(label, nestedJsonObject);
-                                } else {
-                                    jsonObject.addProperty(label, columnValue.toString());
-                                }
-                                break;
+                            else if (value instanceof java.sql.Timestamp sqlTimestamp) {
+                                // convert to java.util.Date first
+                                java.util.Date utilDate = new java.util.Date(sqlTimestamp.getTime());
+                                String rfcDateString = rfcFormat.format(utilDate.toInstant());
+                                columns.put(metaData.getColumnLabel(i), rfcDateString);
+                            }
+                            // if it is not date - put the value directly
+                            else {
+                                columns.put(metaData.getColumnLabel(i), resultSet.getObject(i));
+                            }
                         }
+                        rows.add(columns);
                     }
-                    jsonArray.add(jsonObject.toString());
+                } catch(Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    resultSet.close();
                 }
-                resultSet.close();
+
                 statement.close();
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                String result = gson.toJson(jsonArray);
-                span.setAttribute("Rows returned", jsonArray.size());
+                String result = gson.toJson(rows);
+                span.setAttribute("Rows returned", rows.size());
                 span.setStatus(StatusCode.OK);
                 return result;
             }

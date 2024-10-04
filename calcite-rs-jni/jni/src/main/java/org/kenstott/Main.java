@@ -20,7 +20,7 @@ public class Main {
 //        Class.forName("com.simba.googlebigquery.jdbc42.Driver");
 //        Connection conn = DriverManager.getConnection(jdbcUrl);
 
-        String modelPath = "../../adapters/bigquery/model.json";
+        String modelPath = "../../adapters/databricks/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -31,7 +31,10 @@ public class Main {
             String x = query.getModels();
             System.out.println(x);
             String q1 = """
-                    SELECT * from "sales" LIMIT 10
+                    SELECT * from "lineitem"
+               
+                    OFFSET 2 ROWS
+                    FETCH NEXT 5 ROWS ONLY
                     """;
             String z1 = query.queryModels(q1);
             System.out.println(z1);
