@@ -17,20 +17,20 @@ jobs:
           submodules: 'recursive'
       # - name: Setup Gradle
       #   uses: gradle/gradle-build-action@v2
-      - name: Build with Gradle
-        working-directory: calcite-rs-jni/calcite
-        run: |
-          ./gradlew clean
-          ./gradlew assemble
-      - name: Copy Maven dependencies
-        run: |
-          cd calcite-rs-jni
-          mvn clean install
-          mvn dependency:copy-dependencies
-      # - name: Build the Java project
+      # - name: Build with Gradle
+      #   working-directory: calcite-rs-jni/calcite
+      #   run: |
+      #     ./gradlew clean
+      #     ./gradlew assemble
+      # - name: Copy Maven dependencies
       #   run: |
       #     cd calcite-rs-jni
-      #     ./build.sh
+      #     mvn clean install
+      #     mvn dependency:copy-dependencies
+      - name: Build the Java project
+        run: |
+          cd calcite-rs-jni
+          ./build.sh
       # - name: Build the Connector and CLI Plugin
       #   run: |
       #     cargo build --bin ndc-calcite --bin ndc-calcite-cli
