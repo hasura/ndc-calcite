@@ -32,8 +32,8 @@ jobs:
           cd calcite-rs-jni
           ./build.sh
       - name: Copy Maven dependencies
+        working-directory: calcite-rs-jni
         run: |
-          cd calcite-rs-jni
           mvn clean install
           mvn dependency:copy-dependencies
       # - name: Build the Connector and CLI Plugin
