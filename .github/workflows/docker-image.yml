@@ -24,14 +24,10 @@ jobs:
       # - name: Setup Gradle
       #   uses: gradle/gradle-build-action@v2
       # - name: Build with Gradle
-      #   working-directory: calcite-rs-jni/calcite
+      # - name: Build the Java project
       #   run: |
-      #     ./gradlew clean
-      #     ./gradlew assemble
-      - name: Build the Java project
-        run: |
-          cd calcite-rs-jni
-          ./build.sh
+      #     cd calcite-rs-jni
+      #     ./build.sh
       - name: Build with Gradle
         working-directory: calcite-rs-jni/calcite
         run: |
