@@ -23,8 +23,7 @@ jobs:
         run: |
           cargo build --bin ndc-calcite --bin ndc-calcite-cli
       - name: Build the docker image
-        run: |
-          ./build.sh
+        uses: docker/build-push-action@v4
 
           
 
