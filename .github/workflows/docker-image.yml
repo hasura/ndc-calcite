@@ -19,8 +19,8 @@ jobs:
         uses: gradle/gradle-build-action@v2
         working-directory: calcite-rs-jni/calcite
       - name: Copy Maven dependencies
-        working-directory: calcite-rs-jni
         run: |
+          cd calcite-rs-jni
           mvn clean install
           mvn dependency:copy-dependencies
       # - name: Build the Java project
