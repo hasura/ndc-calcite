@@ -20,7 +20,7 @@ jobs:
       - name: Build with Gradle
         working-directory: calcite-rs-jni/calcite
         run: |
-          ./gradlew build
+          ./gradlew assemble
       - name: Copy Maven dependencies
         run: |
           cd calcite-rs-jni
