@@ -28,15 +28,15 @@ jobs:
       #   run: |
       #     ./gradlew clean
       #     ./gradlew assemble
-      # - name: Copy Maven dependencies
-      #   run: |
-      #     cd calcite-rs-jni
-      #     mvn clean install
-      #     mvn dependency:copy-dependencies
       - name: Build the Java project
         run: |
           cd calcite-rs-jni
           ./build.sh
+      - name: Build with Gradle
+        working-directory: calcite-rs-jni/calcite
+        run: |
+          ./gradlew clean
+          ./gradlew assemble
       - name: Copy Maven dependencies
         working-directory: calcite-rs-jni
         run: |
