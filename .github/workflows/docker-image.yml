@@ -15,9 +15,6 @@ jobs:
         uses: actions/checkout@v3
       - name: Build
         run: |
-          git clone --recurse-submodules git@github.com:hasura/ndc-calcite.git
-          cd ndc-calcite
-          git checkout main
           cd calcite-rs-jni
           chmod +x build.sh
           ./build.sh
