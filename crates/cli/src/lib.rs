@@ -152,7 +152,7 @@ async fn initialize(
                 path: "./".to_string(),
                 target: Some(DOCKER_CONNECTOR_RW.to_string()),
                 action: metadata::DockerComposeWatchAction::SyncAndRestart,
-                ignore: vec![],
+                ignore: vec!["true".to_string()],
             }],
         };
 
@@ -178,7 +178,7 @@ async fn update(
     };
 
     // Read the `connector-metadata.yaml` file and create a map of supported environment variables
-    let metadata_yaml_file = docker_config_path.join(".hasura-connector/connector-metadata.yaml");
+    let metadata_yaml_file = config_path.join(".hasura-connector/connector-metadata.yaml");
     let metadata = if metadata_yaml_file.exists() {
         let metadata_yaml = fs::read_to_string(metadata_yaml_file).await?;
         Ok(Some(serde_yaml::from_str::<
