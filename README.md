@@ -269,22 +269,25 @@ ddn run docker-start
 
 # Data File Formats
 
-| **Fact**                | **Arrow**           | **CSV**                  | **JSON**                 | **XLSX**           |
-|-------------------------|---------------------|--------------------------|--------------------------|--------------------|
-| **Adapter Status**      | Tested              | Tested                   | Tested                   | Tested             |
-| **Current Status**      | Growing             | Stable                   | Stable                   | Stable             |
-| **Market Position**     | Niche               | Mainstream               | Mainstream               | Mainstream         |
-| **Primary Use Case**    | In-Memory Analytics | Data Exchange            | Data Exchange            | Data Exchange      |
-| **Notable Features**    | High Performance    | Simple, Widely Supported | Flexible, Human-Readable | Spreadsheet Format |
-| **Company**             | Apache              | N/A                      | N/A                      | Microsoft          |
-| **Initial Release**     | 2016                | 1970s                    | 2000s                    | 2007               |
-| **Latest Major Update** | 2023                | N/A                      | N/A                      | 2023               |
-| **Community Support**   | High                | High                     | High                     | High               |
-| **Commercial Support**  | High                | High                     | High                     | High               |
+| **Format**  | **Adapter Status** | **Notes**                           | **Current Status** | **Market Position** | **Primary Use Case** | **Notable Features**      | **Company** | **Initial Release** | **Latest Major Update** | **Community Support** | **Commercial Support** |
+|-------------|--------------------|-------------------------------------|--------------------|---------------------|----------------------|---------------------------|-------------|---------------------|-------------------------|-----------------------|------------------------|
+| **Arrow**   | Tested             | file mount                          | Growing            | Niche               | In-Memory Analytics  | High Performance          | Apache      | 2016                | 2023                    | High                  | High                   |
+| **CSV**     | Tested             | s3, http, file mount, redis caching | Stable             | Mainstream          | Data Exchange        | Simple, Widely Supported  | N/A         | 1970s               | N/A                     | High                  | High                   |
+| **JSON**    | Tested             | s3, http, file mount, redis caching | Stable             | Mainstream          | Data Exchange        | Flexible, Human-Readable  | N/A         | 2000s               | N/A                     | High                  | High                   |
+| **XLSX**    | Tested             | s3, http, file mount, redis caching | Stable             | Mainstream          | Data Exchange        | Spreadsheet Format        | Microsoft   | 2007                | 2023                    | High                  | High                   |
+| **AVRO**    | Not Interested     |                                     | Stable             | Niche               | Data Serialization   | Schema Evolution, Compact | Apache      | 2009                | 2023                    | Moderate              | Moderate               |
+| **Parquet** | Tested             | file mount (s3 could be added)      | Growing            | Growing             | Big Data Analytics   | Columnar, Compression     | Apache      | 2013                | 2023                    | High                  | High                   |
+
+## Additional Notes
+
+All projection, filtering and sorting are handled in memory. 
+This means that the entire file is read into memory, and then operated on as a table scan. 
+Wide tables - with narrow projections may not perform as well as expected.
+Large tables may not perform well.
 
 # Databases
 
-| **Fact**       | Adapter Status | **Current Status** | **Market Position** | **Primary Use Case** | **Notable Features**     | **Company**         | **Initial Release** | **Latest Major Update** | **Community Support** | **Commercial Support** |
+| **Database**   | Adapter Status | **Current Status** | **Market Position** | **Primary Use Case** | **Notable Features**     | **Company**         | **Initial Release** | **Latest Major Update** | **Community Support** | **Commercial Support** |
 |----------------|----------------|--------------------|---------------------|----------------------|--------------------------|---------------------|---------------------|-------------------------|-----------------------|------------------------|
 | **Cassandra**  | Tested         | Growing            | Mainstream          | NoSQL                | High Scalability         | Apache              | 2008                | 2023                    | High                  | High                   |
 | **Druid**      |                | Growing            | Niche               | Real-time Analytics  | Real-time Data Ingestion | Apache              | 2015                | 2023                    | High                  | High                   |
@@ -321,9 +324,9 @@ ddn run docker-start
 | **SQLStream**  |                | Growing            | Mainstream          | Stream Processing    | Real-time Analytics      | SQLstream           | 2009                | 2023                    | Moderate              | Moderate               |
 | **Jethro**     | Not Interested | Declining          | Niche               | Analytics            | High Performance         | JethroData          | 2015                | 2020                    | Low                   | Moderate               |
 | **Firebird**   |                | Stable             | Niche               | OLTP                 | Open Source              | Firebird Foundation | 2000                | 2023                    | High                  | High                   |
-| **BigQuery**   | Tested         | Growing            | Mainstream          | Analytics            | Serverless               | Google              | 2010                | 2023                    | High                  | High                   |
+| **BigQuery**   | Dup/Tested     | Growing            | Mainstream          | Analytics            | Serverless               | Google              | 2010                | 2023                    | High                  | High                   |
 | **Clickhouse** | Dup            | Growing            | Mainstream          | Analytics            | Columnar Storage         | Yandex              | 2016                | 2023                    | High                  | High                   |
-| **Oracle**     | Dup            |                    |                     |                      |                          | Oracle              | 1979                |                         |                       |                        |
-| **PostgreSQL** | Dup/Tested     |                    |                     |                      |                          | PostgreSQL          | 1996                |                         |                       |                        |
-| **MySQL**      | Dup            |                    |                     |                      |                          | Oracle              | 1995                |                         |                       |                        |
-| **MS SQL**     | Dup            |                    |                     |                      |                          | Microsoft           | 1989                |                         |                       |                        |
+| **Oracle**     | Dup            | Stable             | Mainstream          | Database             | High Performance         | Oracle              | 1979                | 2023                    | High                  | High                   |
+| **PostgreSQL** | Dup/Tested     | Growing            | Mainstream          | Database             | Open Source              | PostgreSQL          | 1996                | 2023                    | High                  | High                   |
+| **MySQL**      | Dup?           | Growing            | Mainstream          | Database             | Open Source              | Oracle              | 1995                | 2023                    | High                  | High                   |
+| **MS SQL**     | Dup?           | Stable             | Mainstream          | Database             | High Performance         | Microsoft           | 1989                | 2023                    | High                  | High                   |
