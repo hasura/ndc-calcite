@@ -152,7 +152,7 @@ async fn initialize(
                 path: "./".to_string(),
                 target: Some(DOCKER_CONNECTOR_RW.to_string()),
                 action: metadata::DockerComposeWatchAction::SyncAndRestart,
-                ignore: vec!["true".to_string()],
+                ignore: vec![],
             }],
         };
 
