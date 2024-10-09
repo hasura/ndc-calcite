@@ -263,7 +263,7 @@ async fn update(
 
     // Replace the placeholders in the model file with the environment variables
 
-    let model_file = context.context_path.join(".hasura-connector/model.json");
+    let model_file = config_path.join("model.json");
     let mut model_file_value = if model_file.exists() {
         let model_json_stringified = fs::read_to_string(model_file.clone()).await?;
         Ok(model_json_stringified)
