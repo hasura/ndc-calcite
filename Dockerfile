@@ -52,7 +52,7 @@ RUN . /scripts/java_env_jre.sh && \
 
 COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
 COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin
-COPY --from=java-build /calcite-rs-jni/calcite/target/ /calcite-rs-jni/target/
+COPY --from=java-build /calcite-rs-jni/jni/target/ /calcite-rs-jni/jni/target/
 
 ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
 ENV RUST_BACKTRACE=full
