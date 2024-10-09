@@ -29,13 +29,14 @@ pub struct PrebuiltDockerImagePackaging {
     pub docker_image: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvironmentVariableDefinition {
     pub name: String,
     pub description: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_value: Option<String>,
+    pub required: bool
 }
 
 #[derive(Debug, Serialize, Deserialize)]
