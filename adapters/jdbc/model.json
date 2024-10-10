@@ -6,6 +6,7 @@
       "name": "default",
       "cache": true,
       "type": "jdbc",
+      "jdbcDriver": "org.sqlite.JDBC",
       "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
       "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite3/adapters/jdbc/chinook.db"
     }
