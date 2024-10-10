@@ -29,7 +29,7 @@ You can build it like this.
 
 ```shell
 cd calcite-rs-jni
-chmod +x build.sh
+chmod +x *.sh
 ./build.sh
 ```
 
@@ -44,13 +44,9 @@ cargo build --bin ndc-calcite --bin ndc-calcite-cli
 
 ### Test the file adapter
 
-Note - the test requires "metadata" to be added to configuration.json.
-It should do it on first pass, but for now - you may to run it once to populate.
-Then run it again to actually perform the test.
+**Note** - Run it to perform the test.
 
 ```shell
-chmod +x test.sh
-./test.sh file # populate metadata
 ./test.sh file # run the tests
 ```
 
@@ -61,7 +57,6 @@ chmod +x test.sh
 ### Build the docker image
 
 ```shell
-chmod +x build-local.sh
 ./build-local.sh
 ```
 
@@ -85,7 +80,6 @@ This script is one-and-done, you can't redo without resetting back to prior stat
 You might consider, committing before running this, to facilitate a rollback.
 
 ```shell
-chmod +x ../cli.sh
 ../cli.sh ./app/connector/calcite 8081 secret
 ```
 
@@ -97,7 +91,6 @@ Look at the sample models for ideas, or, get more details
 from [Apache Calcite](https://calcite.apache.org/docs/adapter.html).
 
 ```shell
-chmod +x ../cli-update-model.sh
 ../cli-update-model.sh ./app/connector/calcite
 ```
 
@@ -218,7 +211,6 @@ And you should see this:
 ### Start the standalone instance
 
 ```shell
-chmod +x run-connector-local.sh
 ./run-connector-local.sh file
 ```
 
