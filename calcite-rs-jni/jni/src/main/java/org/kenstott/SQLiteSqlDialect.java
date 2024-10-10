@@ -101,8 +101,10 @@ public class SQLiteSqlDialect extends SqlDialect {
                 String phrasesList = String.join(", ", selectItems);
 
                 // Create the new SQL query
-                String newSqlQuery = String.format("""
-                        SELECT %s FROM "%s" WHERE "%s" IN (%s)""", phrasesList, tableName, idColumn, valuesList);
+                String newSqlQuery = String.format(
+                        "\n                        SELECT %s FROM \"%s\" WHERE \"%s\" IN (%s)",
+                        phrasesList, tableName, idColumn, valuesList
+                );
                 writer.reset();
                 writer.print(newSqlQuery);
             } else {

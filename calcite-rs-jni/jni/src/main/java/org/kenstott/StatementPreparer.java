@@ -43,12 +43,15 @@ class StatementPreparer {
     private static String findParams(String input, ArrayList<String> extractedStrings, ArrayList<Object> params) {
         Pattern pattern = Pattern.compile("\\?(\\d+)\\?");
         Matcher matcher = pattern.matcher(input);
-        return matcher.replaceAll(match -> {
-            String value = match.group().replaceAll("\\?", "");
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String value = matcher.group().replaceAll("\\?", "");
             int index = Integer.parseInt(value);
             params.add(extractedStrings.get(index));
-            return PARAM_MARKER;
-        });
+            matcher.appendReplacement(sb, PARAM_MARKER);
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private static ArrayList<String> extractMarkedUpStrings(String input) {
