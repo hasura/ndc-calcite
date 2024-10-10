@@ -45,14 +45,14 @@ RUN apt-get update &&  \
     rm -rf /var/lib/apt/lists/*
 
 RUN . /scripts/java_env_jre.sh && \
-    mkdir -p /calcite-rs-jni/target && \
+    mkdir -p /calcite-rs-jni/jni/target && \
     mkdir -p /etc/ndc-calcite && \
     mkdir -p /app/connector && \
     chmod -R 666 /app/connector
 
 COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
 COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin
-COPY --from=java-build /calcite-rs-jni/target/ /calcite-rs-jni/target/
+COPY --from=java-build /calcite-rs-jni/jni/target/ /calcite-rs-jni/jni/target/
 
 ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
 ENV RUST_BACKTRACE=full
