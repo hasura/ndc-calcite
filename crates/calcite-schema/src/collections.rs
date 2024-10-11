@@ -3,10 +3,12 @@
 //! Introspect Calcite metadata and then reinterprets it into Calcite metadata.
 //!
 use std::collections::{BTreeMap, HashMap};
-use std::error::Error;
 
-use ndc_models::{CollectionInfo, CollectionName, FieldName, ForeignKeyConstraint, ObjectField, ObjectType, ObjectTypeName, ScalarType, ScalarTypeName, SchemaResponse, Type, TypeName, UniquenessConstraint};
+use http::StatusCode;
 use ndc_models::Type::{Named, Nullable};
+use ndc_models::{CollectionInfo, CollectionName, FieldName, ForeignKeyConstraint, ObjectField, ObjectType, ObjectTypeName, ScalarType, ScalarTypeName, Type, TypeName, UniquenessConstraint};
+use ndc_sdk::connector::{ErrorResponse, Result};
+use serde_json::Value;
 use tracing::Level;
 
 use crate::calcite::{ColumnMetadata, TableMetadata};
@@ -32,7 +34,7 @@ use crate::calcite::{ColumnMetadata, TableMetadata};
 pub fn collections(
     data_models: &HashMap<CollectionName, TableMetadata>,
     scalar_types: &BTreeMap<ScalarTypeName, ScalarType>,
-) -> Result<(BTreeMap<ObjectTypeName, ObjectType>, Vec<CollectionInfo>), Result<SchemaResponse, Box<dyn Error>>, > {
+) -> Result<(BTreeMap<ObjectTypeName, ObjectType>, Vec<CollectionInfo>)> {
     let mut object_types: BTreeMap<ObjectTypeName, ObjectType> = BTreeMap::new();
     let mut collection_infos: Vec<CollectionInfo> = Vec::new();
 
@@ -56,13 +58,12 @@ pub fn collections(
                 uniqueness_constraints,
             })
         } else {
-            return Err(Err(Box::new(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(ErrorResponse::new(StatusCode::from_u16(500).unwrap(),
                 format!(
                     "Table names cannot be same as a scalar type name: {}",
                     table_metadata.name
-                ),
-            ))));
+                ), Value::Null
+            ));
         }
     }
     Ok((object_types, collection_infos))

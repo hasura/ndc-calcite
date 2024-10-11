@@ -6,11 +6,12 @@
 //! Aggregate are generated as additional queries, and stitched into the
 //! RowSet aggregates response.
 use std::collections::BTreeMap;
-
+use http::StatusCode;
 use indexmap::IndexMap;
 use ndc_models::{ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, RelationshipType, RowFieldValue, VariableName};
-use ndc_sdk::connector::QueryError;
-use ndc_sdk::models;
+use ndc_sdk::connector::{ErrorResponse};
+use ndc_sdk::connector::error::Result;
+use ndc_models as models;
 use serde_json::{Number, Value};
 use tracing::{event, Level, span};
 
@@ -100,7 +101,7 @@ pub struct QueryComponents {
 #[tracing::instrument(skip(query_params), level = Level::INFO)]
 pub fn orchestrate_query(
     query_params: QueryParams
-) -> Result<models::RowSet, QueryError> {
+) -> Result<models::RowSet> {
     let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.coll_rel, query_params.args, query_params.query, query_params.vars)?;
     let mut rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
     let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
@@ -135,7 +136,7 @@ pub fn orchestrate_query(
 }
 
 #[tracing::instrument(skip(rows_data, sub_relationship), level = Level::DEBUG)]
-fn generate_value_from_rows(rows_data: &Vec<Row>, sub_relationship: &Relationship) -> Result<Value, QueryError> {
+fn generate_value_from_rows(rows_data: &Vec<Row>, sub_relationship: &Relationship) -> Result<Value> {
     let relationship_value: Value = rows_data.into_iter().map(|row| {
         let mut row_values: Vec<Value> = Vec::new();
         for (foreign_key, _) in sub_relationship.column_mapping.iter() {
@@ -155,13 +156,13 @@ fn generate_value_from_rows(rows_data: &Vec<Row>, sub_relationship: &Relationshi
 }
 
 #[tracing::instrument(skip(sub_relationship), level = Level::DEBUG)]
-fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName, FieldName)>, Vec<&FieldName>, RelationshipType), QueryError> {
+fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName, FieldName)>, Vec<&FieldName>, RelationshipType)> {
     let pks: Vec<(FieldName, FieldName)> = sub_relationship.column_mapping
         .iter()
         .map(|(k, v)| (k.clone(), v.clone()))
         .collect();
     if pks.len() > 1 {
-        return Err(QueryError::Other(Box::from("Cannot create a sub-query based on a composite key"), Value::Null));
+        return Err(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), "Cannot create a sub-query based on a composite key".to_string(), Value::Null));
     }
     let fks: Vec<&FieldName> = sub_relationship.column_mapping.keys().collect();
     let relationship_type = sub_relationship.relationship_type.clone();
@@ -169,13 +170,13 @@ fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName
 }
 
 #[tracing::instrument(skip(params, query_components), level = Level::INFO)]
-fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>, QueryError> {
+fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>> {
     execute_query_collection(params, query_components, query_components.select.clone())
 }
 
 
 #[tracing::instrument(skip(params, query_components), level = Level::INFO)]
-fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -> Result<Option<IndexMap<FieldName, Value>>, QueryError> {
+fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -> Result<Option<IndexMap<FieldName, Value>>> {
     match execute_query_collection(params, query_components, query_components.aggregates.clone()) {
         Ok(collection_option) => {
             if let Some(collection) = collection_option {
@@ -205,7 +206,7 @@ fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -
 }
 
 #[tracing::instrument(skip(pks, value), level = Level::INFO)]
-fn generate_predicate(pks: &Vec<(FieldName, FieldName)>, value: Value) -> Result<Expression, QueryError> {
+fn generate_predicate(pks: &Vec<(FieldName, FieldName)>, value: Value) -> Result<Expression> {
     let (_, name) = pks[0].clone();
     Ok(Expression::BinaryComparisonOperator {
         column: ComparisonTarget::Column {
@@ -219,7 +220,7 @@ fn generate_predicate(pks: &Vec<(FieldName, FieldName)>, value: Value) -> Result
 }
 
 #[tracing::instrument(skip(query, predicate, pks), level = Level::INFO)]
-fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, FieldName)>) -> Result<Box<Query>, QueryError> {
+fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, FieldName)>) -> Result<Box<Query>> {
     let mut revised_query = query.clone();
     revised_query.predicate = Some(predicate);
     revised_query.offset = None;
@@ -242,7 +243,7 @@ fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, 
 #[tracing::instrument(
     skip(params, arguments, sub_relationship, revised_query), level = Level::INFO
 )]
-fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>, QueryError> {
+fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>> {
     let fk_rows = orchestrate_query(QueryParams {
         config: params.config,
         coll: &sub_relationship.target_collection,
@@ -257,7 +258,7 @@ fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, Relatio
 }
 
 #[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks), level = Level::INFO)]
-fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>) -> Result<Option<Vec<Row>>, QueryError> {
+fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>) -> Result<Option<Vec<Row>>> {
     let modified_rows: Vec<Row> = rows.clone().into_iter().map(|mut row| {
         event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
         let pk_value = row.get(fks[0]).unwrap().0.clone();
@@ -290,7 +291,7 @@ fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: 
 }
 
 #[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks, query), level = Level::DEBUG)]
-fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>, query: &Query) -> Result<Option<Vec<Row>>, QueryError> {
+fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>, query: &Query) -> Result<Option<Vec<Row>>> {
     let modified_rows: Vec<Row> = rows.clone().unwrap().into_iter().map(|mut row| {
         event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
         let rowset = serde_json::map::Map::new();
@@ -324,7 +325,7 @@ fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk
 }
 
 #[tracing::instrument(skip(child_rows, rowset, value), level = Level::DEBUG)]
-fn process_child_rows(child_rows: &Vec<&Row>, mut rowset: serde_json::map::Map<String, Value>, value: &mut RowFieldValue) -> Result<(), QueryError> {
+fn process_child_rows(child_rows: &Vec<&Row>, mut rowset: serde_json::map::Map<String, Value>, value: &mut RowFieldValue) -> Result<()> {
     rowset.insert("aggregates".to_string(), Value::Null);
     if !child_rows.is_empty() {
         let mut result: Vec<serde_json::map::Map<String, Value>> = vec![];
@@ -351,7 +352,7 @@ fn execute_query_collection(
     params: QueryParams,
     query_components: &QueryComponents,
     phrase: Option<String>,
-) -> Result<Option<Vec<Row>>, QueryError> {
+) -> Result<Option<Vec<Row>>> {
     if phrase.is_none() || phrase.clone().unwrap().is_empty() {
         return Ok(None);
     }

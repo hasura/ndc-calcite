@@ -11,22 +11,18 @@ use jni::objects::{GlobalRef, JObject, JString, JValueGen};
 use jni::objects::JValueGen::Object;
 use ndc_models as models;
 use ndc_models::{FieldName, RowFieldValue};
-use ndc_sdk::connector::QueryError;
+use ndc_sdk::connector::{ErrorResponse};
 use opentelemetry::trace::{TraceContextExt};
-use serde::de::DeserializeOwned;
 use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
+use ndc_sdk::connector::error::Result;
 
 use ndc_calcite_schema::jvm::get_jvm;
 use ndc_calcite_schema::version5::create_jvm_connection;
 use ndc_calcite_schema::version5::ParsedConfiguration;
 
 pub type Row = IndexMap<FieldName, RowFieldValue>;
-
-fn is_json_string<T: DeserializeOwned>(s: &str) -> bool {
-    serde_json::from_str::<T>(s).is_ok()
-}
 
 /// Creates a Calcite query engine.
 ///
@@ -61,21 +57,21 @@ fn is_json_string<T: DeserializeOwned>(s: &str) -> bool {
 /// }
 /// ```
 #[tracing::instrument(skip(configuration, env), level = Level::INFO)]
-pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> JObject<'a> {
-    let class = env.find_class("org/kenstott/CalciteQuery").unwrap();
-    let instance = env.new_object(class, "()V", &[]).unwrap();
+pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> Result<JObject<'a>> {
+    let class = env.find_class("org/kenstott/CalciteQuery").map_err(ErrorResponse::from_error)?;
+    let instance = env.new_object(class, "()V", &[]).map_err(ErrorResponse::from_error)?;
     let _ = create_jvm_connection(configuration, &instance, env);
     event!(Level::INFO, "Instantiated Calcite Query Engine");
-    return instance;
+    Ok(instance)
 }
 
-fn parse_to_row(data: Vec<String>) -> Vec<Row> {
+fn parse_to_row(data: Vec<String>) -> Result<Vec<Row>> {
     let mut rows: Vec<Row> = Vec::new();
     for item in data {
-        let row: Row = serde_json::from_str(&item).unwrap();
+        let row: Row = serde_json::from_str(&item).map_err(ErrorResponse::from_error)?;
         rows.push(row);
     }
-    rows
+    Ok(rows)
 }
 
 /// Executes a query using the Calcite Java library.
@@ -132,7 +128,7 @@ pub fn connector_query(
     sql_query: &str,
     query_metadata: &models::Query,
     explain: &bool,
-) -> Result<Vec<Row>, QueryError> {
+) -> Result<Vec<Row>> {
 
     // This method of retrieving current span context is not working!!!
     let span = tracing::Span::current();
@@ -141,12 +137,12 @@ pub fn connector_query(
     let trace_id = otel_context.span().span_context().trace_id();
 
     let jvm = get_jvm().lock().unwrap();
-    let mut java_env = jvm.attach_current_thread().unwrap();
-    let calcite_query = java_env.new_local_ref(calcite_reference).unwrap();
+    let mut java_env = jvm.attach_current_thread().map_err(ErrorResponse::from_error)?;
+    let calcite_query = java_env.new_local_ref(calcite_reference).map_err(ErrorResponse::from_error)?;
 
-    let temp_string = java_env.new_string(sql_query).unwrap();
-    let trace_id_jstring = java_env.new_string(trace_id.to_string()).unwrap();
-    let span_id_jstring = java_env.new_string(span_id.to_string()).unwrap();
+    let temp_string = java_env.new_string(sql_query).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to get sql query string") })))?;
+    let trace_id_jstring = java_env.new_string(trace_id.to_string()).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to get trace id string") })))?;
+    let span_id_jstring = java_env.new_string(span_id.to_string()).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to get span id string") })))?;
     let temp_obj = JObject::from(temp_string);
     let trace_id_obj = JObject::from(trace_id_jstring);
     let span_id_obj = JObject::from(span_id_jstring);
@@ -161,22 +157,25 @@ pub fn connector_query(
     match result.unwrap() {
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
-            let rows: Vec<Row> = match serde_json::from_str::<Vec<String>>(&json_string) {
+            let mut rows: Vec<Row> = match serde_json::from_str::<Vec<String>>(&json_string) {
                 Ok(json_rows) => {
-                    parse_to_row(json_rows)
+                    parse_to_row(json_rows)?
                 },
                 Err(_) => match serde_json::from_str::<Vec<Row>>(&json_string) {
                     Ok(vec) => vec,
                     Err(error) => {
                         let err = CalciteError { message: format!("Failed to deserialize JSON: {}", error) };
-                        return Err(QueryError::Other(Box::new(err), Value::Null));
+                        return Err(ErrorResponse::from_error(err));
                     }
                 }
             };
+            if config.fixes.unwrap_or_default() {
+                rows = fix_rows(rows, query_metadata);
+            }
             event!(Level::DEBUG, result = format!("Completed Query. Retrieved {} rows. Result: {:?}", rows.len().to_string(), serde_json::to_string_pretty(&rows)));
             Ok(rows)
         }
-        _ => Err(QueryError::Other(Box::new(CalciteError { message: String::from("Invalid response from Calcite.") }), Value::Null))
+        _ => Err(ErrorResponse::from_error(CalciteError { message: String::from("Invalid response from Calcite. Expected object.") }))
     }
 }
 
@@ -216,8 +215,8 @@ fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
 // ANCHOR_END: calcite_query
 
 #[derive(Debug)]
-struct CalciteError {
-    message: String,
+pub(crate) struct CalciteError {
+    pub(crate) message: String,
 }
 
 impl fmt::Display for CalciteError {
