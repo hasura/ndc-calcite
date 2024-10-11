@@ -1,4 +1,4 @@
-package org.kenstott;
+package com.hasura;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.*;

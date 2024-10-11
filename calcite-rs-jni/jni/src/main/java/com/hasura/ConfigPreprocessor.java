@@ -1,4 +1,4 @@
-package org.kenstott;
+package com.hasura;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

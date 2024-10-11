@@ -40,7 +40,7 @@ pub fn get_jvm() -> &'static Mutex<JavaVM> {
         let jvm = JVM.get().expect("JVM is not set up.");
         let binding = jvm.lock().unwrap();
         let mut env = binding.attach_current_thread().unwrap();
-        let _ = env.call_static_method("org/kenstott/CalciteQuery", "noOpMethod", "()V", &[]);
+        let _ = env.call_static_method("com/hasura/CalciteQuery", "noOpMethod", "()V", &[]);
         if let Err(_) = env.exception_occurred() {
             env.exception_describe().expect("TODO: panic message");
             env.exception_clear().expect("TODO: panic message");

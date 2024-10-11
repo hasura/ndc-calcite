@@ -4,5 +4,5 @@ schemas:
   - name: default
     cache: true
     type: "jdbc"
-    sqlDialectFactory: "org.kenstott.SQLiteSqlDialectFactory"
+    sqlDialectFactory: "com.hasura.SQLiteSqlDialectFactory"
     jdbcUrl: "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite3/adapters/jdbc/chinook.db"
