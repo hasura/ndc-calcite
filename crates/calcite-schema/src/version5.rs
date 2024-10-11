@@ -160,7 +160,7 @@ pub fn create_query_engine<'a>(
     configuration: &'a ParsedConfiguration,
     mut env: JNIEnv<'a>
 ) -> Result<GlobalRef, Error> {
-    let class_result = env.find_class("org/kenstott/CalciteQuery");
+    let class_result = env.find_class("com/hasura/CalciteQuery");
     let class = match class_result {
         Ok(class) => class,
         Err(e) => return Err(e),

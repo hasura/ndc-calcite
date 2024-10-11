@@ -1,4 +1,4 @@
-package org.kenstott;
+package com.hasura;
 
 import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.config.NullCollation;

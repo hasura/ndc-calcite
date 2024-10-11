@@ -5,7 +5,7 @@
     {
       "type": "jdbc",
       "name": "default",
-      "sqlDialectFactory": "org.kenstott.SQLiteSqlDialectFactory",
+      "sqlDialectFactory": "com.hasura.SQLiteSqlDialectFactory",
       "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/ndc-calcite/adapters/jdbc/chinook.db"
     }
     ]

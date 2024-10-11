@@ -1,4 +1,4 @@
-package org.kenstott;
+package com.hasura;
 
 import com.google.gson.*;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -12,13 +12,9 @@ import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.joda.time.DateTime;
 
-import java.io.File;
-import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -29,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
 import java.util.*;
-
-import static java.util.Map.entry;
 
 class ExportedKey {
     String pkTableCatalog;
