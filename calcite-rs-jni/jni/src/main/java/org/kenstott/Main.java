@@ -14,13 +14,7 @@ import java.sql.SQLException;
 public class Main {
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException {
 
-//        String jdbcUrl = "jdbc:bigquery://https://www.googleapis.com/bigquery/v2:443?ProjectId=MyProject26996&OAuthType=0&OAuthServiceAcctEmail=kenneth.stott@gmail.com";
-//        String encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString());
-//        System.out.println(encodedUrl);
-//        Class.forName("com.simba.googlebigquery.jdbc42.Driver");
-//        Connection conn = DriverManager.getConnection(jdbcUrl);
-
-        String modelPath = "../../adapters/databricks/model.json";
+        String modelPath = "../../adapters/file/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -30,12 +24,7 @@ public class Main {
             calciteConnection = query.createCalciteConnection(modelPath);
             String x = query.getModels();
             System.out.println(x);
-            String q1 = """
-                    SELECT * from "lineitem"
-               
-                    OFFSET 2 ROWS
-                    FETCH NEXT 5 ROWS ONLY
-                    """;
+            String q1 = "SELECT * from \"DEPTS\"";
             String z1 = query.queryModels(q1);
             System.out.println(z1);
 //            String z2 = query.queryModels("""

@@ -4,13 +4,13 @@
 //! the config file with the new schema.
 //!
 
-use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use jni::objects::GlobalRef;
 use ndc_models as models;
 use ndc_models::SchemaResponse;
+use ndc_sdk::connector::{ErrorResponse, Result};
 use tracing::{debug, event, Level};
 use ndc_calcite_values::is_running_in_container::is_running_in_container;
 use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DEV_CONFIG_FILE_NAME, DOCKER_CONNECTOR_RW};
@@ -61,12 +61,12 @@ use crate::version5::ParsedConfiguration;
 /// ```
 // ANCHOR: get_schema
 #[tracing::instrument(skip(configuration, calcite_ref), level=Level::INFO)]
-pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse, Box<dyn Error>> {
+pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse> {
     let data_models = get_models(&calcite_ref);
     let scalar_types = scalars::scalars();
     let (object_types, collections) = match collections::collections(&data_models, &scalar_types) {
         Ok(value) => value,
-        Err(value) => return value,
+        Err(value) => return Err(value),
     };
     let procedures = vec![];
     let functions: Vec<models::FunctionInfo> = vec![];
@@ -89,8 +89,8 @@ pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -
     let file = File::create(file_path);
     match file {
         Ok(mut file) => {
-            let serialized_json = serde_json::to_string_pretty(&new_configuration)?;
-            file.write_all(serialized_json.as_bytes())?;
+            let serialized_json = serde_json::to_string_pretty(&new_configuration).map_err(ErrorResponse::from_error)?;
+            file.write_all(serialized_json.as_bytes()).map_err(ErrorResponse::from_error)?;
             event!(Level::INFO, "Wrote metadata to config: {}", serde_json::to_string(&schema).unwrap());
         }
         Err(_) => {

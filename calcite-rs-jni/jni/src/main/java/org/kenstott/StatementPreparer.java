@@ -3,10 +3,12 @@ package org.kenstott;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 
 /**
  * The StatementPreparer class is responsible for preparing a SQL statement by replacing
@@ -31,10 +33,21 @@ class StatementPreparer {
         ArrayList<Object> extractedStringParams = new ArrayList<>();
         modifiedInput = findParams(modifiedInput, extractedStrings, extractedStringParams);
         PreparedStatement preparedStatement = connection.prepareStatement(modifiedInput);
+
+        // Regex pattern for RFC3339
+        String datePattern = "^[1-9]\\d{3}-(?:(?:0[1-9]|1[0-3])-(?:0[1-9]|1[0-9]|2[0-2])|(?:0[13-9]|1[0-2])-30|(?:0[13578]|1[02])-31)T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|[+-][01]\\d:[0-5]\\d)$";
+        Pattern pattern = Pattern.compile(datePattern);
+
         for (int i = 0; i < extractedStringParams.size(); i++) {
             Object item = extractedStringParams.get(i);
             if (item instanceof String) {
-                preparedStatement.setString(i + 1, (String) item);
+                String strItem = (String) item;
+                if (pattern.matcher(strItem).matches()) {
+                    // this string can be parsed as a date
+                    preparedStatement.setDate(i + 1, java.sql.Date.valueOf(LocalDate.parse(strItem, DateTimeFormatter.ISO_OFFSET_DATE_TIME)));
+                } else {
+                    preparedStatement.setString(i + 1, strItem);
+                }
             }
         }
         return preparedStatement;
@@ -43,12 +56,15 @@ class StatementPreparer {
     private static String findParams(String input, ArrayList<String> extractedStrings, ArrayList<Object> params) {
         Pattern pattern = Pattern.compile("\\?(\\d+)\\?");
         Matcher matcher = pattern.matcher(input);
-        return matcher.replaceAll(match -> {
-            String value = match.group().replaceAll("\\?", "");
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String value = matcher.group().replaceAll("\\?", "");
             int index = Integer.parseInt(value);
             params.add(extractedStrings.get(index));
-            return PARAM_MARKER;
-        });
+            matcher.appendReplacement(sb, PARAM_MARKER);
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private static ArrayList<String> extractMarkedUpStrings(String input) {

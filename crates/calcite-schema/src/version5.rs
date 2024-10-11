@@ -1,13 +1,13 @@
 //! Internal Configuration and state for our connector.
 
 use std::collections::{HashMap};
+use std::{error, fmt};
 use std::path::Path;
 use jni::errors::{Error, JniError};
 use jni::JNIEnv;
 use jni::objects::{GlobalRef, JObject, JValueGen, JValueOwned};
 use jni::objects::JValueGen::Object;
 use ndc_models::CollectionName;
-use ndc_sdk::connector::InitializationError;
 use once_cell::sync::OnceCell;
 
 use schemars::JsonSchema;
@@ -24,6 +24,26 @@ use crate::error::{ParseConfigurationError, WriteParsedConfigurationError};
 use crate::jvm::{get_jvm};
 use crate::models::get_models;
 
+#[derive(Debug)]
+pub enum InitializationError {
+    Other(Box<dyn error::Error>),
+}
+
+impl fmt::Display for InitializationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            InitializationError::Other(ref e) => write!(f, "Other error: {}", e),
+        }
+    }
+}
+
+impl error::Error for InitializationError {
+    fn source(&self) -> Option<&(dyn error::Error + 'static)> {
+        match *self {
+            InitializationError::Other(ref e) => Some(&**e),
+        }
+    }
+}
 pub struct CalciteRefSingleton {
     calcite_ref: OnceCell<GlobalRef>,
 }

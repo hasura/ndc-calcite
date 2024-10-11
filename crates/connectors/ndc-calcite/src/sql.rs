@@ -6,12 +6,11 @@ use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use ndc_models::{Aggregate, ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ErrorResponse, ExistsInCollection, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, UnaryComparisonOperator, VariableName};
-use ndc_sdk::connector::QueryError;
-use ndc_sdk::models;
+use ndc_models::{OrderByTarget, Aggregate, ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ExistsInCollection, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, UnaryComparisonOperator, VariableName};
+use ndc_sdk::connector::{ErrorResponse};
 use serde_json::{Value};
 use tracing::{event, Level};
-
+use ndc_sdk::connector::error::Result;
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_schema::calcite::TableMetadata;
 use crate::query::QueryComponents;
@@ -32,11 +31,11 @@ impl Error for VariableNotFoundError {}
 fn eval_argument(
     variables: &BTreeMap<VariableName, Value>,
     argument: &RelationshipArgument,
-) -> Result<Value, QueryError> {
+) -> Result<Value> {
     match argument {
         RelationshipArgument::Variable { name } => variables
             .get(name.as_str())
-            .ok_or(QueryError::Other(Box::new(VariableNotFoundError), Value::String(name.to_string())))
+            .ok_or(ErrorResponse::from_error(VariableNotFoundError))
             .map(|val| val.clone()),
         RelationshipArgument::Literal { value } => Ok(value.clone()),
         RelationshipArgument::Column { .. } => { todo!() }
@@ -127,7 +126,7 @@ fn order_by(query: &Query) -> Vec<String> {
                     .replace("\"", "");
                 let target = &element.target;
                 match target {
-                    models::OrderByTarget::Column {
+                    OrderByTarget::Column {
                         name, field_path, ..
                     } => {
                         let field_path = field_path.clone().unwrap_or_default();
@@ -135,8 +134,8 @@ fn order_by(query: &Query) -> Vec<String> {
                         p.extend(field_path);
                         order_statements.push(format!("\"{}\" {}", p.join("."), order_direction));
                     }
-                    models::OrderByTarget::SingleColumnAggregate { .. } => todo!(),
-                    models::OrderByTarget::StarCountAggregate { .. } => todo!(),
+                    OrderByTarget::SingleColumnAggregate { .. } => todo!(),
+                    OrderByTarget::StarCountAggregate { .. } => todo!(),
                 };
             }
         }
@@ -146,7 +145,7 @@ fn order_by(query: &Query) -> Vec<String> {
 }
 
 #[tracing::instrument(skip(query), level=Level::DEBUG)]
-fn pagination(query: &Query) -> Result<Vec<String>, QueryError> {
+fn pagination(query: &Query) -> Result<Vec<String>> {
     let mut pagination_statements: Vec<String> = Vec::new();
     if query.limit.is_some() {
         pagination_statements.push(format!(" LIMIT {}", query.limit.unwrap()));
@@ -219,7 +218,7 @@ fn predicates(
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     variables: &BTreeMap<VariableName, Value>,
     query: &Query,
-) -> Result<String, Box<dyn Error>> {
+) -> Result<String> {
     process_expression_option(configuration, collection, collection_relationships, variables, query.clone().predicate)
 }
 
@@ -236,7 +235,7 @@ fn process_expression_option(
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     variables: &BTreeMap<VariableName, Value>,
     predicate: Option<Expression>,
-) -> Result<String, Box<dyn Error>> {
+) -> Result<String> {
     match predicate {
         None => Ok("".into()),
         Some(expr) => process_sql_expression(configuration, collection, collection_relationships, variables, &expr),
@@ -272,7 +271,7 @@ fn process_sql_expression(
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     variables: &BTreeMap<VariableName, Value>,
     expr: &Expression,
-) -> Result<String, Box<dyn Error>> {
+) -> Result<String> {
     let table = create_qualified_table_name(
         configuration.clone().metadata.unwrap().get(collection).unwrap()
     );
@@ -414,6 +413,9 @@ fn process_sql_expression(
                         Ok("".into())
                     }
                 }
+                ExistsInCollection::NestedCollection { .. } => {
+                    Ok("".into())
+                }
             }
         }
     }
@@ -545,7 +547,7 @@ pub fn query_collection(
     query,
     variables
 ), level=Level::DEBUG)]
-pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents, QueryError> {
+pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents> {
     let mut argument_values = BTreeMap::new();
     for (argument_name, argument_value) in arguments {
         if argument_values
@@ -555,13 +557,11 @@ pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a C
             )
             .is_some()
         {
-            return Err(QueryError::InvalidRequest(ErrorResponse {
-                message: format!(
+            return Err(ErrorResponse::new(http::StatusCode::from_u16(500).unwrap(), format!(
                     "Duplicate argument: {}",
                     argument_name
                 ),
-                details: Value::String(argument_name.to_string()),
-            }));
+                Value::String(argument_name.to_string())));
         }
     }
     let (select_clause, join_clause) = select(configuration, variables, collection, query, collection_relationships, None);
@@ -574,10 +574,7 @@ pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a C
     let predicates: Option<String> = match predicates {
         Ok(p) => Some(p),
         Err(e) => {
-            return Err(QueryError::InvalidRequest(ErrorResponse {
-                message: e.to_string(),
-                details: Default::default(),
-            }));
+            return Err(ErrorResponse::from_error(e));
         }
     };
     let final_aggregates = aggregates.clone().unwrap_or_default();

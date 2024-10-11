@@ -192,7 +192,7 @@ public class CalciteQuery {
                                         tableTypeList.add(tableType);
                                     }
                                 }
-                            } catch (SQLException e) {
+                            } catch (Throwable e) {
                                 logger.error(e.toString());
                                 throw new RuntimeException(e);
                             }
@@ -240,11 +240,11 @@ public class CalciteQuery {
                                     } catch (SQLException e) { /* ignore */ }
                                     list.add(new TableMetadata(catalog, schemaName, tableName, remarks, primaryKeys, exportedKeys, localCatalogName, localSchemaName));
                                 }
-                            } catch (Exception e) {
+                            } catch (Throwable e) {
                                 span.setAttribute("Error", e.toString());
                             }
                         }
-                    } catch(Exception e) {
+                    } catch (Throwable e) {
                         System.err.println(e.toString());
                     }
                 }
@@ -280,54 +280,54 @@ public class CalciteQuery {
                 String description = columnsSet.getString("REMARKS");
                 String dataTypeName = columnsSet.getString("TYPE_NAME");
                 boolean nullable = columnsSet.getBoolean("NULLABLE");
-                Map<String, String> remapTypes = Map.ofEntries(
-                        entry("CHAR", "CHAR"),
-                        entry("CHAR(1)", "VARCHAR"),
-                        entry("VARCHAR", "VARCHAR"),
-                        entry("VARCHAR(65536)", "VARCHAR"),
-                        entry("VARCHAR(65536) NOT NULL", "VARCHAR"),
-                        entry("VARCHAR NOT NULL", "VARCHAR"),
-                        entry("JavaType(class java.util.ArrayList)", "LIST"),
-                        entry("JavaType(class org.apache.calcite.adapter.file.ComparableArrayList)", "LIST"),
-                        entry("ANY ARRAY", "LIST"),
-                        entry("VARCHAR NOT NULL ARRAY", "LIST"),
-                        entry("JavaType(class java.util.LinkedHashMap)", "MAP"),
-                        entry("JavaType(class org.apache.calcite.adapter.file.ComparableLinkedHashMap)", "MAP"),
-                        entry("JavaType(class java.lang.String)", "VARCHAR"),
-                        entry("JavaType(class java.lang.Integer)", "INTEGER"),
-                        entry("INTEGER NOT NULL", "INTEGER"),
-                        entry("INTEGER", "INTEGER"),
-                        entry("JSON", "JSON"),
-                        entry("JSONB", "JSON"),
-                        entry("SMALLINT NOT NULL", "INTEGER"),
-                        entry("SMALLINT", "INTEGER"),
-                        entry("TINYINT NOT NULL", "INTEGER"),
-                        entry("TINYINT", "INTEGER"),
-                        entry("BIGINT NOT NULL", "INTEGER"),
-                        entry("BIGINT", "INTEGER"),
-                        entry("FLOAT NOT NULL", "FLOAT"),
-                        entry("FLOAT", "FLOAT"),
-                        entry("DOUBLE NOT NULL", "DOUBLE"),
-                        entry("DOUBLE", "DOUBLE"),
-                        entry("BOOLEAN NOT NULL", "BOOLEAN"),
-                        entry("BOOLEAN", "BOOLEAN"),
-                        entry("VARBINARY NOT NULL", "VARBINARY"),
-                        entry("VARBINARY", "VARBINARY"),
-                        entry("BINARY NOT NULL", "BINARY"),
-                        entry("BINARY", "BINARY"),
-                        entry("DATE NOT NULL", "DATE"),
-                        entry("DATE", "DATE"),
-                        entry("TIME(0) NOT NULL", "TIME"),
-                        entry("TIME(0)", "TIME"),
-                        entry("TIMESTAMP(0) NOT NULL", "TIMESTAMP"),
-                        entry("TIMESTAMP(0)", "TIMESTAMP"),
-                        entry("TIMESTAMP(3) NOT NULL", "TIMESTAMP"),
-                        entry("TIMESTAMP(3)", "TIMESTAMP"),
-                        entry("TIMESTAMP NOT NULL", "TIMESTAMPTZ"),
-                        entry("TIMESTAMP", "TIMESTAMPTZ"),
-                        entry("DECIMAL(10,2)", "FLOAT"),
-                        entry("DECIMAL(12,2)", "FLOAT")
-                );
+                Map<String, String> remapTypes = new HashMap<>();
+                remapTypes.put("CHAR", "CHAR");
+                remapTypes.put("CHAR(1)", "VARCHAR");
+                remapTypes.put("VARCHAR", "VARCHAR");
+                remapTypes.put("VARCHAR(65536)", "VARCHAR");
+                remapTypes.put("VARCHAR(65536) NOT NULL", "VARCHAR");
+                remapTypes.put("VARCHAR NOT NULL", "VARCHAR");
+                remapTypes.put("JavaType(class java.util.ArrayList)", "LIST");
+                remapTypes.put("JavaType(class org.apache.calcite.adapter.file.ComparableArrayList)", "LIST");
+                remapTypes.put("ANY ARRAY", "LIST");
+                remapTypes.put("VARCHAR NOT NULL ARRAY", "LIST");
+                remapTypes.put("JavaType(class java.util.LinkedHashMap)", "MAP");
+                remapTypes.put("JavaType(class org.apache.calcite.adapter.file.ComparableLinkedHashMap)", "MAP");
+                remapTypes.put("JavaType(class java.lang.String)", "VARCHAR");
+                remapTypes.put("JavaType(class java.lang.Integer)", "INTEGER");
+                remapTypes.put("INTEGER NOT NULL", "INTEGER");
+                remapTypes.put("INTEGER", "INTEGER");
+                remapTypes.put("JSON", "JSON");
+                remapTypes.put("JSONB", "JSON");
+                remapTypes.put("SMALLINT NOT NULL", "INTEGER");
+                remapTypes.put("SMALLINT", "INTEGER");
+                remapTypes.put("TINYINT NOT NULL", "INTEGER");
+                remapTypes.put("TINYINT", "INTEGER");
+                remapTypes.put("BIGINT NOT NULL", "INTEGER");
+                remapTypes.put("BIGINT", "INTEGER");
+                remapTypes.put("FLOAT NOT NULL", "FLOAT");
+                remapTypes.put("FLOAT", "FLOAT");
+                remapTypes.put("DOUBLE NOT NULL", "DOUBLE");
+                remapTypes.put("DOUBLE", "DOUBLE");
+                remapTypes.put("BOOLEAN NOT NULL", "BOOLEAN");
+                remapTypes.put("BOOLEAN", "BOOLEAN");
+                remapTypes.put("VARBINARY NOT NULL", "VARBINARY");
+                remapTypes.put("VARBINARY", "VARBINARY");
+                remapTypes.put("BINARY NOT NULL", "BINARY");
+                remapTypes.put("BINARY", "BINARY");
+                remapTypes.put("DATE NOT NULL", "DATE");
+                remapTypes.put("DATE", "DATE");
+                remapTypes.put("TIME(0) NOT NULL", "TIME");
+                remapTypes.put("TIME(0)", "TIME");
+                remapTypes.put("TIMESTAMP(0) NOT NULL", "TIMESTAMP");
+                remapTypes.put("TIMESTAMP(0)", "TIMESTAMP");
+                remapTypes.put("TIMESTAMP(3) NOT NULL", "TIMESTAMP");
+                remapTypes.put("TIMESTAMP(3)", "TIMESTAMP");
+                remapTypes.put("TIMESTAMP NOT NULL", "TIMESTAMPTZ");
+                remapTypes.put("TIMESTAMP", "TIMESTAMPTZ");
+                remapTypes.put("DECIMAL(10,2)", "FLOAT");
+                remapTypes.put("DECIMAL(12,2)", "FLOAT");
+
                 String mappedType = remapTypes.get(dataTypeName);
                 if (mappedType == null) {
                     if (dataTypeName.toLowerCase().contains("varchar") && !dataTypeName.toLowerCase().endsWith("map")) {
@@ -474,13 +474,13 @@ public class CalciteQuery {
                             Object value = resultSet.getObject(i);
 
                             // handling Dates and Timestamps
-                            if (value instanceof java.sql.Date sqlDate) {
+                            if (value instanceof java.sql.Date) {
+                                java.sql.Date sqlDate = (java.sql.Date) value;
                                 java.util.Date utilDate = new java.util.Date(sqlDate.getTime());
                                 String rfcDateString = rfcDateFormat.format(utilDate.toInstant());
                                 columns.put(metaData.getColumnLabel(i), rfcDateString);
-                            }
-                            else if (value instanceof java.sql.Timestamp sqlTimestamp) {
-                                // convert to java.util.Date first
+                            } else if (value instanceof java.sql.Timestamp) {
+                                java.sql.Timestamp sqlTimestamp = (java.sql.Timestamp) value;
                                 java.util.Date utilDate = new java.util.Date(sqlTimestamp.getTime());
                                 String rfcDateString = rfcFormat.format(utilDate.toInstant());
                                 columns.put(metaData.getColumnLabel(i), rfcDateString);
@@ -492,7 +492,7 @@ public class CalciteQuery {
                         }
                         rows.add(columns);
                     }
-                } catch(Exception e) {
+                } catch(Throwable e) {
                     e.printStackTrace();
                 } finally {
                     resultSet.close();
@@ -505,7 +505,7 @@ public class CalciteQuery {
                 span.setStatus(StatusCode.OK);
                 return result;
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             span.setStatus(StatusCode.ERROR);
             span.setAttribute("Error", e.toString());
             return "{\"error\":\"" + e + "\"}";

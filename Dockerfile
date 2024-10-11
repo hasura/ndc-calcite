@@ -45,7 +45,7 @@ RUN apt-get update &&  \
     rm -rf /var/lib/apt/lists/*
 
 RUN . /scripts/java_env_jre.sh && \
-    mkdir -p /calcite-rs-jni/target && \
+    mkdir -p /calcite-rs-jni/jni/target && \
     mkdir -p /etc/ndc-calcite && \
     mkdir -p /app/connector && \
     chmod -R 666 /app/connector
