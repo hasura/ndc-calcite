@@ -505,7 +505,7 @@ public class CalciteQuery {
                 span.setStatus(StatusCode.OK);
                 return result;
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             span.setStatus(StatusCode.ERROR);
             span.setAttribute("Error", e.toString());
             return "{\"error\":\"" + e + "\"}";
