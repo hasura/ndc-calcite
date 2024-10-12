@@ -3,15 +3,15 @@ package com.hasura;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.sql.Timestamp;
+import java.sql.Date;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-
+import java.util.regex.Pattern;
 
 /**
  * The StatementPreparer class is responsible for preparing a SQL statement by replacing
@@ -31,7 +31,7 @@ class StatementPreparer {
      * @throws SQLException If an error occurs while preparing the statement.
      */
     public static PreparedStatement prepare(String input, Connection connection) throws SQLException {
-        ArrayList<String> extractedStrings = extractMarkedUpStrings(input);
+        ArrayList<Object> extractedStrings = extractMarkedUpStrings(input);
         String modifiedInput = replaceWithIndexedQuestionMarks(input, extractedStrings);
         ArrayList<Object> extractedStringParams = new ArrayList<>();
         modifiedInput = findParams(modifiedInput, extractedStrings, extractedStringParams);
@@ -41,12 +41,16 @@ class StatementPreparer {
             Object item = extractedStringParams.get(i);
             if (item instanceof String) {
                 preparedStatement.setString(i + 1, (String) item);
+            } else if (item instanceof Timestamp) {
+                preparedStatement.setTimestamp(i + 1, (Timestamp) item);
+            } else if (item instanceof Date) {
+                preparedStatement.setDate(i + 1, (Date) item);
             }
         }
         return preparedStatement;
     }
 
-    private static String findParams(String input, ArrayList<String> extractedStrings, ArrayList<Object> params) {
+    private static String findParams(String input, ArrayList<Object> extractedStrings, ArrayList<Object> params) {
         Pattern pattern = Pattern.compile("\\?(\\d+)\\?");
         Matcher matcher = pattern.matcher(input);
         StringBuffer sb = new StringBuffer();
@@ -60,9 +64,9 @@ class StatementPreparer {
         return sb.toString();
     }
 
-    private static ArrayList<String> extractMarkedUpStrings(String input) {
+    private static ArrayList<Object> extractMarkedUpStrings(String input) {
         String marker = STRING_MARKER;
-        ArrayList<String> extractedList = new ArrayList<>();
+        ArrayList<Object> extractedList = new ArrayList<>();
 
         int startIndex = input.indexOf(marker);
         while (startIndex != -1) {
@@ -81,40 +85,116 @@ class StatementPreparer {
      * But makes a special exception for UTC formatted dates, in which case it
      * converts them to ANSI SQL dates in local time.
      *
-     * @param input The SQL statement to process.
+     * @param input            The SQL statement to process.
      * @param extractedStrings The list of extracted marked-up strings.
      * @return The input SQL statement with marked up strings replaced by indexed question marks.
      */
-    private static String replaceWithIndexedQuestionMarks(String input, ArrayList<String> extractedStrings) {
-        Pattern pattern = Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2}([T\\s]\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?)?([Zz]|([+\\-]\\d{2}:\\d{2}))?$");
+    private static String replaceWithIndexedQuestionMarks(String input, ArrayList<Object> extractedStrings) {
+        Pattern pattern = Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2}([T\\s]\\d{2}:\\d{2}:\\d{2}(\\.\\d{3}))Z$");
         DateTimeFormatter rfcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
-        DateTimeFormatter localFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         for (int i = 0; i < extractedStrings.size(); ++i) {
-            Matcher matcher = pattern.matcher(extractedStrings.get(i));
+            Matcher matcher = pattern.matcher((String) extractedStrings.get(i));
             if (matcher.matches()) {
-                // if it seems like it is a date - we are going to tyr and make it a date constant
+                // if it seems like it is a date - we are going to try and make it a date constant
                 try {
                     // if the pattern follows the exact pattern that comes from the hasura NDC
-                    // we will convert it to a local time ANSI SQL date constant.
+                    // we will convert it to a ANSI SQL timestamp.
                     // Otherwise, we will convert it to a string constant verbatim.
-                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(extractedStrings.get(i), rfcFormatter);
-                    LocalDateTime localDateTime = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
-                    String localDateTimeString = localDateTime.format(localFormatter);
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse((String) extractedStrings.get(i), rfcFormatter);
+                    zonedDateTime = zonedDateTime.withZoneSameInstant(ZoneOffset.UTC); // adjust timezone to UTC
+
+                    Object convertedDateTime; // This will store either a Date or a Timestamp
+                    if (zonedDateTime.toLocalTime().toSecondOfDay() == 0) {
+                        // Represents the start of the day in UTC
+                        convertedDateTime = Date.valueOf(zonedDateTime.toLocalDate()); // Convert to java.sql.Date with LocalDate
+                    } else {
+                        // Does not represent the start of the day in UTC
+                        convertedDateTime = Timestamp.from(zonedDateTime.toInstant()); // Convert to Timestamp
+                    }
+
                     input = input.replace(
                             STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
-                            "'" + localDateTimeString + "'"
+                            PARAM_MARKER + i + PARAM_MARKER
                     );
-                    extractedStrings.remove(i);
-                    --i;
-                } catch(Exception ignored) {
+                    extractedStrings.set(i, convertedDateTime);
+                } catch (Exception ignored) {
                     input = input.replace(
                             STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
-                            "'" + extractedStrings.get(i) + "'"
+                            PARAM_MARKER + i + PARAM_MARKER
                     );
-                    extractedStrings.remove(i);
-                    --i;
                 }
-            // if it's not a date constant, we will convert it into string parameter
+            } else if (((String) extractedStrings.get(i)).matches("\\d{4}-\\d{2}-\\d{2}")) {  // Match YYYY-MM-DD pattern
+                try {
+                    Date date = Date.valueOf((String) extractedStrings.get(i));  // Convert to java.sql.Date
+                    input = input.replace(
+                            STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                            PARAM_MARKER + i + PARAM_MARKER
+                    );
+                    extractedStrings.set(i, date);
+                } catch (Exception ignored) {
+                    input = input.replace(
+                            STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                            PARAM_MARKER + i + PARAM_MARKER
+                    );
+                }
+            } else if (((String) extractedStrings.get(i)).startsWith("DATE::")) {
+                try {
+                    String dateStr = ((String) extractedStrings.get(i)).replace("DATE::", "");
+                    Date date = Date.valueOf(dateStr);
+                    input = input.replace(
+                            STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                            PARAM_MARKER + i + PARAM_MARKER
+                    );
+                    extractedStrings.set(i, date);
+                } catch (Exception ignored) {
+                    input = input.replace(
+                            STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                            PARAM_MARKER + i + PARAM_MARKER
+                    );
+                }
+                // if it's not a date constant, we will convert it into string parameter
+            } else if (((String) extractedStrings.get(i)).startsWith("TIMESTAMP::")) {
+                String rfcDateString = ((String) extractedStrings.get(i)).replace("TIMESTAMP::", "");
+                DateTimeFormatter RFC_1123_DATE_TIME = DateTimeFormatter.RFC_1123_DATE_TIME;
+                DateTimeFormatter RFC_3339_DATE_TIME = new DateTimeFormatterBuilder()
+                        .parseCaseInsensitive()
+                        .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
+                        .optionalStart()
+                        .appendPattern(".SSS")
+                        .optionalEnd()
+                        .appendPattern("XXX")
+                        .toFormatter();
+                try {
+                    ZonedDateTime zonedDateTime = ZonedDateTime.parse(rfcDateString, RFC_1123_DATE_TIME);
+                    Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
+                    input = input.replace(
+                            STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                            PARAM_MARKER + i + PARAM_MARKER
+                    );
+                    extractedStrings.set(i, timestamp);
+                } catch (Exception ignored) {
+                    try {
+                        ZonedDateTime zonedDateTime = ZonedDateTime.parse(rfcDateString, RFC_3339_DATE_TIME);
+                        Timestamp timestamp = Timestamp.from(zonedDateTime.toInstant());
+                        input = input.replace(
+                                STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                                PARAM_MARKER + i + PARAM_MARKER
+                        );
+                        extractedStrings.set(i, timestamp);
+                    } catch (Exception ignore) {
+                        input = input.replace(
+                                STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                                PARAM_MARKER + i + PARAM_MARKER
+                        );
+                    }
+                }
+                // if it's not a date constant, we will convert it into string parameter
+            } else if (((String) extractedStrings.get(i)).startsWith("STRING::")) {
+                String rfcDateString = ((String) extractedStrings.get(i)).replace("STRING::", "");
+                input = input.replace(
+                        STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
+                        PARAM_MARKER + i + PARAM_MARKER
+                );
             } else {
                 input = input.replace(
                         STRING_MARKER + extractedStrings.get(i) + STRING_MARKER,
