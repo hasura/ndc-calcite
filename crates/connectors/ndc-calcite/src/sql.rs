@@ -304,10 +304,10 @@ fn process_sql_expression(
                 .collect();
             Ok(format!("({})", processed_expressions.join(" OR ")))
         }
-        Expression::Not { expression } => Ok(format!(
-            "(NOT {:?})",
-            process_sql_expression(configuration, collection, collection_relationships, variables, expression)
-        )),
+        Expression::Not { expression } => {
+            let embed_expression = process_sql_expression(configuration, collection, collection_relationships, variables, expression)?;
+            Ok(format!("(NOT {})", embed_expression))
+        },
         Expression::UnaryComparisonOperator { operator, column } => match operator {
             UnaryComparisonOperator::IsNull => {
                 match column {
