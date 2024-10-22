@@ -7,6 +7,7 @@ import io.opentelemetry.api.trace.*;
 import io.opentelemetry.context.Context;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
 import org.apache.calcite.adapter.jdbc.JdbcTable;
+import org.apache.calcite.avatica.util.ArrayImpl;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
@@ -291,6 +292,8 @@ public class CalciteQuery {
                 remapTypes.put("JavaType(class java.lang.Integer)", "INTEGER");
                 remapTypes.put("INTEGER NOT NULL", "INTEGER");
                 remapTypes.put("INTEGER", "INTEGER");
+                remapTypes.put("MAP NOT NULL", "MAP");
+                remapTypes.put("ARRAY NOT NULL", "ARRAY");
                 remapTypes.put("JSON", "JSON");
                 remapTypes.put("JSONB", "JSON");
                 remapTypes.put("SMALLINT NOT NULL", "INTEGER");
@@ -478,6 +481,8 @@ public class CalciteQuery {
                                 java.util.Date utilDate = new java.util.Date(sqlTimestamp.getTime());
                                 String rfcDateString = rfcFormat.format(utilDate.toInstant());
                                 columns.put(metaData.getColumnLabel(i), rfcDateString);
+                            } else if (value instanceof ArrayImpl) {
+                                columns.put(metaData.getColumnLabel(i), ((ArrayImpl) value).getArray());
                             }
                             // if it is not date - put the value directly
                             else {
