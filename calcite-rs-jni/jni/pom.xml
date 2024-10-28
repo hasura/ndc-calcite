@@ -194,13 +194,13 @@
         </dependency>
 
         <!-- JDBC drivers and dependencies -->
-        <dependency>
-            <groupId>sybase</groupId>
-            <artifactId>jconnect</artifactId>
-            <version>1</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/jars/jconn4.jar</systemPath>
-        </dependency>
+        <!-- <dependency> -->
+        <!--     <groupId>sybase</groupId> -->
+        <!--     <artifactId>jconnect</artifactId> -->
+        <!--     <version>1</version> -->
+        <!--     <scope>system</scope> -->
+        <!--     <systemPath>${project.basedir}/jars/jconn4.jar</systemPath> -->
+        <!-- </dependency> -->
         <dependency>
             <groupId>org.kenstott</groupId>
             <artifactId>bigquery-jdbc</artifactId>
@@ -271,7 +271,6 @@
             <groupId>com.databricks</groupId>
             <artifactId>databricks-jdbc</artifactId>
             <version>2.6.40-patch-1</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.hive</groupId>
@@ -361,4 +360,3 @@
         </plugins>
     </build>
 </project>
-
