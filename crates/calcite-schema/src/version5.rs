@@ -160,16 +160,8 @@ pub fn create_query_engine<'a>(
     configuration: &'a ParsedConfiguration,
     mut env: JNIEnv<'a>
 ) -> Result<GlobalRef, Error> {
-    let class_result = env.find_class("com/hasura/CalciteQuery");
-    let class = match class_result {
-        Ok(class) => class,
-        Err(e) => return Err(e),
-    };
-    let instance_result = env.new_object(class, "()V", &[]);
-    let instance = match instance_result {
-        Ok(instance) => instance,
-        Err(e) => return Err(e),
-    };
+    let class = env.find_class("com/hasura/CalciteQuery")?;
+    let instance = env.new_object(class, "()V", &[])?;
 
     match create_jvm_connection(configuration, &instance, &mut env) {
         Ok(_) => {
