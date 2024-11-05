@@ -14,7 +14,7 @@
         "port": 9142,
         "ssl": true,
         "dc": "us-west-1",
-        "pathToRootCert": "./root.crt"
+        "pathToRootCert": "/Users/kennethstott/Documents/GitHub/calcite-connector/adapters/cassandra/root.crt"
       }
     }
   ]

@@ -14,13 +14,13 @@
         <level value="info" />
     </logger>
     <logger name="org.apache.calcite.adapter">
-        <level value="info" />
+        <level value="fine" />
     </logger>
     <logger name="org.apache.spark">
         <level value="info" />
     </logger>
     <root>
-        <priority value="error" />
+        <priority value="debug" />
         <appender-ref ref="console"/>
     </root>
 </log4j:configuration>

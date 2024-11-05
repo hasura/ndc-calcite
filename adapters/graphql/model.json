@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "defaultSchema": "graphql",
+  "schemas": [
+    {
+      "name": "graphql",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.graphql.GraphQLSchemaFactory",
+      "operand": {
+        "endpoint": "http://localhost:3000/graphql",
+        "role": "admin"
+      }
+    }
+  ]
+}

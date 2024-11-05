@@ -12,24 +12,43 @@ import java.sql.SQLException;
 public class Main {
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException {
 
-        String modelPath = "../../adapters/file/model.json";
+        JdbcTest.test();
+
+        String modelPath = "../../adapters/graphql/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
 
         try {
+            String sql = "SELECT al.\"albumId\", al.\"title\"\n" +
+                    ", COUNT(tr.\"trackId\") AS trackCount\n" +
+                    "FROM \"graphql\".\"Albums\" al\n" +
+                    "JOIN \"graphql\".\"Tracks\" tr ON al.\"albumId\" = tr.\"albumId\"\n" +
+                    "WHERE al.\"albumId\" > 200\n" +
+                    "GROUP BY al.\"albumId\", al.\"title\"\n" +
+                    "ORDER BY trackCount\n" +
+                    "OFFSET 1 ROWS\n" +
+                    "FETCH NEXT 150 ROWS ONLY\n";
+            CalciteVerboseDebugger.debugVerbose(modelPath);
+            try {
+                System.out.println("************QUERY PLANNER************");
+                CalciteModelPlanner.displayQueryPlan(modelPath, sql);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            System.out.println("************EXECUTE QUERY************");
             CalciteQuery query = new CalciteQuery();
-            calciteConnection = query.createCalciteConnection(modelPath);
+            try {
+                calciteConnection = query.createCalciteConnection(modelPath);
+            } catch (Throwable e) {
+                e.printStackTrace();
+            }
             String x = query.getModels();
             System.out.println(x);
-            String q1 = "SELECT \"default\".\"LONG_EMPS\".\"AGE\" AS \"AGE\",\"default\".\"LONG_EMPS\".\"CITY\" AS \"CITY\",\"default\".\"LONG_EMPS\".\"DEPTNO\" AS \"DEPTNO\",\"default\".\"LONG_EMPS\".\"EMPID\" AS \"EMPID\",\"default\".\"LONG_EMPS\".\"EMPNO\" AS \"EMPNO\",\"default\".\"LONG_EMPS\".\"GENDER\" AS \"GENDER\",\"default\".\"LONG_EMPS\".\"JOINEDAT\" AS \"JOINEDAT\",\"default\".\"LONG_EMPS\".\"MANAGER\" AS \"MANAGER\",\"default\".\"LONG_EMPS\".\"NAME\" AS \"NAME\",\"default\".\"LONG_EMPS\".\"SLACKER\" AS \"SLACKER\" FROM \"default\".\"LONG_EMPS\" WHERE \"JOINEDAT\" IN (__UTF8__1996-08-03__UTF8__,__UTF8__2001-01-01__UTF8__)  LIMIT 10";
-            String z1 = query.queryModels(q1);
+
+            String z1 = query.queryModels(sql);
             System.out.println(z1);
-//            String z2 = query.queryModels("""
-//                    SELECT "CustomerId" from "FILE"."TEST"
-//                    """
-//            );
-//            System.out.println(z2);
             calciteConnection.close();
             calciteConnection = null;
         } catch (Exception e) {
