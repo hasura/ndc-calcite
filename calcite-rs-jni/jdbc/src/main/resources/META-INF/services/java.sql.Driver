@@ -1,3 +1,2 @@
 com.hasura.GraphQLDriver
-org.apache.calcite.jdbc.Driver
-org.apache.calcite.avatica.remote.Driver
+
