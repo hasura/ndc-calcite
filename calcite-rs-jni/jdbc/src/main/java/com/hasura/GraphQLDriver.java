@@ -70,6 +70,9 @@ public class GraphQLDriver extends UnregisteredDriver implements Driver {
 
         Properties calciteProps = new Properties();
         calciteProps.setProperty("fun", "standard");
+        calciteProps.setProperty("caseSensitive", "true");
+        calciteProps.setProperty("unquotedCasing", "UNCHANGED");
+        calciteProps.setProperty("quotedCasing", "UNCHANGED");
 
         Connection connection = DriverManager.getConnection("jdbc:calcite:", calciteProps);
         CalciteConnection calciteConnection = connection.unwrap(CalciteConnection.class);

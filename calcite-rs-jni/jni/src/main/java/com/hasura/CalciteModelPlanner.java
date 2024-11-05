@@ -3,6 +3,7 @@ package com.hasura;
 import org.apache.calcite.adapter.enumerable.EnumerableConvention;
 import org.apache.calcite.adapter.enumerable.EnumerableRules;
 import org.apache.calcite.adapter.graphql.GraphQLRules;
+import org.apache.calcite.avatica.util.Casing;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelOptRule;
@@ -16,6 +17,7 @@ import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.validate.SqlConformanceEnum;
 import org.apache.calcite.tools.*;
 
 import java.sql.Connection;
@@ -38,6 +40,9 @@ public class CalciteModelPlanner {
         public static void displayQueryPlan(String modelPath, String sql) throws Exception {
                 Properties info = new Properties();
                 info.put("model", modelPath);
+                info.setProperty("caseSensitive", "true");
+                info.setProperty("unquotedCasing", "UNCHANGED");
+                info.setProperty("quotedCasing", "UNCHANGED");
 
                 Connection connection = DriverManager.getConnection("jdbc:calcite:", info);
                 CalciteConnection calciteConnection = connection.unwrap(CalciteConnection.class);
@@ -72,10 +77,17 @@ public class CalciteModelPlanner {
                 hepProgramBuilder.addMatchOrder(HepMatchOrder.TOP_DOWN);
                 rules.forEach(hepProgramBuilder::addRuleInstance);
 
+                // Set the SQL parser configuration
+                SqlParser.Config parserConfig = SqlParser.config()
+                        .withCaseSensitive(true)  // For distinguishing between "name" and "Name"
+                        .withUnquotedCasing(Casing.UNCHANGED)  // Keep original case for unquoted identifiers
+                        .withQuotedCasing(Casing.UNCHANGED)    // Keep original case for quoted identifiers
+                        .withConformance(SqlConformanceEnum.LENIENT);
+
                 // Create planner configuration
                 FrameworkConfig config = Frameworks.newConfigBuilder()
                         .defaultSchema(rootSchema)
-                        .parserConfig(SqlParser.Config.DEFAULT)
+                        .parserConfig(parserConfig)
                         .programs(Programs.sequence(
                                 Programs.ofRules(rules),
                                 Programs.ofRules(GraphQLRules.PROJECT_RULE),

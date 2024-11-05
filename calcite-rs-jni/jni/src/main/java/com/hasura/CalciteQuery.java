@@ -136,6 +136,9 @@ public class CalciteQuery {
         span.setAttribute("modelPath", modelPath);
         Properties info = new Properties();
         info.setProperty("model", ConfigPreprocessor.preprocessConfig(modelPath));
+        info.setProperty("caseSensitive", "true");
+        info.setProperty("unquotedCasing", "UNCHANGED");
+        info.setProperty("quotedCasing", "UNCHANGED");
         try {
 //            Class.forName("com.simba.googlebigquery.jdbc42.Driver");
             Class.forName("org.apache.calcite.jdbc.Driver");
