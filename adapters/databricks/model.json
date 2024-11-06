@@ -1,17 +1,17 @@
 {
   "version": "1.0",
-  "defaultSchema": "TEST",
+  "defaultSchema": "default",
   "schemas": [
     {
-      "name": "TEST",
+      "name": "default",
       "type": "custom",
       "factory": "org.apache.calcite.adapter.jdbc.JdbcSchema$Factory",
       "operand": {
         "jdbcDriver": "com.databricks.client.jdbc.Driver",
         "jdbcUrl": "jdbc:databricks://dbc-35019fa9-14d3.cloud.databricks.com:443/;HttpPath=/sql/1.0/warehouses/fd7249aff7e8684c;PWD=dapice663dc29531c32040053109eabdd24f;ConnCatalog=samples;ConnSchema=tpch",
-        "jdbcSchema": "tpch",
-        "jdbcCatalog": "samples"
+        "jdbcPassword": "dapice663dc29531c32040053109eabdd24f"
       }
     }
   ]
 }
+```

@@ -110,6 +110,8 @@ impl ConnectorSetup for Calcite {
                 .or_else(|| env::var("MODEL_FILE").ok())
                 .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), serde_json::Value::String("".to_string())))?;
 
+            println!("Model file path: {:?}", model_file_path);
+
             let models = fs::read_to_string(model_file_path.clone()).unwrap();
 
             if has_yaml_extension(&model_file_path.clone()) {
@@ -324,6 +326,7 @@ fn convert_to_relationship_argument(p0: &models::Argument) -> models::Relationsh
 fn init_state(
     configuration: &ParsedConfiguration,
 ) -> Result<CalciteState> {
+    println!("init state {:#?}", configuration);
     dotenv::dotenv().ok();
     init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()));
     let jvm = get_jvm();

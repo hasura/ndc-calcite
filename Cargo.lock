@@ -1499,6 +1499,7 @@ dependencies = [
  "anyhow",
  "build-data",
  "clap",
+ "dotenv",
  "env_logger",
  "include_dir",
  "insta",
@@ -1522,6 +1523,7 @@ version = "0.1.4"
 dependencies = [
  "anyhow",
  "clap",
+ "dotenv",
  "http 0.2.12",
  "jni",
  "jsonschema",

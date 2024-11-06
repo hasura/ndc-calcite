@@ -58,6 +58,7 @@ pub type Row = IndexMap<FieldName, RowFieldValue>;
 /// ```
 #[tracing::instrument(skip(configuration, env), level = Level::INFO)]
 pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> Result<JObject<'a>> {
+    println!("env is {:#?}", env);
     let class = env.find_class("com/hasura/CalciteQuery").map_err(ErrorResponse::from_error)?;
     let instance = env.new_object(class, "()V", &[]).map_err(ErrorResponse::from_error)?;
     let _ = create_jvm_connection(configuration, &instance, env).expect("Failed to create JVM connection");
