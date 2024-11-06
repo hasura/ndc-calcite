@@ -265,25 +265,24 @@ fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: 
         let rowset = serde_json::map::Map::new();
         if let Some(value) = row.get_mut(field_name) {
             event!(Level::DEBUG, "value: {:?}", value);
-            if let RowFieldValue(_) = *value {
-                let (key, name) = pks[0].clone();
-                event!(Level::DEBUG, "key: {:?}, name: {:?}", key, name);
-                let mut child_rows = Vec::new();
-                for x in fk_rows {
-                    if let Some(value) = x.get(&key) {
-                        event!(Level::DEBUG, "value: {:?}", value);
-                        if value.0 == pk_value {
-                            child_rows.push(x);
-                        }
-                    } else {
-                        event!(Level::DEBUG, "value: {:?}", value);
+            let (key, name) = pks[0].clone();
+            event!(Level::DEBUG, "key: {:?}, name: {:?}", key, name);
+            let mut child_rows = Vec::new();
+            for x in fk_rows {
+                if let Some(value) = x.get(&key) {
+                    event!(Level::DEBUG, "value: {:?}", value);
+                    if value.0 == pk_value {
+                        child_rows.push(x);
                     }
+                } else {
+                    event!(Level::DEBUG, "value: {:?}", value);
                 }
-                if child_rows.len() > 1 {
-                    child_rows = vec![child_rows[0]];
-                }
-                process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
             }
+            if child_rows.len() > 1 {
+                child_rows = vec![child_rows[0]];
+            }
+            process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
+
         }
         row
     }).collect();
@@ -300,7 +299,7 @@ fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk
         let pk_value = row.get(fks[0]).unwrap().0.clone();
         if let Some(value) = row.get_mut(field_name) {
             event!(Level::DEBUG, "value: {:?}", value);
-            if let RowFieldValue(_) = *value {
+
                 let (key, name) = pks[0].clone();
                 event!(Level::DEBUG, "key: {:?}, name: {:?}", key, name);
                 let mut child_rows = Vec::new();
@@ -317,7 +316,7 @@ fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk
                 }
                 event!(Level::DEBUG, "Key: {:?}, Name: {:?}, Child Rows: {:?}", key, name, child_rows);
                 process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
-            }
+
         }
         row
     }).collect();

@@ -14,6 +14,5 @@ pub mod jvm;
 
 pub mod configuration;
 pub mod version;
-mod metrics;
 mod test;
 mod list_files;

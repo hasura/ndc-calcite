@@ -3,7 +3,6 @@
 use std::collections::{HashMap};
 use std::{error, fmt};
 use std::path::Path;
-use jni::errors::{Error, JniError};
 use jni::JNIEnv;
 use jni::objects::{GlobalRef, JObject, JValueGen, JValueOwned};
 use jni::objects::JValueGen::Object;

@@ -203,11 +203,11 @@ fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
             }
         }
         for (_key, value) in &mut row {
-            if let RowFieldValue(val) = value {
-                if val == "null" {
-                    *value = RowFieldValue(Value::Null);
-                }
+            let RowFieldValue(val) = value;
+            if val == "null" {
+                *value = RowFieldValue(Value::Null);
             }
+
         }
         row.swap_remove("CONSTANT");
         row
