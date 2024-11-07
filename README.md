@@ -1,50 +1,22 @@
-# Hasura SQL Integration Suite
+# Hasura Integration Suite
 
-A comprehensive collection of tools and adapters for enabling SQL access to GraphQL and other data sources through Apache Calcite.
+Tools for integrating with Hasura Data Delivery Network (DDN) in two key ways:
+1. Native Data Connector (NDC) toolkit for ingesting data sources into Hasura DDN
+2. SQL-based tools for querying Hasura DDN endpoints
 
-## Components
+## Native Data Connector Development
 
-### 1. [Hasura GraphQL SQL Adapter](calcite-rs-jni/calcite/graphql/README.md)
-SQL:2003 compliant system that enables Apache Calcite to query Hasura GraphQL endpoints using SQL. Features include:
-- SQL:2003 compliance with extensive feature support
-- Window functions and common table expressions
-- Flexible caching system (in-memory and Redis)
-- Advanced query optimization
-- Comprehensive type system
+### [NDC Calcite](ndc-calcite.md)
+A toolkit for creating Hasura DDN Native Data Connectors using Apache Calcite:
+- Support for developing connectors to 15+ file-based data sources
+- Support for developing connectors to 25+ JDBC-based data sources
+- Metadata-configurable adapter framework
+- Built-in testing and validation tools
+- Comprehensive connector development documentation
 
-### 2. [GraphQL JDBC Connector](calcite-rs-jni/jdbc/README.md)
-JDBC driver for SQL access to GraphQL endpoints, offering:
-- Standard JDBC interface for GraphQL data
-- Authentication via headers (Bearer tokens, API keys)
-- Role-based access control
-- Query result caching
-- Integration with standard JDBC tooling
+#### Supported Data Sources for NDC Development
 
-### 3. [Python DB-API](calcite-rs-jni/py_graphql_sql/README.md)
-Python DB-API 2.0 implementation for SQL access to Hasura DDN endpoints:
-- Python 3.9+ support
-- Context manager support
-- Type hints for better IDE integration
-- Clear error handling
-- Thread-safe design
-
-### 4. [SQL HTTP Server](calcite-rs-jni/sqlengine/README.md)
-Lightweight HTTP server for executing SQL queries via REST:
-- JSON-based request/response format
-- Read-only query execution
-- Authentication and role-based access
-- Connection pooling
-- Environment-based configuration
-
-### 5. [NDC Calcite](ndc-calcite.md)
-Metadata-configurable adapter supporting ~40 data sources:
-- 15+ file-based data sources
-- 25+ JDBC-based data sources
-- Support for various databases and file formats
-
-## Supported Data Sources
-
-### File Formats
+File Formats:
 | Format    | Status  | Features |
 |-----------|---------|----------|
 | Arrow     | Tested  | File mount, High Performance |
@@ -53,8 +25,7 @@ Metadata-configurable adapter supporting ~40 data sources:
 | XLSX      | Tested  | S3, HTTP, file mount, Redis caching |
 | Parquet   | Tested  | File mount (S3 support possible) |
 
-### Databases
-Notable supported databases include:
+Databases:
 - PostgreSQL (Tested)
 - Redshift (Tested)
 - Databricks (Tested)
@@ -67,13 +38,48 @@ Notable supported databases include:
 
 [View full database support matrix](ndc-calcite.md#databases)
 
+## SQL Access Tools for Hasura DDN
+
+### [Hasura GraphQL SQL Adapter](calcite-rs-jni/calcite/graphql/README.md)
+Apache Calcite adapter optimized for querying Hasura DDN endpoints using SQL:
+- SQL:2003 compliance with extensive feature support
+- Window functions and common table expressions
+- Flexible caching system (in-memory and Redis)
+- Advanced query optimization
+- Comprehensive type system
+
+### SQL Access Interfaces
+
+#### JDBC Connector
+JDBC driver for SQL access to Hasura DDN endpoints:
+- Standard JDBC interface
+- Authentication via headers (Bearer tokens, API keys)
+- Role-based access control
+- Query result caching
+- Integration with standard JDBC tooling
+
+#### Python DB-API
+Python DB-API 2.0 implementation for SQL access to Hasura DDN endpoints:
+- Python 3.9+ support
+- Context manager support
+- Type hints for better IDE integration
+- Clear error handling
+- Thread-safe design
+
+#### SQL HTTP Server
+Lightweight HTTP server for executing SQL queries against Hasura DDN endpoints via REST:
+- JSON-based request/response format
+- Read-only query execution
+- Authentication and role-based access
+- Connection pooling
+- Environment-based configuration
+
 ## Getting Started
 
 Each component has its own setup and configuration requirements. Please refer to the individual component documentation linked above for detailed instructions.
 
-## Common Features Across Components
+## Common Features
 
-- SQL:2003 compliance
 - Authentication and authorization support
 - Query result caching
 - Clear error handling
@@ -83,11 +89,10 @@ Each component has its own setup and configuration requirements. Please refer to
 ## Development
 
 For development setup and contribution guidelines, please refer to each component's documentation:
-- [Calcite Adapter Contributing Guide](ndc-calcite.md#contributing)
+- [NDC Calcite Development](ndc-calcite.md#temporary-instructions---for-getting-started-as-a-developer-with-this-repo)
 - [JDBC Connector Development Guide](calcite-rs-jni/jdbc/README.md#building-from-source)
 - [Python DB-API Development](calcite-rs-jni/py_graphql_sql/README.md#prerequisites)
 - [SQL HTTP Server Development](calcite-rs-jni/sqlengine/README.md#building-and-running)
-- [NDC Calcite Development](ndc-calcite.md#temporary-instructions---for-getting-started-as-a-developer-with-this-repo)
 
 ## License
 
