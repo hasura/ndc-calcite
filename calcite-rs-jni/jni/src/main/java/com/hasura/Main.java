@@ -48,6 +48,7 @@ public class Main {
             System.out.println(x);
 
             String z1 = query.queryModels(sql);
+            z1 = query.queryModels(sql);
             System.out.println(z1);
             calciteConnection.close();
             calciteConnection = null;

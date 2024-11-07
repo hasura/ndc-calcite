@@ -1,0 +1,60 @@
+[tool.poetry]
+name = "py_graphql_sql"
+version = "0.1.0"
+description = "Read-only DB-API 2.0 compliant JDBC connector for GraphQL"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+    { include = "py_graphql_sql" },
+    { include = "examples" }
+]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<4.0"  # Set explicit Python version range
+jaydebeapi = ">=1.2.3"
+JPype1 = ">=1.2.0"
+typing-extensions = ">=4.5.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+pytest-cov = "^4.1.0"
+black = "^23.7.0"
+pylint = "^2.17.5"
+isort = "^5.12.0"
+mypy = "^1.4.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pylint.messages_control]
+disable = [
+    "C0111",  # missing-docstring
+    "C0103",  # invalid-name (for DB-API compatibility)
+    "R0903",  # too-few-public-methods
+    "W0622",  # redefined-builtin (for Warning)
+]
+
+[tool.pylint.format]
+max-line-length = 88
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["jaydebeapi.*", "jpype.*"]
+ignore_missing_imports = true

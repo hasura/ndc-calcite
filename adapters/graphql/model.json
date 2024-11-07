@@ -8,7 +8,11 @@
       "factory": "org.apache.calcite.adapter.graphql.GraphQLSchemaFactory",
       "operand": {
         "endpoint": "http://localhost:3000/graphql",
-        "role": "admin"
+        "role": "admin",
+        "cache": {
+          "type": "memory",
+          "ttl": 300
+        }
       }
     }
   ]

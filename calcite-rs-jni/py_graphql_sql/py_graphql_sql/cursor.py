@@ -4,10 +4,9 @@ from typing import Any, Optional, Sequence, Tuple, Type
 from contextlib import AbstractContextManager
 
 from .db_types import ConnectionProtocol, Row, RowSequence
-from .exceptions import DatabaseError
+from .exceptions import DatabaseError, InterfaceError, ProgrammingError
 
-
-class Cursor(AbstractContextManager["Cursor"]):
+class Cursor(AbstractContextManager):
     """DB-API 2.0 Cursor class."""
 
     description: Optional[
@@ -31,8 +30,10 @@ class Cursor(AbstractContextManager["Cursor"]):
         self.arraysize: int = 1
         self.description = None
         self.rowcount: int = -1
+        self._lastrowid = None
+        self.closed = False
 
-    def __enter__(self) -> Cursor:
+    def __enter__(self) -> 'Cursor':
         """Enter context manager."""
         return self
 
@@ -45,12 +46,32 @@ class Cursor(AbstractContextManager["Cursor"]):
         """Exit context manager."""
         self.close()
 
+    @property
+    def connection(self) -> ConnectionProtocol:
+        """Return the cursor's connection."""
+        return self._connection
+
+    @property
+    def lastrowid(self) -> Optional[Any]:
+        """Return the rowid of the last modified row."""
+        return self._lastrowid
+
     def close(self) -> None:
         """Close the cursor."""
-        self._cursor.close()
+        if not self.closed:
+            try:
+                self._cursor.close()
+            finally:
+                self.closed = True
 
-    def execute(self, operation: str, parameters: Optional[Sequence[Any]] = None) -> Cursor:
+    def _check_closed(self) -> None:
+        """Check if cursor is closed."""
+        if self.closed:
+            raise InterfaceError("Cursor is closed")
+
+    def execute(self, operation: str, parameters: Optional[Sequence[Any]] = None) -> 'Cursor':
         """Execute a database operation."""
+        self._check_closed()
         try:
             if parameters:
                 self._cursor.execute(operation, parameters)
@@ -61,12 +82,20 @@ class Cursor(AbstractContextManager["Cursor"]):
                 self.description = self._cursor.description
 
             self.rowcount = self._cursor.rowcount
+
+            # Attempt to get lastrowid if available
+            try:
+                self._lastrowid = self._cursor.lastrowid
+            except AttributeError:
+                self._lastrowid = None
+
             return self
         except Exception as e:
             raise DatabaseError(str(e)) from e
 
     def executemany(self, operation: str, seq_of_parameters: Sequence[Sequence[Any]]) -> None:
         """Execute the same operation multiple times."""
+        self._check_closed()
         try:
             for parameters in seq_of_parameters:
                 self.execute(operation, parameters)
@@ -75,6 +104,7 @@ class Cursor(AbstractContextManager["Cursor"]):
 
     def fetchone(self) -> Optional[Row]:
         """Fetch the next row."""
+        self._check_closed()
         try:
             row = self._cursor.fetchone()
             if row is None:
@@ -85,6 +115,7 @@ class Cursor(AbstractContextManager["Cursor"]):
 
     def fetchmany(self, size: Optional[int] = None) -> RowSequence:
         """Fetch the next set of rows."""
+        self._check_closed()
         try:
             if size is None:
                 size = self.arraysize
@@ -97,6 +128,7 @@ class Cursor(AbstractContextManager["Cursor"]):
 
     def fetchall(self) -> RowSequence:
         """Fetch all remaining rows."""
+        self._check_closed()
         try:
             rows = self._cursor.fetchall()
             if not rows:
@@ -104,3 +136,30 @@ class Cursor(AbstractContextManager["Cursor"]):
             return [tuple(row) if isinstance(row, (list, tuple)) else (row,) for row in rows]
         except Exception as e:
             raise DatabaseError(str(e)) from e
+
+    def nextset(self) -> Optional[bool]:
+        """Move to next result set."""
+        self._check_closed()
+        try:
+            has_next = self._cursor.nextset()
+            if has_next:
+                if self._cursor.description:
+                    self.description = self._cursor.description
+                self.rowcount = self._cursor.rowcount
+            return has_next
+        except AttributeError:
+            return None
+        except Exception as e:
+            raise DatabaseError(str(e)) from e
+
+    def setinputsizes(self, sizes: Sequence[Any]) -> None:
+        """Predefine memory areas for parameters."""
+        self._check_closed()
+        # Implementation optional per DB-API spec
+        pass
+
+    def setoutputsize(self, size: int, column: Optional[int] = None) -> None:
+        """Set a column buffer size for fetches of large columns."""
+        self._check_closed()
+        # Implementation optional per DB-API spec
+        pass

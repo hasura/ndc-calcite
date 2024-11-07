@@ -1,16 +1,5 @@
-""""Type definitions for the DB-API package."""
-from typing import Any, Optional, Sequence, Tuple, Protocol
-from typing_extensions import TypeAlias
-
-
-# Row type definitions
-Row: TypeAlias = Tuple[Any, ...]
-RowSequence: TypeAlias = Sequence[Row]
-
-# JDBC related types
-JDBCArgs: TypeAlias = Optional[Sequence[Any]]
-JDBCPath: TypeAlias = Optional[str]
-
+"""Type definitions for the DB-API package."""
+from typing import Any, Dict, Optional, Protocol, Sequence, Tuple, Union
 
 class ConnectionProtocol(Protocol):
     """Protocol defining the Connection interface."""
@@ -27,7 +16,14 @@ class ConnectionProtocol(Protocol):
     def cursor(self) -> "CursorProtocol": ...
 
     @property
-    def jdbc_connection(self):
+    def autocommit(self) -> bool: ...
+
+    @autocommit.setter
+    def autocommit(self, value: bool) -> None: ...
+
+    @property
+    def jdbc_connection(self) -> Any:
+        """Return the JDBC connection object."""
         return self._jdbc_connection
 
 
@@ -35,6 +31,7 @@ class CursorProtocol(Protocol):
     """Protocol defining the Cursor interface."""
 
     arraysize: int
+    closed: bool
     description: Optional[
         Sequence[
             Tuple[
@@ -49,6 +46,7 @@ class CursorProtocol(Protocol):
         ]
     ]
     rowcount: int
+    lastrowid: Optional[Any]
 
     def close(self) -> None: ...
 
@@ -60,8 +58,30 @@ class CursorProtocol(Protocol):
         self, operation: str, seq_of_parameters: Sequence[Sequence[Any]]
     ) -> None: ...
 
-    def fetchone(self) -> Optional[Row]: ...
+    def fetchone(self) -> Optional[Tuple[Any, ...]]: ...
 
-    def fetchmany(self, size: Optional[int] = None) -> RowSequence: ...
+    def fetchmany(self, size: Optional[int] = None) -> Sequence[Tuple[Any, ...]]: ...
 
-    def fetchall(self) -> RowSequence: ...
+    def fetchall(self) -> Sequence[Tuple[Any, ...]]: ...
+
+    def nextset(self) -> Optional[bool]: ...
+
+    def setinputsizes(self, sizes: Sequence[Any]) -> None: ...
+
+    def setoutputsize(self, size: int, column: Optional[int] = None) -> None: ...
+
+
+# Type definitions
+Row = Tuple[Any, ...]
+RowSequence = Sequence[Row]
+JDBCArgs = Optional[Union[Sequence[Any], Dict[str, Any]]]
+JDBCPath = Optional[str]
+
+__all__ = [
+    'ConnectionProtocol',
+    'CursorProtocol',
+    'Row',
+    'RowSequence',
+    'JDBCArgs',
+    'JDBCPath',
+]
