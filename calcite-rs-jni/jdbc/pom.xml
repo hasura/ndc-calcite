@@ -87,6 +87,11 @@
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
 
             <!-- Apache Commons -->
             <dependency>
@@ -251,6 +256,12 @@
                 <directory>src/main/resources</directory>
                 <filtering>false</filtering>
             </resource>
+            <!-- Add specific resource for service file -->
+            <resource>
+                <directory>src/main/service</directory>
+                <targetPath>META-INF/services</targetPath>
+                <filtering>false</filtering>
+            </resource>
         </resources>
         <plugins>
             <!-- Enforcer Plugin -->
@@ -338,14 +349,14 @@
                 </executions>
             </plugin>
 
-            <!-- Assembly Plugin for Fat JAR -->
+            <!-- Assembly Plugin -->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.7.1</version>
                 <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
+                    <descriptors>
+                        <descriptor>src/assembly/assembly.xml</descriptor>
+                    </descriptors>
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
