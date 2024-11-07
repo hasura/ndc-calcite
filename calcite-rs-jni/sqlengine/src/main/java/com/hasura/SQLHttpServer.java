@@ -46,6 +46,7 @@ public class SQLHttpServer {
 
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         server.createContext("/sql", new SQLHandler());
+        server.createContext("/v1/sql", new SQLHandler());
         server.setExecutor(null);
         server.start();
         System.out.println("Server started on port " + PORT);
