@@ -9,6 +9,10 @@ public class CalciteVerboseDebugger {
     public static void debugVerbose(String modelPath) throws Exception {
         Properties info = new Properties();
         info.put("model", modelPath);
+        info.setProperty("fun", "standards");
+        info.setProperty("caseSensitive", "true");
+        info.setProperty("unquotedCasing", "UNCHANGED");
+        info.setProperty("quotedCasing", "UNCHANGED");
 
         try (Connection connection = DriverManager.getConnection("jdbc:calcite:", info)) {
             CalciteConnection calciteConnection = connection.unwrap(CalciteConnection.class);

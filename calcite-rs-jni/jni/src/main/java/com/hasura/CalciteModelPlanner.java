@@ -40,6 +40,7 @@ public class CalciteModelPlanner {
         public static void displayQueryPlan(String modelPath, String sql) throws Exception {
                 Properties info = new Properties();
                 info.put("model", modelPath);
+                info.setProperty("fun", "standard");
                 info.setProperty("caseSensitive", "true");
                 info.setProperty("unquotedCasing", "UNCHANGED");
                 info.setProperty("quotedCasing", "UNCHANGED");
