@@ -1,4 +1,5 @@
 """DB-API 2.0 compliant JDBC connector for GraphQL."""
+import logging
 from datetime import date, datetime, time, timedelta
 from typing import Any, Type
 
@@ -10,11 +11,25 @@ from .exceptions import (
     ProgrammingError, NotSupportedError
 )
 
+# Add SQLAlchemy dialect registration
+from sqlalchemy.dialects import registry
+from .sqlalchemy.hasura.ddnbase import HasuraDDNDialect
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+try:
+    logger.debug("Attempting to register the 'hasura.graphql' dialect.")
+    registry.register('hasura.graphql', 'py_graphql_sql.sqlalchemy.hasura.ddnbase', 'HasuraDDNDialect')
+    logger.debug("Successfully registered the 'hasura.graphql' dialect.")
+except Exception as e:
+    logger.error("Failed to register the 'hasura.graphql' dialect.", exc_info=True)
+
 # DB-API 2.0 Module Interface
 apilevel = "2.0"
 threadsafety = 1  # Threads may share module, but not connections
 paramstyle = "qmark"  # JDBC uses ? style
-
 
 # DB-API 2.0 Type Objects
 class DBAPITypeObject:
@@ -89,5 +104,8 @@ __all__ = [
     'InternalError', 'ProgrammingError', 'NotSupportedError',
 
     # Version info
-    'VERSION', '__version__'
+    'VERSION', '__version__',
+
+    # Add SQLAlchemy dialect
+    'HasuraDDNDialect'
 ]

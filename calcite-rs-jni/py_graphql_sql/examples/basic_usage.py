@@ -10,16 +10,8 @@ def main() -> None:
     host = "http://localhost:3000/graphql"
     jdbc_args = {"role": "admin"}
 
-    # Get paths to JAR directories
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    driver_paths = [
-        os.path.abspath(
-            os.path.join(current_dir, "../../jdbc/target")
-        )  # Add additional paths as needed
-    ]
-
     # Create connection using context manager
-    with connect(host, jdbc_args, driver_paths) as conn:
+    with connect(host, jdbc_args) as conn:
         with conn.cursor() as cur:
             # Execute a query
             cur.execute("SELECT * FROM Albums", [])

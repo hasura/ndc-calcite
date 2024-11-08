@@ -20,11 +20,18 @@ class Connection(AbstractContextManager):
     def __init__(
         self,
         host: str,
-        jdbc_args: Optional[JDBCArgs] = None,
-        driver_paths: Optional[List[str]] = None
+        jdbc_args: Optional[JDBCArgs] = None
     ) -> None:
         """Initialize connection."""
         try:
+            # Get paths to JAR directories
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            driver_paths = [
+                os.path.abspath(
+                    os.path.join(current_dir, "./jars")
+                )  # Add additional paths as needed
+            ]
+
             # Start JVM if it's not already started
             if not jpype.isJVMStarted():
                 # Build classpath from all JARs in provided directories
@@ -135,8 +142,7 @@ class Connection(AbstractContextManager):
 
 def connect(
     host: str,
-    jdbc_args: Optional[JDBCArgs] = None,
-    driver_paths: Optional[List[str]] = None,
+    jdbc_args: Optional[JDBCArgs] = None
 ) -> Connection:
     """
     Create a new read-only database connection.
@@ -149,4 +155,4 @@ def connect(
     Returns:
         Connection: A new database connection
     """
-    return Connection(host, jdbc_args, driver_paths)
+    return Connection(host, jdbc_args)
