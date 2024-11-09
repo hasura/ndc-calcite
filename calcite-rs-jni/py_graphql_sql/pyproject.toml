@@ -34,7 +34,8 @@ dev = ["black", "isort"]
 homepage = "https://github.com/hasura/ndc-calcite"
 
 [project.entry-points."sqlalchemy.dialects"]
-"hasura.graphql" = "py_graphql_sql.sqlalchemy.hasura.ddnbase:HasuraDDNDialect"
+"hasura.py_graphql_sql" = "py_graphql_sql.sqlalchemy.hasura.ddnbase:HasuraDDNDialect"
+"hasura" = "py_graphql_sql.sqlalchemy.hasura.ddnbase:HasuraDDNDialect"
 
 [tool.setuptools]
 packages = { find = {} }

@@ -2,6 +2,7 @@
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.dialects import registry
 import logging
+import sqlalchemy
 from pprint import pprint
 
 # Enable logging
@@ -12,9 +13,12 @@ print("\n=== Testing Connection ===")
 # Ensure dialect is registered
 from py_graphql_sql.sqlalchemy.hasura.ddnbase import HasuraDDNDialect
 
-url = 'hasura+graphql:///?url=http://localhost:3000/graphql'
+url = 'hasura+py_graphql_sql:///?url=http://localhost:3000/graphql'
 
 try:
+    # registered_dialects = list(registry._entry_points.keys())
+    dialect_names = list(sqlalchemy.dialects.registry.impls)
+    print(dialect_names)
     print(f"\nCreating engine with URL: {url}")
     engine = create_engine(url, echo=True)
     print("Engine created successfully")

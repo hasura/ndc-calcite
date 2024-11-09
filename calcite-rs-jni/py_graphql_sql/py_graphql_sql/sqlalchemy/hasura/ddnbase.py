@@ -1,3 +1,5 @@
+import importlib
+
 from sqlalchemy.engine import default
 from sqlalchemy import types
 from sqlalchemy.types import (
@@ -12,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class HasuraDDNDialect(default.DefaultDialect):
     name = 'hasura'
-    driver = 'graphql'
+    driver = 'py_graphql_sql'
 
     # Existing flags
     supports_alter = False
@@ -208,8 +210,13 @@ class HasuraDDNDialect(default.DefaultDialect):
 
     @classmethod
     def dbapi(cls):
-        import py_graphql_sql
-        return py_graphql_sql
+        try:
+            logger.info(f"Called Hasura dbapi; {cls.driver}")
+            driver_module = importlib.import_module(cls.driver)
+            return driver_module
+        except Exception as e:
+            logger.info(f"Error loading Hasura dbapi: {e}")
+            raise
 
     def create_connect_args(self, url):
         """Convert SQLAlchemy URL to your connect() parameters"""
