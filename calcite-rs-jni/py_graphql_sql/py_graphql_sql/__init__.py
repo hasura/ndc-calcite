@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 try:
     logger.debug("Attempting to register the 'hasura.py_graphql_sql' dialect.")
     registry.register('hasura.py_graphql_sql', 'py_graphql_sql.sqlalchemy.hasura.ddnbase', 'HasuraDDNDialect')
-    registry.register('hasura', 'py_graphql_sql.sqlalchemy.hasura.ddnbase', 'HasuraDDNDialect')
+    # registry.register('hasura', 'py_graphql_sql.sqlalchemy.hasura.ddnbase', 'HasuraDDNDialect')
     logger.debug(registry.load('hasura.py_graphql_sql'))
     logger.debug("Successfully registered the 'hasura.py_graphql_sql' dialect.")
 except Exception as e:

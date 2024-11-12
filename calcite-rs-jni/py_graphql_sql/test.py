@@ -17,7 +17,7 @@ url = 'hasura+py_graphql_sql:///?url=http://localhost:3000/graphql'
 
 try:
     # registered_dialects = list(registry._entry_points.keys())
-    dialect_names = list(sqlalchemy.dialects.registry.impls)
+    dialect_names = list(sqlalchemy.dialects.registry.impls) + list(sqlalchemy.dialects.__all__)
     print(dialect_names)
     print(f"\nCreating engine with URL: {url}")
     engine = create_engine(url, echo=True)
