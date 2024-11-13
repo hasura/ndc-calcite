@@ -8,6 +8,15 @@
         <artifactId>ndc-calcite</artifactId>
         <version>1.0.0</version>
     </parent>
+    <artifactId>sqlengine</artifactId>
+
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jar.version>1.0.0</jar.version> <!-- The version of the jar from the other project -->
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.json</groupId>
@@ -17,18 +26,61 @@
         <dependency>
             <groupId>com.hasura</groupId>
             <artifactId>graphql-jdbc-driver</artifactId>
-            <version>1.0.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/../jdbc/target/graphql-jdbc-driver-1.0.0-jar-with-dependencies.jar</systemPath>
+            <version>${jar.version}</version> <!-- Assuming it's the same version as your project -->
         </dependency>
     </dependencies>
 
-    <artifactId>sqlengine</artifactId>
-
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
+    <build>
+        <plugins>
+            <!-- Exec Plugin for Installing Local Dependencies -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>install-local-jar</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>mvn</executable>
+                            <arguments>
+                                <argument>install:install-file</argument>
+                                <argument>-Dfile=${project.basedir}/../jdbc/target/graphql-jdbc-driver-${jar.version}-jar-with-dependencies.jar</argument>
+                                <argument>-DgroupId=com.hasura</argument>
+                                <argument>-DartifactId=graphql-jdbc-driver</argument>
+                                <argument>-Dversion=${jar.version}</argument>
+                                <argument>-Dpackaging=jar</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Assembly Plugin -->
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.hasura.SQLHttpServer</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

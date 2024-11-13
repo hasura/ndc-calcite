@@ -47,9 +47,24 @@ public class SQLHttpServer {
         HttpServer server = HttpServer.create(new InetSocketAddress(PORT), 0);
         server.createContext("/sql", new SQLHandler());
         server.createContext("/v1/sql", new SQLHandler());
+        server.createContext("/health", new HealthHandler());  // add this line
         server.setExecutor(null);
         server.start();
         System.out.println("Server started on port " + PORT);
+    }
+
+    static class HealthHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            JSONObject json = new JSONObject();
+            json.put("health", "OK");
+            byte[] response = json.toString().getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, response.length);
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response);
+            }
+        }
     }
 
     static class SQLHandler implements HttpHandler {
