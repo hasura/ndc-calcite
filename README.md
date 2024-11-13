@@ -1,8 +1,9 @@
 # Hasura Integration Suite
 
-Tools for integrating with Hasura Data Delivery Network (DDN) in two key ways:
+Tools for integrating with Hasura Data Delivery Network (DDN) in three key ways:
 1. Native Data Connector (NDC) toolkit for ingesting data sources into Hasura DDN
 2. SQL-based tools for querying Hasura DDN endpoints
+3. ODBC-based access to Hasura DDN
 
 ## Native Data Connector Development
 
@@ -74,6 +75,20 @@ Lightweight HTTP server for executing SQL queries against Hasura DDN endpoints v
 - Connection pooling
 - Environment-based configuration
 
+## ODBC-based Access to Hasura DDN
+
+### [DDN ODBC Driver](calcite-rs-jni/odbc/README.md)
+The DDN ODBC Driver is a .NET Standard 2.0 library that provides an ODBC-compliant interface to interact with the Hasura DDN platform. This driver allows you to execute SQL queries and retrieve data from your Hasura DDN instance using a familiar ODBC-based API.
+
+#### Features
+- Supports ODBC API for executing SQL queries and retrieving data
+- Provides a simple and intuitive connection management interface
+- Automatically starts and manages a Java application server in the background
+- Supports reading metadata (tables, columns) from the Hasura DDN instance
+- Operates in a read-only mode to ensure data integrity
+
+For detailed usage instructions, please refer to the [DDN ODBC Driver README](DDN-ODBC/README.md).
+
 ## Getting Started
 
 Each component has its own setup and configuration requirements. Please refer to the individual component documentation linked above for detailed instructions.
@@ -93,6 +108,7 @@ For development setup and contribution guidelines, please refer to each componen
 - [JDBC Connector Development Guide](calcite-rs-jni/jdbc/README.md#building-from-source)
 - [Python DB-API Development](calcite-rs-jni/py_graphql_sql/README.md#prerequisites)
 - [SQL HTTP Server Development](calcite-rs-jni/sqlengine/README.md#building-and-running)
+- [DDN ODBC Driver Development](DDN-ODBC/README.md)
 
 ## License
 
@@ -102,6 +118,7 @@ Different components are released under different licenses:
 - Python DB-API: MIT License
 - SQL HTTP Server: MIT License
 - NDC Calcite: License information not specified
+- DDN ODBC Driver: License information not specified
 
 ## Support
 
