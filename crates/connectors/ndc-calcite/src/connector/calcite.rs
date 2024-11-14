@@ -183,19 +183,8 @@ impl Connector for Calcite {
         }
             .instrument(info_span!("tracing Calcite"))
             .await;
-        dotenv::dotenv().ok();
-        let calcite;
-        let calcite_ref;
-        {
-            let java_vm = get_jvm().lock().unwrap();
-            let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_query_engine(configuration, &mut env)
-                .or(Err(ErrorResponse::from_error(crate::calcite::CalciteError { message: String::from("Failed to lock JVM") })))?;
-            let env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite_ref = env.new_global_ref(calcite).unwrap();
-        }
 
-        let schema = retrieve_schema(configuration, calcite_ref.clone());
+        let schema = retrieve_schema(configuration);
         match schema {
             Ok(schema) => Ok(JsonResponse::from(schema)),
             Err(_) => Err(ErrorResponse::new(StatusCode::from_u16(500).unwrap(),"Problem getting schema.".to_string(),Value::String("".to_string()))),
@@ -349,7 +338,6 @@ fn init_state(
 }
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
     use std::path::PathBuf;
 
     use axum_test_helper::TestClient;
@@ -359,14 +347,18 @@ mod tests {
 
     #[tokio::test]
     async fn capabilities_match_ndc_spec_version() -> Result<()> {
+
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+        let config_dir = PathBuf::from(manifest_dir).join("test_configuration");
+
         let state =
-            ndc_sdk::default_main::init_server_state(Calcite::default(), PathBuf::new()).await?;
+            ndc_sdk::default_main::init_server_state(Calcite::default(), config_dir).await?;
         let app = ndc_sdk::default_main::create_router::<Calcite>(state, None);
 
         let client = TestClient::new(app);
         let response = client.get("/capabilities").send().await;
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status().as_u16(), StatusCode::OK.as_u16());
 
         let body: ndc_models::CapabilitiesResponse = response.json().await;
         // ideally we would get this version from `ndc_models::VERSION`

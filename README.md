@@ -208,6 +208,13 @@ And you should see this:
 
 **NOTE Perform all of these operations from the root of the repo!!!**
 
+### Generate the configuration of a connector
+
+```shell
+./run-connector-update.sh file
+```
+
+
 ### Start the standalone instance
 
 ```shell
@@ -272,8 +279,8 @@ ddn run docker-start
 
 ## Additional Notes
 
-All projection, filtering and sorting are handled in memory. 
-This means that the entire file is read into memory, and then operated on as a table scan. 
+All projection, filtering and sorting are handled in memory.
+This means that the entire file is read into memory, and then operated on as a table scan.
 Wide tables - with narrow projections may not perform as well as expected.
 Large tables may not perform well.
 

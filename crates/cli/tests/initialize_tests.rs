@@ -1,10 +1,11 @@
 mod common;
 
+use configuration::version5::{parse_configuration, CalciteRefSingleton};
 use tokio::fs;
 
 use ndc_calcite_cli::*;
-use ndc_calcite_configuration as configuration;
-use ndc_calcite_configuration::ParsedConfiguration;
+use ndc_calcite_schema as configuration;
+use ndc_calcite_schema::version5::ParsedConfiguration;
 
 #[tokio::test]
 async fn test_initialize_directory() -> anyhow::Result<()> {
@@ -15,11 +16,15 @@ async fn test_initialize_directory() -> anyhow::Result<()> {
         environment: configuration::environment::EmptyEnvironment,
         release_version: None,
     };
+
+    let calcite_singleton = CalciteRefSingleton::new();
+
     run(
         Command::Initialize {
             with_metadata: false,
         },
         context,
+        calcite_singleton,
     )
     .await?;
 
@@ -31,7 +36,7 @@ async fn test_initialize_directory() -> anyhow::Result<()> {
     assert!(configuration_file_path.exists());
     let contents = fs::read_to_string(configuration_file_path).await?;
     common::assert_ends_with_newline(&contents);
-    let _: ParsedConfiguration = configuration::parse_configuration(&dir).await?;
+    let _: ParsedConfiguration = parse_configuration(&dir).await?;
 
     let metadata_file_path = dir
         .path()
@@ -51,11 +56,13 @@ async fn test_initialize_version_is_unchanged() -> anyhow::Result<()> {
         environment: configuration::environment::EmptyEnvironment,
         release_version: None,
     };
+    let calcite_singleton = CalciteRefSingleton::new();
     run(
         Command::Initialize {
             with_metadata: false,
         },
         context,
+        calcite_singleton,
     )
     .await?;
 
@@ -88,11 +95,13 @@ async fn test_do_not_initialize_when_files_already_exist() -> anyhow::Result<()>
         environment: configuration::environment::EmptyEnvironment,
         release_version: None,
     };
+    let calcite_singleton = CalciteRefSingleton::new();
     match run(
         Command::Initialize {
             with_metadata: false,
         },
         context,
+        calcite_singleton
     )
     .await
     {
@@ -115,11 +124,13 @@ async fn test_initialize_directory_with_metadata() -> anyhow::Result<()> {
         environment: configuration::environment::EmptyEnvironment,
         release_version: None,
     };
+    let calcite_singleton = CalciteRefSingleton::new();
     run(
         Command::Initialize {
             with_metadata: true,
         },
         context,
+        calcite_singleton,
     )
     .await?;
 
@@ -152,11 +163,14 @@ async fn test_initialize_directory_with_metadata_and_release_version() -> anyhow
         environment: configuration::environment::EmptyEnvironment,
         release_version: Some("v1.2.3"),
     };
+    let calcite_singleton = CalciteRefSingleton::new();
+
     run(
         Command::Initialize {
             with_metadata: true,
         },
         context,
+        calcite_singleton,
     )
     .await?;
 
