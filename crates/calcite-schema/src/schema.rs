@@ -62,7 +62,11 @@ use crate::version5::ParsedConfiguration;
 // ANCHOR: get_schema
 #[tracing::instrument(skip(configuration, calcite_ref), level=Level::INFO)]
 pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse> {
-    let data_models = get_models(&calcite_ref);
+    let data_models = match configuration.clone().metadata {
+        Some(metadata) => metadata,
+        None => get_models(&calcite_ref)
+    };
+
     let scalar_types = scalars::scalars();
     let (object_types, collections) = match collections::collections(&data_models, &scalar_types) {
         Ok(value) => value,
