@@ -195,6 +195,7 @@ impl Connector for Calcite {
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }
 
+        // add check for key in configuration
         let schema = retrieve_schema(configuration, calcite_ref.clone());
         match schema {
             Ok(schema) => Ok(JsonResponse::from(schema)),
