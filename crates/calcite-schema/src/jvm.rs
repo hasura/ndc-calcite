@@ -79,11 +79,8 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
     let state_inited = env::var("STATE_INITED").unwrap_or("false".to_string());
     if state_inited == "false" {
         let jar_dependency_folder = env::var("JAR_DEPENDENCY_FOLDER");
-        println!("Jar dependency folder is {:#?}", jar_dependency_folder);
         let folder_path = jar_dependency_folder.unwrap_or("/calcite-rs-jni/jni/target/dependency".into());
-        println!("Folder path is {}", folder_path);
         let mut jar_paths = get_jar_files(&folder_path);
-        println!("Jar paths are {:#?}", jar_paths);
         let jar_name = env::var("CALCITE_JAR").unwrap_or("/calcite-rs-jni/jni/target/calcite-rs-jni-1.0-SNAPSHOT.jar".into());
 
         if !jar_name.is_empty() {

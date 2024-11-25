@@ -1,34 +1,20 @@
 //! # Get Schema
 //!
-//! Introspects Calcite metadata and generates a new schema. Updates
-//! the config file with the new schema.
-//!
+//! Introspects Calcite metadata and generates the NDC schema.
 
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
-use jni::objects::GlobalRef;
 use ndc_models as models;
 use ndc_models::SchemaResponse;
 use ndc_sdk::connector::Result;
 use tracing::Level;
 use crate::{collections, scalars};
-use crate::models::get_models;
 use crate::version5::ParsedConfiguration;
 
-/// Get the schema information from the given `calcite_ref`.
+/// Get the schema information from the metadata present in the configuration.
 ///
-/// This function retrieves the data models using `calcite::get_models` function and the scalar types using `scalars::scalars` function.
-/// It then calls `collections::collections` function with the data models and scalar types to get the object types and collections.
-/// If any error occurs during the retrieval of object types and collections, the function returns the error immediately.
 ///
 /// The `procedures` and `functions` are empty vectors.
 ///
 /// Finally, the schema information is populated into a `SchemaResponse` struct and returned.
-///
-/// # Arguments
-///
-/// * `calcite_ref` - A `GlobalRef` representing the Calcite reference.
 ///
 /// # Returns
 ///
@@ -46,10 +32,8 @@ use crate::version5::ParsedConfiguration;
 ///
 ///     use ndc_calcite_schema::schema::get_schema;
 ///
-///     let calcite_ref = GlobalRef::new();
-///
 ///     // Get the schema
-///     let schema = get_schema(configuration, calcite_ref)?;
+///     let schema = get_schema(configuration)?;
 ///
 ///     // Print the schema
 ///     println!("Schema: {:?}", schema);
