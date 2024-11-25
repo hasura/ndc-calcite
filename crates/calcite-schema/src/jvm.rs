@@ -96,15 +96,15 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
         }
 
         let log4j2_debug = env::var("LOG4J2_DEBUG").unwrap_or("false".to_string());
-        let otel_exporter_otlp_traces_endpoint = env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT").unwrap_or_default();
-        let otel_exporter_otlp_metrics_endpoint = env::var("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT").unwrap_or_default();
-        let otel_metric_export_interval = env::var("OTEL_METRIC_EXPORT_INTERVAL").unwrap_or_default();
-        let otel_exporter_otlp_endpoint = env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or("http://local.hasura.dev:4317".to_string());
-        let otel_service_name = env::var("OTEL_SERVICE_NAME").unwrap_or("".to_string());
-        let otel_logs_exporter = env::var("OTEL_LOGS_EXPORTER").unwrap_or("".to_string());
-        let otel_traces_exporter = env::var("OTEL_TRACES_EXPORTER").unwrap_or("".to_string());
-        let otel_metrics_exporter = env::var("OTEL_METRICS_EXPORTER").unwrap_or("".to_string());
-        let otel_log_level = env::var("OTEL_LOG_LEVEL").unwrap_or("".to_string());
+        let otel_exporter_otlp_traces_endpoint = env::var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT");
+        let otel_exporter_otlp_metrics_endpoint = env::var("OTEL_EXPORTER_OTLP_METRICS_ENDPOINT");
+        let otel_metric_export_interval = env::var("OTEL_METRIC_EXPORT_INTERVAL");
+        let otel_exporter_otlp_endpoint = env::var("OTEL_EXPORTER_OTLP_ENDPOINT");
+        let otel_service_name = env::var("OTEL_SERVICE_NAME");
+        let otel_logs_exporter = env::var("OTEL_LOGS_EXPORTER");
+        let otel_traces_exporter = env::var("OTEL_TRACES_EXPORTER");
+        let otel_metrics_exporter = env::var("OTEL_METRICS_EXPORTER");
+        let otel_log_level = env::var("OTEL_LOG_LEVEL");
         let log_level = env::var("LOG_LEVEL").unwrap_or("".to_string());
         let log4j_configuration_file = env::var("LOG4J_CONFIGURATION_FILE").unwrap_or("classpath:log4j2-config.xml".to_string());
         let expanded_paths: String = jar_paths.join(":");
@@ -114,55 +114,55 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
             .option("--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED")
             .option("-Dotel.java.global-autoconfigure.enabled=true")
             .option(format!("-Dlog4j.configurationFile={}", log4j_configuration_file));
-        if !otel_exporter_otlp_traces_endpoint.is_empty() {
+        if let Ok(otel_exporter_otlp_traces_endpoint) = otel_exporter_otlp_traces_endpoint {
             jvm_args = jvm_args.option(
                 format!("-Dotel.exporter.otlp.traces.endpoint={}", otel_exporter_otlp_traces_endpoint)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.exporter.otlp.traces.endpoint={}", otel_exporter_otlp_traces_endpoint));
         }
-        if !otel_exporter_otlp_metrics_endpoint.is_empty() {
+        if let Ok(otel_exporter_otlp_metrics_endpoint) = otel_exporter_otlp_metrics_endpoint {
             jvm_args = jvm_args.option(
                 format!("-Dotel.exporter.otlp.metrics.endpoint={}", otel_exporter_otlp_metrics_endpoint)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.exporter.otlp.metrics.endpoint={}", otel_exporter_otlp_metrics_endpoint));
         }
-        if !otel_exporter_otlp_endpoint.is_empty() {
+        if let Ok(endpoint) = otel_exporter_otlp_endpoint {
             jvm_args = jvm_args.option(
-                format!("-Dotel.exporter.otlp.endpoint={}", otel_exporter_otlp_endpoint)
+                format!("-Dotel.exporter.otlp.endpoint={}", endpoint)
             );
-            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.exporter.otlp.endpoint={}", otel_exporter_otlp_endpoint));
+            event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.exporter.otlp.endpoint={}", endpoint));
         }
-        if !otel_service_name.is_empty() {
+        if let Ok(otel_service_name) = otel_service_name {
             jvm_args = jvm_args.option(
                 format!("-Dotel.service.name={}", otel_service_name)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.service.name={}", otel_service_name));
         }
-        if !otel_logs_exporter.is_empty() {
+        if let Ok(otel_logs_exporter) = otel_logs_exporter {
             jvm_args = jvm_args.option(
                 format!("-Dotel.logs.exporter={}", otel_logs_exporter)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.logs.exporter={}", otel_logs_exporter));
         }
-        if !otel_traces_exporter.is_empty() {
+        if let Ok(otel_traces_exporter) = otel_traces_exporter {
             jvm_args = jvm_args.option(
                 format!("-Dotel.traces.exporter={}", otel_traces_exporter)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.traces.exporter={}", otel_traces_exporter));
         }
-        if !otel_metrics_exporter.is_empty() {
+        if let Ok(otel_metrics_exporter) = otel_metrics_exporter {
             jvm_args = jvm_args.option(
                 format!("-Dotel.metrics.exporter={}", otel_metrics_exporter)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.metrics.exporter={}", otel_metrics_exporter));
         }
-        if !otel_metric_export_interval.is_empty() {
+        if let Ok(otel_metric_export_interval) = otel_metric_export_interval {
             jvm_args = jvm_args.option(
                 format!("-Dotel.metric.export.interval={}", otel_metric_export_interval)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.metric.export.interval={}", otel_metric_export_interval));
         }
-        if !otel_log_level.is_empty() {
+        if let Ok(otel_log_level) = otel_log_level {
             jvm_args = jvm_args.option(
                 format!("-Dotel.log.level={}", otel_log_level)
             );

@@ -315,7 +315,7 @@ fn convert_to_relationship_argument(p0: &models::Argument) -> models::Relationsh
 fn init_state(
     configuration: &ParsedConfiguration,
 ) -> Result<CalciteState> {
-    println!("init state {:#?}", configuration);
+
     dotenv::dotenv().ok();
     init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()));
     let jvm = get_jvm();
