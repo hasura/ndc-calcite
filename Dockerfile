@@ -16,7 +16,7 @@ RUN cargo chef cook --recipe-path recipe.json
 # final build stage
 FROM chef AS builder
 COPY . .
-RUN cargo build  --bin ndc-calcite --bin ndc-calcite-cli
+RUN cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
 
 # java-build stage
 FROM debian:trixie-slim AS java-build
