@@ -11,8 +11,8 @@ use jni::objects::{GlobalRef, JObject, JString, JValueGen};
 use jni::objects::JValueGen::Object;
 use ndc_models as models;
 use ndc_models::{FieldName, RowFieldValue};
-use ndc_sdk::connector::{ErrorResponse};
-use opentelemetry::trace::{TraceContextExt};
+use ndc_sdk::connector::ErrorResponse;
+use opentelemetry::trace::TraceContextExt;
 use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
@@ -136,7 +136,7 @@ pub fn connector_query(
     let span_id = otel_context.span().span_context().span_id();
     let trace_id = otel_context.span().span_context().trace_id();
 
-    let jvm = get_jvm().lock().unwrap();
+    let jvm = get_jvm(true).lock().unwrap();
     let mut java_env = jvm.attach_current_thread().map_err(ErrorResponse::from_error)?;
     let calcite_query = java_env.new_local_ref(calcite_reference).map_err(ErrorResponse::from_error)?;
 

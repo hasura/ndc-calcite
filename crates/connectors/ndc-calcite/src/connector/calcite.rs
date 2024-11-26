@@ -23,7 +23,6 @@ use tracing::Instrument;
 use crate::capabilities::calcite_capabilities;
 use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
 use ndc_calcite_schema::calcite::Model;
-use ndc_calcite_schema::models::get_models;
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_values::is_running_in_container::is_running_in_container;
@@ -98,7 +97,6 @@ impl ConnectorSetup for Calcite {
                 .map_err(|err| ErrorResponse::from_error(err))?;
 
             update_model(&mut json_object)?;
-            update_metadata(&mut json_object);
 
             Ok(json_object)
         }
@@ -123,14 +121,6 @@ impl ConnectorSetup for Calcite {
             }
 
             Ok(())
-        }
-
-        fn update_metadata(json_object: &mut ParsedConfiguration) {
-            if json_object.metadata.is_none() {
-                let state = init_state(json_object).expect("TODO: panic message");
-                json_object.metadata = Some(get_models(&state.calcite_ref));
-                println!("metadata: {:?}", serde_json::to_string_pretty(&json_object.metadata));
-            }
         }
 
         configure_path(span, &configuration_dir);
@@ -315,8 +305,8 @@ fn init_state(
 ) -> Result<CalciteState> {
 
     dotenv::dotenv().ok();
-    init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()));
-    let jvm = get_jvm();
+    init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()), true);
+    let jvm = get_jvm(true);
     match jvm.lock() {
         Ok(java_vm) => {
             let calcite;

@@ -312,7 +312,7 @@ async fn update(
     for _attempt in 1..=UPDATE_ATTEMPTS {
         let existing_configuration = parse_configuration(config_path).await?;
         dotenv::dotenv().ok();
-        init_jvm(&existing_configuration);
+        init_jvm(&existing_configuration, false);
 
         let output = introspect(
             existing_configuration.clone(),

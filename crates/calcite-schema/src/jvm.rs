@@ -35,7 +35,7 @@ static CONFIG: OnceCell<Mutex<ParsedConfiguration>> = OnceCell::new();
 /// ```
 // ANCHOR: get_jvm
 #[tracing::instrument(skip(), level = Level::INFO)]
-pub fn get_jvm() -> &'static Mutex<JavaVM> {
+pub fn get_jvm(should_initialize_otel: bool) -> &'static Mutex<JavaVM> {
     {
         let jvm = JVM.get().expect("JVM is not set up.");
         let binding = jvm.lock().unwrap();
@@ -45,7 +45,7 @@ pub fn get_jvm() -> &'static Mutex<JavaVM> {
             dotenv::dotenv().ok();
             env.exception_describe().expect("TODO: panic message");
             env.exception_clear().expect("TODO: panic message");
-            init_jvm(&CONFIG.get().as_ref().unwrap().lock().unwrap());
+            init_jvm(&CONFIG.get().as_ref().unwrap().lock().unwrap(), should_initialize_otel);
             return JVM.get().expect("JVM problem.");
         }
     }
@@ -72,7 +72,7 @@ pub fn get_jvm() -> &'static Mutex<JavaVM> {
 /// ```
 // ANCHOR: init_jvm
 #[tracing::instrument(skip(calcite_configuration), level = Level::INFO)]
-pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
+pub fn init_jvm(calcite_configuration: &ParsedConfiguration, should_initialize_otel: bool) {
     let configuration = match calcite_configuration {
         ParsedConfiguration::Version5(c) => c
     };
@@ -111,9 +111,11 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
         let mut jvm_args = InitArgsBuilder::new()
             .version(JNIVersion::V8)
             .option(format!("-Dlog4j2.debug={}", log4j2_debug))
-            .option("--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED")
+//            .option("--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED")
             .option("-Dotel.java.global-autoconfigure.enabled=true")
             .option(format!("-Dlog4j.configurationFile={}", log4j_configuration_file));
+
+        if should_initialize_otel {
         if let Ok(otel_exporter_otlp_traces_endpoint) = otel_exporter_otlp_traces_endpoint {
             jvm_args = jvm_args.option(
                 format!("-Dotel.exporter.otlp.traces.endpoint={}", otel_exporter_otlp_traces_endpoint)
@@ -167,6 +169,8 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration) {
                 format!("-Dotel.log.level={}", otel_log_level)
             );
             event!(Level::DEBUG, "Added {} to JVM", format!("-Dotel.log.level={}", otel_log_level));
+        }
+
         }
         if !log_level.is_empty() {
             jvm_args = jvm_args.option(

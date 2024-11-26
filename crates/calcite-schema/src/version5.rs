@@ -1,6 +1,6 @@
 //! Internal Configuration and state for our connector.
 
-use std::collections::{HashMap};
+use std::collections::HashMap;
 use std::{error, fmt};
 use std::path::Path;
 use jni::JNIEnv;
@@ -61,13 +61,13 @@ impl CalciteRefSingleton {
                 dotenv::dotenv().ok();
                 let calcite;
                 let calcite_ref;
-                init_jvm(args);
-                let java_vm = get_jvm().lock().unwrap();
+                init_jvm(args, false);
+                let java_vm = get_jvm(false).lock().unwrap();
                 let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
                 calcite = create_query_engine(&config, &mut env);
                 let new_env = java_vm.attach_current_thread_as_daemon().unwrap();
                 calcite_ref = new_env.new_global_ref(calcite).unwrap();
-                self.calcite_ref.set(calcite_ref).map_err(| _ | "Calcite Query Engine already initialized").unwrap();
+                self.calcite_ref.set(calcite_ref).map_err(| e | format!("Calcite Query Engine already initialized - {e:#?}")).unwrap();
                 Ok(())
              }
         }

@@ -3,7 +3,7 @@
 //! This is intended to be automatically downloaded and invoked via the Hasura CLI, as a plugin.
 //! It is unlikely that end-users will use it directly.
 
-use std::{env};
+use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use clap::Parser;

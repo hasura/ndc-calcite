@@ -20,7 +20,7 @@ use crate::jvm::get_jvm;
 #[tracing::instrument(skip(calcite_ref), level=Level::INFO)]
 pub fn get_models(calcite_ref: &GlobalRef) -> HashMap<CollectionName, TableMetadata> {
     let map = {
-        let jvm = get_jvm().lock().unwrap();
+        let jvm = get_jvm(false).lock().unwrap();
         let mut env = jvm.attach_current_thread_as_daemon().unwrap();
         let calcite_query = env.new_local_ref(calcite_ref).unwrap();
         let args: &[JValueGen<&JObject<'_>>] = &[];
