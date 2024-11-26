@@ -129,7 +129,26 @@ namespace DDN_ODBC_Tester
             if (tables.Rows.Count > 0)
             {
                 string tableName = tables.Rows[0]["TABLE_NAME"].ToString();
-                TestMetadata(conn, "Basic Select", $"SELECT * FROM {tableName} LIMIT 5");
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"SELECT * FROM \"{tableName}\" LIMIT 5";
+                try
+                {
+                    using var reader = cmd.ExecuteReader();
+                    var columns = Enumerable.Range(0, reader.FieldCount)
+                        .Select(i => reader.GetName(i));
+                    Console.WriteLine(string.Join("\t", columns));
+
+                    while (reader.Read())
+                    {
+                        var values = Enumerable.Range(0, reader.FieldCount)
+                            .Select(i => reader[i]?.ToString() ?? "NULL");
+                        Console.WriteLine(string.Join("\t", values));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Parameterized query not supported: {ex.Message}");
+                }
             }
         }
 
@@ -177,14 +196,16 @@ namespace DDN_ODBC_Tester
                 cmd.CommandText = $"SELECT * FROM {tableName} LIMIT 1";
                 
                 using var reader = cmd.ExecuteReader();
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    Console.WriteLine($"Column {i}:");
-                    Console.WriteLine($"  Name: {reader.GetName(i)}");
-                    Console.WriteLine($"  Type: {reader.GetFieldType(i)}");
-                    Console.WriteLine($"  Precision: {reader.GetSchemaTable().Rows[i]["NumericPrecision"]}");
-                    Console.WriteLine($"  Scale: {reader.GetSchemaTable().Rows[i]["NumericScale"]}");
-                    Console.WriteLine($"  IsNullable: {reader.GetSchemaTable().Rows[i]["AllowDBNull"]}");
+                while(reader.Read()) {
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        Console.WriteLine($"Column {i}:");
+                        Console.WriteLine($"  Name: {reader.GetName(i)}");
+                        Console.WriteLine($"  Type: {reader.GetFieldType(i)}");
+                        Console.WriteLine($"  Precision: {reader.GetSchemaTable().Rows[i]["NumericPrecision"]}");
+                        Console.WriteLine($"  Scale: {reader.GetSchemaTable().Rows[i]["NumericScale"]}");
+                        Console.WriteLine($"  IsNullable: {reader.GetSchemaTable().Rows[i]["AllowDBNull"]}");
+                    }
                 }
             }
         }

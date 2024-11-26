@@ -10,63 +10,54 @@
 
 extern "C" {
 
-    SQLRETURN SQL_API SQLExecDirect_A(
-    SQLHSTMT        hstmt,
-    SQLCHAR*        szSqlStr,
-    SQLINTEGER      cbSqlStr)
-    {
-        std::string sqlStr(reinterpret_cast<char*>(szSqlStr),
-            cbSqlStr == SQL_NTS ? strlen(reinterpret_cast<const char*>(szSqlStr)) : cbSqlStr);
+    SQLRETURN SQL_API SQLExecDirect(
+        SQLHSTMT    StatementHandle,
+        SQLCHAR*    StatementText,
+        SQLINTEGER  TextLength) {
 
-        auto stmt = static_cast<Statement*>(hstmt);
-        if (!stmt) {
+        LOGF("SQLExecDirect called with query: %s", StatementText);
+
+        auto* stmt = static_cast<Statement*>(StatementHandle);
+        if (!stmt || !stmt->conn) {
+            LOG("Invalid statement handle or connection");
             return SQL_INVALID_HANDLE;
         }
 
-        return SQL_ERROR;
+        // Convert to string based on TextLength
+        std::string query;
+        if (TextLength == SQL_NTS) {
+            query = reinterpret_cast<const char*>(StatementText);
+        } else {
+            query = std::string(reinterpret_cast<const char*>(StatementText), TextLength);
+        }
+
+        LOGF("Executing query: %s", query.c_str());
+        return stmt->conn->Query(query, stmt);
     }
 
-    SQLRETURN SQL_API SQLExecDirect_W(
-        SQLHSTMT        hstmt,
-        SQLWCHAR*       szSqlStr,
-        SQLINTEGER      cbSqlStr)
-    {
-        // Get the actual string length
-        size_t actualLength = 0;
-        while (szSqlStr[actualLength] != L'\0' &&
-               !(szSqlStr[actualLength] == L'\\' && szSqlStr[actualLength + 1] == L'0')) {
-            actualLength++;
-               }
+    // And the Unicode version
+    SQLRETURN SQL_API SQLExecDirectW(
+        SQLHSTMT     StatementHandle,
+        SQLWCHAR*    StatementText,
+        SQLINTEGER   TextLength) {
 
-        // Create wide string excluding the "\ 0" terminator
-        std::wstring wsqlStr(szSqlStr, actualLength);
-        std::string sqlStr = WideStringToString(wsqlStr);
-
-        LOGF("SQLExecDirect_W: Original SQL: '%s'", sqlStr.c_str());
-
-        // Transform the query
-        std::string transformedSql = sqlStr;
-
-        // Replace INFORMATION_SCHEMA.TABLES
-        size_t pos = transformedSql.find("INFORMATION_SCHEMA.TABLES");
-        if (pos != std::string::npos) {
-            transformedSql.replace(pos, std::string("INFORMATION_SCHEMA.TABLES").length(), "metadata.TABLES");
-        }
-
-        // Replace INFORMATION_SCHEMA.COLUMNS
-        pos = transformedSql.find("INFORMATION_SCHEMA.COLUMNS");
-        if (pos != std::string::npos) {
-            transformedSql.replace(pos, std::string("INFORMATION_SCHEMA.COLUMNS").length(), "metadata.COLUMNS");
-        }
-
-        LOGF("SQLExecDirect_W: Transformed SQL: '%s'", transformedSql.c_str());
-
-        auto stmt = static_cast<Statement*>(hstmt);
-        if (!stmt) {
-            LOG("SQLExecDirect_W: Invalid statement handle");
+        auto* stmt = static_cast<Statement*>(StatementHandle);
+        if (!stmt || !stmt->conn) {
+            LOG("Invalid statement handle or connection");
             return SQL_INVALID_HANDLE;
         }
 
-        return SQL_ERROR;
+        // Convert wide string to UTF-8
+        std::wstring wquery;
+        if (TextLength == SQL_NTS) {
+            wquery = reinterpret_cast<const wchar_t*>(StatementText);
+        } else {
+            wquery = std::wstring(reinterpret_cast<const wchar_t*>(StatementText), TextLength);
+        }
+
+        std::string query = WideStringToString(wquery);
+        LOGF("SQLExecDirectW executing query: %s", query.c_str());
+
+        return stmt->conn->Query(query, stmt);
     }
 } // extern "C"

@@ -3,7 +3,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include "../include/connection.hpp"
 #include "../include/logging.hpp"
-#include "../include/httplib.h"
 #include "../include/globals.hpp"
 #include "../include/environment.hpp"
 #include "../include/statement.hpp"

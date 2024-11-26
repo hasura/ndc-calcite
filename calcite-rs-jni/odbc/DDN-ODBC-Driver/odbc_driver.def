@@ -10,8 +10,8 @@ EXPORTS
     SQLDisconnect
     SQLGetInfo=SQLGetInfo_A
     SQLGetInfoW=SQLGetInfo_W
-    SQLExecDirect=SQLExecDirect_A
-    SQLExecDirectW=SQLExecDirect_W
+    SQLExecDirect
+    SQLExecDirectW
     SQLSetDescField
     SQLSetDescFieldW
     SQLTables=SQLTables_A
@@ -27,6 +27,7 @@ EXPORTS
     SQLColAttributeW
     SQLFetch
     SQLGetTypeInfo
+    SQLBindParameter
     SQLGetTypeInfoW
     SQLGetData=SQLGetData_A
     SQLGetDataW=SQLGetData_W

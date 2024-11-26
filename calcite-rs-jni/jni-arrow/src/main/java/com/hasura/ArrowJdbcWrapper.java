@@ -77,8 +77,7 @@ public class ArrowJdbcWrapper implements AutoCloseable {
         try {
             ArrowResultSet resultSet = executeQueryBatched(query);
             VectorSchemaRoot result = resultSet.nextBatch();
-            resultSet.close();
-            logger.info("Successfully executed query and got results");
+            logger.info("Successfully executed query and got results. Remember to close the vector root to release memory.");
             return result;
         } catch (Exception e) {
             logger.severe("Error executing query: " + e.getMessage());

@@ -101,6 +101,7 @@ set(SOURCE_FILES
         src/SQLGetStmtAttr.cpp
         src/SQLSetDescField.cpp
         src/SQLGetTypeInfo.cpp
+        src/SQLBindParameter.cpp
 )
 
 # Header files
@@ -110,6 +111,8 @@ set(HEADER_FILES
     include/globals.hpp
     include/logging.hpp
     include/statement.hpp
+        include/JniParam.hpp
+        src/JniParam.cpp
 )
 
 # Function to filter files starting with `._`
@@ -124,6 +127,8 @@ function(filter_files file_list)
 endfunction()
 filter_files(SOURCE_FILES)
 filter_files(HEADER_FILES)
+
+add_definitions(-D_SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING)
 
 # Create the library
 add_library(${PROJECT_NAME} SHARED
