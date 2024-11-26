@@ -30,7 +30,7 @@ You can build it like this.
 ```shell
 cd calcite-rs-jni
 chmod +x *.sh
-./build.sh
+./build-local.sh v0.1.0
 ```
 
 This will build the Java jars that the Rust project (at the root of this mono-repo) requires.
