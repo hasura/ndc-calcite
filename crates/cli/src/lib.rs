@@ -177,8 +177,6 @@ async fn update(
         &context.context_path
     };
 
-    println!("config path is {:?}", config_path);
-
     // Read the `connector-metadata.yaml` file and create a map of supported environment variables
     let metadata_yaml_file = config_path.join(".hasura-connector/connector-metadata.yaml");
     let metadata = if metadata_yaml_file.exists() {
@@ -193,8 +191,6 @@ async fn update(
         .as_ref()
         .map(|m| m.supported_environment_variables.clone())
         .unwrap_or_default();
-
-    println!("Supported env vars are {:?}", supported_env_vars);
 
     let mut env_var_map = BTreeMap::new();
     for env_var in supported_env_vars.iter() {
@@ -270,7 +266,6 @@ async fn update(
     let model_file = config_path.join("model.json");
     let mut model_file_value = if model_file.exists() {
         let model_json_stringified = fs::read_to_string(model_file.clone()).await?;
-        println!("Model file: {:?}", model_json_stringified);
         Ok(model_json_stringified)
     } else {
         Err(anyhow::Error::msg("Model file does not exist"))
@@ -280,14 +275,11 @@ async fn update(
     for (key, value) in &env_var_map {
         // include the identifiers with the env var to avoid replacing the wrong value
         let env_var_identifier = format!("{{{{{}}}}}", key);
-        println!("env var idenntifier is {:?}", env_var_identifier);
         model_file_value = model_file_value.replace(&env_var_identifier, value);
     }
 
     // Create a regex pattern to match `{{*}}`
     let re = Regex::new(r"\{\{.*?\}\}").unwrap();
-
-    println!("Model file after replacing placeholders: {:?}", model_file_value);
 
     // check if there is any placeholder left in the model file, which means
     // there is an extra env var which is not allowed in the metadata or there is
@@ -319,7 +311,6 @@ async fn update(
     // We do that with a few attempts.
     for _attempt in 1..=UPDATE_ATTEMPTS {
         let existing_configuration = parse_configuration(config_path).await?;
-        println!("Existing configuration is {:#?}", existing_configuration);
         dotenv::dotenv().ok();
         init_jvm(&existing_configuration);
 
@@ -338,7 +329,6 @@ async fn update(
         if input_again_before_write == existing_configuration {
             // In order to be sure to capture default values absent in the initial input we have to
             // always write out the updated configuration.
-            println!("Writing updated configuration to disk {output:#?}");
             write_parsed_configuration(output, config_path).await?;
             return Ok(());
         }
