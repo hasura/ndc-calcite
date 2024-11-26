@@ -108,19 +108,17 @@ impl ConnectorSetup for Calcite {
                 .model_file_path
                 .clone()
                 .or_else(|| env::var("MODEL_FILE").ok())
-                .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), serde_json::Value::String("".to_string())))?;
-
-            println!("Model file path: {:?}", model_file_path);
+                .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), serde_json::Value::String(String::new())))?;
 
             let models = fs::read_to_string(model_file_path.clone()).unwrap();
 
             if has_yaml_extension(&model_file_path.clone()) {
                 let model_object: Model = serde_yaml::from_str(&models)
-                    .map_err(|err| ErrorResponse::from_error(err))?;
+                    .map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             } else {
                 let model_object: Model = serde_json::from_str(&models)
-                    .map_err(|err| ErrorResponse::from_error(err))?;
+                    .map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             }
 
@@ -129,7 +127,7 @@ impl ConnectorSetup for Calcite {
 
         fn update_metadata(json_object: &mut ParsedConfiguration) {
             if json_object.metadata.is_none() {
-                let state = init_state(&json_object).expect("TODO: panic message");
+                let state = init_state(json_object).expect("TODO: panic message");
                 json_object.metadata = Some(get_models(&state.calcite_ref));
                 println!("metadata: {:?}", serde_json::to_string_pretty(&json_object.metadata));
             }
