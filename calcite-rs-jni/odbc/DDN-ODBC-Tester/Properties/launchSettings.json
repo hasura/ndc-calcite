@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "DDN-ODBC-Tester": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "JAVA_HOME": "C:\\Program Files\\Microsoft\\jdk-11.0.25.9-hotspot-ARM64"
+      },
+      "nativeDebugging": false
+    }
+  }
+}

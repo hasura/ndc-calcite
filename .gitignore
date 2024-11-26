@@ -19,6 +19,7 @@ target/
 /adapters/hive/mariadb_data/
 /adapters/hive/beeline.conf/
 /adapters/hive/hadoop_data/
+.vs/*
 
 /test-connector/
 adapters/file/data/files/2022CbpOceanEconomyTable__2022CbpIaOceanEconomy.json
@@ -44,3 +45,4 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+/calcite-rs-jni/odbc/.vs/DDN-ODBC/DesignTimeBuild/.dtbcache.v2

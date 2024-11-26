@@ -1,0 +1,30 @@
+﻿<Project>
+  <!-- Define root output directories -->
+  <PropertyGroup>
+    <!-- All outputs go to bin -->
+    <BinRoot>$(SolutionDir)bin</BinRoot>
+    <ObjRoot>$(SolutionDir)obj</ObjRoot>
+
+    <!-- Project-specific output paths -->
+    <BaseOutputPath>$(BinRoot)\$(Platform)\$(Configuration)</BaseOutputPath>
+    <OutputPath>$(BaseOutputPath)</OutputPath>
+    <OutDir>$(BaseOutputPath)\</OutDir>
+
+    <!-- Intermediate (obj) paths -->
+    <BaseIntermediateOutputPath>$(ObjRoot)\$(MSBuildProjectName)\$(Platform)\$(Configuration)</BaseIntermediateOutputPath>
+    <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
+
+    <!-- Control .NET output behavior -->
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+
+    <!-- Ensure consistent paths for all project types -->
+    <EnableBaseIntermediateOutputPathMismatchWarning>false</EnableBaseIntermediateOutputPathMismatchWarning>
+  </PropertyGroup>
+
+  <!-- Environment settings for C# builds -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <Environment>INCLUDE=;LIB=;LIBPATH=</Environment>
+  </PropertyGroup>
+</Project>

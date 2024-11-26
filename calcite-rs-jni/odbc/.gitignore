@@ -17,3 +17,7 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+.vs/*
+vcpkg_installed
+cmake-build-*
+UpgradeLog.htm
