@@ -1,6 +1,4 @@
-[
-rust-analyzer1
-]
+[rust-analyzer]
 exclude = [
     "target/**",
     "calcite-rs-jni/**",    # This has 10,207 files - exclude if not actively working on it
