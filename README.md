@@ -210,6 +210,10 @@ And you should see this:
 
 ### Generate the configuration of a connector
 
+Running the below step will generate the configuration for the connector
+in a folder called `connector-context` within the adapter's folder.
+
+
 ```shell
 ./run-connector-update.sh file
 ```
@@ -217,9 +221,14 @@ And you should see this:
 
 ### Start the standalone instance
 
+To start the connector of a specific adapter, run the following command:
+
 ```shell
 ./run-connector-local.sh file
 ```
+
+Make sure that you generate the configuration of the connector first before
+you run the connector.
 
 You can start any adapter by using the names of the adapter with the `./adapters` directory.
 
