@@ -4,9 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ndc-calcite</artifactId>
-    <groupId>org.kenstott</groupId>
+    <groupId>com.hasura</groupId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -16,10 +17,13 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <modules>
         <module>./jni</module>
         <module>./bigquery</module>
         <module>./calcite</module>
+        <module>./jdbc</module>
+        <module>./sqlengine</module>
     </modules>
 </project>
 

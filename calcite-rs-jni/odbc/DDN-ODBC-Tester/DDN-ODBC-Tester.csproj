@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>DDN_ODBC_Tester</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>x64;ARM64</Platforms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Data.Odbc" Version="6.0.0" />
+  </ItemGroup>
+
+  <Target Name="DiagnosticTarget" BeforeTargets="CoreCompile">
+    <Message Text="AssemblyInfo files:" Importance="high" />
+    <Message Text="@(Compile)" Importance="high" />
+  </Target>
+  <Target Name="CleanupBeforeCompile" BeforeTargets="CoreCompile">
+    <PropertyGroup>
+      <CleanupPath>$(SolutionDir)obj</CleanupPath>
+      <CleanupPath Condition="'$(SolutionDir)' == ''">$(MSBuildProjectDirectory)\obj</CleanupPath>
+    </PropertyGroup>
+    <Exec Command='powershell -NoProfile -NoLogo -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\cleanup.ps1" -path "$(CleanupPath)"' />
+  </Target>
+  <Target Name="CleanupDotFilesBeforeBuild" BeforeTargets="CoreGenerateAssemblyInfo">
+    <PropertyGroup>
+      <CleanupPath>$(SolutionDir.TrimEnd('\'))</CleanupPath>
+      <CleanupPath Condition="'$(SolutionDir)' == ''">$(MSBuildProjectDirectory)</CleanupPath>
+    </PropertyGroup>
+    <Exec Command='powershell -NoProfile -NoLogo -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\cleanup.ps1" -path "$(CleanupPath)"' />
+  </Target>
+
+  <Target Name="CleanupDotFilesAfterGenerate" AfterTargets="CoreGenerateAssemblyInfo">
+    <PropertyGroup>
+      <CleanupPath>$(SolutionDir.TrimEnd('\'))</CleanupPath>
+      <CleanupPath Condition="'$(SolutionDir)' == ''">$(MSBuildProjectDirectory)</CleanupPath>
+    </PropertyGroup>
+    <Exec Command='powershell -NoProfile -NoLogo -ExecutionPolicy Bypass -File "$(MSBuildProjectDirectory)\cleanup.ps1" -path "$(CleanupPath)"' />
+  </Target>
+</Project>

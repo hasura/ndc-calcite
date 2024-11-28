@@ -19,8 +19,30 @@ target/
 /adapters/hive/mariadb_data/
 /adapters/hive/beeline.conf/
 /adapters/hive/hadoop_data/
+.vs/*
 
 /test-connector/
 adapters/file/data/files/2022CbpOceanEconomyTable__2022CbpIaOceanEconomy.json
 adapters/file/data/files/2022CbpOceanEconomyTable__Notes.json
 /grafana/tempo-data/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.sln.ide/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+/calcite-rs-jni/odbc/.vs/DDN-ODBC/DesignTimeBuild/.dtbcache.v2

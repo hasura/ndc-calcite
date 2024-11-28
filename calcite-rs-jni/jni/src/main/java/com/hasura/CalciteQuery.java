@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 class ExportedKey {
     String pkTableCatalog;
@@ -118,6 +119,7 @@ public class CalciteQuery {
 
     Connection connection;
     CalciteSchema rootSchema;
+    boolean sqliteFlag;
 
     public static void noOpMethod() {
         Span span = tracer.spanBuilder("noOpMethod").startSpan();
@@ -136,6 +138,9 @@ public class CalciteQuery {
         span.setAttribute("modelPath", modelPath);
         Properties info = new Properties();
         info.setProperty("model", ConfigPreprocessor.preprocessConfig(modelPath));
+        info.setProperty("caseSensitive", "true");
+        info.setProperty("unquotedCasing", "UNCHANGED");
+        info.setProperty("quotedCasing", "UNCHANGED");
         try {
 //            Class.forName("com.simba.googlebigquery.jdbc42.Driver");
             Class.forName("org.apache.calcite.jdbc.Driver");
@@ -265,7 +270,7 @@ public class CalciteQuery {
             String schemaName = table.schema;
             CalciteSchema schemaPlus = rootSchema.getSubSchema(schemaName, true);
             Schema schema = schemaPlus.schema;
-            boolean sqliteFlag = false;
+            sqliteFlag = false;
             if (schema instanceof JdbcSchema) {
                 sqliteFlag = ((JdbcSchema) schema).dialect instanceof SQLiteSqlDialect;
             }
@@ -464,6 +469,7 @@ public class CalciteQuery {
                 try {
                     ResultSetMetaData metaData = resultSet.getMetaData();
                     int columnCount = metaData.getColumnCount();
+                    Pattern timestampPattern = Pattern.compile("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$");
 
                     while (resultSet.next()) {
                         Map<String, Object> columns = new LinkedHashMap<>();
@@ -483,6 +489,9 @@ public class CalciteQuery {
                                 columns.put(metaData.getColumnLabel(i), rfcDateString);
                             } else if (value instanceof ArrayImpl) {
                                 columns.put(metaData.getColumnLabel(i), ((ArrayImpl) value).getArray());
+                            } else if (sqliteFlag && value instanceof String && metaData.getColumnLabel(i).toLowerCase().contains("date") &&  timestampPattern.matcher((String) value).matches()) {
+                                String newDate = ((String) value).replace(" ", "T");
+                                columns.put(metaData.getColumnLabel(i), newDate);
                             }
                             // if it is not date - put the value directly
                             else {

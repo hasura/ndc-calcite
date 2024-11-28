@@ -1,0 +1,36 @@
+﻿LIBRARY "DDN-ODBC-Driver"
+
+EXPORTS
+    SQLAllocHandle
+    SQLFreeHandle
+    SQLConnect=SQLConnect_A
+    SQLConnectW=SQLConnect_W
+    SQLDriverConnect=SQLDriverConnect_A
+    SQLDriverConnectW=SQLDriverConnect_W
+    SQLDisconnect
+    SQLGetInfo=SQLGetInfo_A
+    SQLGetInfoW=SQLGetInfo_W
+    SQLExecDirect
+    SQLExecDirectW
+    SQLSetDescField
+    SQLSetDescFieldW
+    SQLTables=SQLTables_A
+    SQLTablesW=SQLTables_W
+    SQLColumns=SQLColumns_A
+    SQLColumnsW=SQLColumns_W
+    SQLGetStmtAttr
+    SQLGetStmtAttrW=SQLGetStmtAttr
+    SQLSetEnvAttr
+    SQLRowCount
+    SQLNumResultCols
+    SQLColAttribute
+    SQLColAttributeW
+    SQLFetch
+    SQLGetTypeInfo
+    SQLBindParameter
+    SQLGetTypeInfoW
+    SQLGetData=SQLGetData_A
+    SQLGetDataW=SQLGetData_W
+    SQLMoreResults
+    SQLFreeStmt
+    DllMain

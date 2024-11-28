@@ -24,15 +24,40 @@
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "WACKY_COLUMN_NAMES": {
+    "2022CbpOceanEconomyTable__Notes": {
       "physicalSchema": "default",
       "catalog": "",
       "schema": "default",
-      "name": "WACKY_COLUMN_NAMES",
+      "name": "2022CbpOceanEconomyTable__Notes",
       "columns": {
-        "EMPID": {
-          "name": "EMPID",
+        "County Business Patterns (CBP) Ocean Economy Table: 2022": {
+          "name": "County Business Patterns (CBP) Ocean Economy Table: 2022",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "EMPS": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "EMPS",
+      "columns": {
+        "EMPNO": {
+          "name": "EMPNO",
           "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "GENDER": {
+          "name": "GENDER",
+          "scalarType": "VARCHAR",
           "nullable": true
         },
         "SLACKER": {
@@ -40,9 +65,9 @@
           "scalarType": "BOOLEAN",
           "nullable": true
         },
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
           "nullable": true
         },
         "DEPTNO": {
@@ -50,19 +75,39 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
           "nullable": true
         },
-        "2gender": {
-          "name": "2gender",
-          "scalarType": "VARCHAR",
+        "JOINEDAT": {
+          "name": "JOINEDAT",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
           "nullable": true
         },
         "CITY": {
           "name": "CITY",
           "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "WACKY_COLUMN_NAMES": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "WACKY_COLUMN_NAMES",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
           "nullable": true
         },
         "AGE": {
@@ -75,8 +120,113 @@
           "scalarType": "DATE",
           "nullable": true
         },
+        "EMPNO": {
+          "name": "EMPNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "2gender": {
+          "name": "2gender",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
         "naME": {
           "name": "naME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "MANAGER": {
+          "name": "MANAGER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "ARCHERS": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "ARCHERS",
+      "columns": {
+        "g": {
+          "name": "g",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "object": {
+          "name": "object",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "d": {
+          "name": "d",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "b": {
+          "name": "b",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "id": {
+          "name": "id",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "a": {
+          "name": "a",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "f": {
+          "name": "f",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "e": {
+          "name": "e",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c": {
+          "name": "c",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "DEPTS": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "DEPTS",
+      "columns": {
+        "DEPTNO": {
+          "name": "DEPTNO",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
           "scalarType": "VARCHAR",
           "nullable": true
         }
@@ -90,9 +240,34 @@
       "schema": "default",
       "name": "yaml",
       "columns": {
-        "object": {
-          "name": "object",
-          "scalarType": "MAP",
+        "g": {
+          "name": "g",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "e": {
+          "name": "e",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "a": {
+          "name": "a",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c": {
+          "name": "c",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "b": {
+          "name": "b",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "f": {
+          "name": "f",
+          "scalarType": "VARCHAR",
           "nullable": true
         },
         "d": {
@@ -105,94 +280,9 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "f": {
-          "name": "f",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "c": {
-          "name": "c",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "e": {
-          "name": "e",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "g": {
-          "name": "g",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "a": {
-          "name": "a",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "b": {
-          "name": "b",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "Connections_2": {
-      "physicalSchema": "default",
-      "catalog": "",
-      "schema": "default",
-      "name": "Connections_2",
-      "columns": {
-        "Connected On": {
-          "name": "Connected On",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "Email Address": {
-          "name": "Email Address",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "Last Name": {
-          "name": "Last Name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "First Name": {
-          "name": "First Name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "URL": {
-          "name": "URL",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "Company": {
-          "name": "Company",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "Position": {
-          "name": "Position",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "2022CbpOceanEconomyTable__2022CbpIaOceanEconomy": {
-      "physicalSchema": "default",
-      "catalog": "",
-      "schema": "default",
-      "name": "2022CbpOceanEconomyTable__2022CbpIaOceanEconomy",
-      "columns": {
-        "2022 CBP Island Areas Ocean Economy Tabulation": {
-          "name": "2022 CBP Island Areas Ocean Economy Tabulation",
-          "scalarType": "VARCHAR",
+        "object": {
+          "name": "object",
+          "scalarType": "MAP",
           "nullable": true
         }
       },
@@ -219,60 +309,15 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "LONG_EMPS": {
+    "2022CbpOceanEconomyTable__2022CbpIaOceanEconomy": {
       "physicalSchema": "default",
       "catalog": "",
       "schema": "default",
-      "name": "LONG_EMPS",
+      "name": "2022CbpOceanEconomyTable__2022CbpIaOceanEconomy",
       "columns": {
-        "JOINEDAT": {
-          "name": "JOINEDAT",
-          "scalarType": "DATE",
-          "nullable": true
-        },
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "CITY": {
-          "name": "CITY",
+        "2022 CBP Island Areas Ocean Economy Tabulation": {
+          "name": "2022 CBP Island Areas Ocean Economy Tabulation",
           "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "EMPNO": {
-          "name": "EMPNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "GENDER": {
-          "name": "GENDER",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "AGE": {
-          "name": "AGE",
-          "scalarType": "INTEGER",
           "nullable": true
         }
       },
@@ -285,11 +330,6 @@
       "schema": "default",
       "name": "DATES",
       "columns": {
-        "JOINTIMES": {
-          "name": "JOINTIMES",
-          "scalarType": "TIMESTAMP",
-          "nullable": true
-        },
         "EMPNO": {
           "name": "EMPNO",
           "scalarType": "INTEGER",
@@ -300,6 +340,11 @@
           "scalarType": "VARCHAR",
           "nullable": true
         },
+        "JOINTIMES": {
+          "name": "JOINTIMES",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
         "JOINEDAT": {
           "name": "JOINEDAT",
           "scalarType": "DATE",
@@ -309,135 +354,20 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "DEPTS": {
+    "LONG_EMPS": {
       "physicalSchema": "default",
       "catalog": "",
       "schema": "default",
-      "name": "DEPTS",
+      "name": "LONG_EMPS",
       "columns": {
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "DEPTNO": {
-          "name": "DEPTNO",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "2022CbpOceanEconomyTable__Notes": {
-      "physicalSchema": "default",
-      "catalog": "",
-      "schema": "default",
-      "name": "2022CbpOceanEconomyTable__Notes",
-      "columns": {
-        "County Business Patterns (CBP) Ocean Economy Table: 2022": {
-          "name": "County Business Patterns (CBP) Ocean Economy Table: 2022",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "ARCHERS": {
-      "physicalSchema": "default",
-      "catalog": "",
-      "schema": "default",
-      "name": "ARCHERS",
-      "columns": {
-        "id": {
-          "name": "id",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "g": {
-          "name": "g",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "object": {
-          "name": "object",
-          "scalarType": "MAP",
-          "nullable": true
-        },
-        "d": {
-          "name": "d",
-          "scalarType": "LIST",
-          "nullable": true
-        },
-        "a": {
-          "name": "a",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "e": {
-          "name": "e",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "f": {
-          "name": "f",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "c": {
-          "name": "c",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "b": {
-          "name": "b",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "EMPS": {
-      "physicalSchema": "default",
-      "catalog": "",
-      "schema": "default",
-      "name": "EMPS",
-      "columns": {
-        "EMPID": {
-          "name": "EMPID",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "SLACKER": {
-          "name": "SLACKER",
+        "MANAGER": {
+          "name": "MANAGER",
           "scalarType": "BOOLEAN",
-          "nullable": true
-        },
-        "AGE": {
-          "name": "AGE",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "NAME": {
-          "name": "NAME",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "CITY": {
-          "name": "CITY",
-          "scalarType": "VARCHAR",
           "nullable": true
         },
         "GENDER": {
           "name": "GENDER",
           "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "MANAGER": {
-          "name": "MANAGER",
-          "scalarType": "BOOLEAN",
           "nullable": true
         },
         "EMPNO": {
@@ -454,6 +384,76 @@
           "name": "DEPTNO",
           "scalarType": "INTEGER",
           "nullable": true
+        },
+        "AGE": {
+          "name": "AGE",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "SLACKER": {
+          "name": "SLACKER",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "NAME": {
+          "name": "NAME",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "EMPID": {
+          "name": "EMPID",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "CITY": {
+          "name": "CITY",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Connections_2": {
+      "physicalSchema": "default",
+      "catalog": "",
+      "schema": "default",
+      "name": "Connections_2",
+      "columns": {
+        "Company": {
+          "name": "Company",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Last Name": {
+          "name": "Last Name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Email Address": {
+          "name": "Email Address",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Position": {
+          "name": "Position",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "Connected On": {
+          "name": "Connected On",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "URL": {
+          "name": "URL",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "First Name": {
+          "name": "First Name",
+          "scalarType": "VARCHAR",
+          "nullable": false
         }
       },
       "primaryKeys": [],
