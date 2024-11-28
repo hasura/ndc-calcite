@@ -194,13 +194,6 @@
         </dependency>
 
         <!-- JDBC drivers and dependencies -->
-        <!-- <dependency> -->
-        <!--     <groupId>sybase</groupId> -->
-        <!--     <artifactId>jconnect</artifactId> -->
-        <!--     <version>1</version> -->
-        <!--     <scope>system</scope> -->
-        <!--     <systemPath>${project.basedir}/jars/jconn4.jar</systemPath> -->
-        <!-- </dependency> -->
         <dependency>
             <groupId>org.kenstott</groupId>
             <artifactId>bigquery-jdbc</artifactId>
