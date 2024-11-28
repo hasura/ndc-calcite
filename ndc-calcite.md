@@ -57,7 +57,7 @@ cargo build --bin ndc-calcite --bin ndc-calcite-cli
 ### Build the docker image
 
 ```shell
-./build-local.sh
+./build-local.sh v0.1.0
 ```
 
 ### Create a Supergraph
@@ -272,8 +272,8 @@ ddn run docker-start
 
 ## Additional Notes
 
-All projection, filtering and sorting are handled in memory. 
-This means that the entire file is read into memory, and then operated on as a table scan. 
+All projection, filtering and sorting are handled in memory.
+This means that the entire file is read into memory, and then operated on as a table scan.
 Wide tables - with narrow projections may not perform as well as expected.
 Large tables may not perform well.
 

@@ -11,8 +11,8 @@ use jni::objects::{GlobalRef, JObject, JString, JValueGen};
 use jni::objects::JValueGen::Object;
 use ndc_models as models;
 use ndc_models::{FieldName, RowFieldValue};
-use ndc_sdk::connector::{ErrorResponse};
-use opentelemetry::trace::{TraceContextExt};
+use ndc_sdk::connector::ErrorResponse;
+use opentelemetry::trace::TraceContextExt;
 use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
@@ -60,7 +60,7 @@ pub type Row = IndexMap<FieldName, RowFieldValue>;
 pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> Result<JObject<'a>> {
     let class = env.find_class("com/hasura/CalciteQuery").map_err(ErrorResponse::from_error)?;
     let instance = env.new_object(class, "()V", &[]).map_err(ErrorResponse::from_error)?;
-    let _ = create_jvm_connection(configuration, &instance, env);
+    let _ = create_jvm_connection(configuration, &instance, env).expect("Failed to create JVM connection");
     event!(Level::INFO, "Instantiated Calcite Query Engine");
     Ok(instance)
 }
@@ -136,7 +136,7 @@ pub fn connector_query(
     let span_id = otel_context.span().span_context().span_id();
     let trace_id = otel_context.span().span_context().trace_id();
 
-    let jvm = get_jvm().lock().unwrap();
+    let jvm = get_jvm(true).lock().unwrap();
     let mut java_env = jvm.attach_current_thread().map_err(ErrorResponse::from_error)?;
     let calcite_query = java_env.new_local_ref(calcite_reference).map_err(ErrorResponse::from_error)?;
 
@@ -202,11 +202,11 @@ fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
             }
         }
         for (_key, value) in &mut row {
-            if let RowFieldValue(val) = value {
-                if val == "null" {
-                    *value = RowFieldValue(Value::Null);
-                }
+            let RowFieldValue(val) = value;
+            if val == "null" {
+                *value = RowFieldValue(Value::Null);
             }
+
         }
         row.swap_remove("CONSTANT");
         row

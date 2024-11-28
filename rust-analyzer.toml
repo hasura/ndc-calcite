@@ -1,0 +1,16 @@
+[rust-analyzer]
+exclude = [
+    "target/**",
+    "calcite-rs-jni/**",    # This has 10,207 files - exclude if not actively working on it
+    "**/target/**",         # Catch all target directories in any subdirectory
+    "grafana/**",
+    "scripts/**",
+    "shared/**",
+    # Add any other directories you don't need LSP support for
+]
+
+# Optionally, you can explicitly specify which directories to watch
+similar_to = [
+    "crates/**",          # Only watch the crates directory
+    "adapters/**"         # And adapters directory
+]

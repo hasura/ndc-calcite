@@ -302,23 +302,17 @@ async fn update(
     )
     .await?;
 
-    // Introspect the database
-    let docker_config_path = &PathBuf::from(DOCKER_CONNECTOR_RW);
-    let config_path = if is_running_in_container() {
-        docker_config_path
-    } else {
-        &context.context_path
-    };
-    if !has_configuration(config_path) {
-        initialize(true, &context).await?
-    }
+    // if !has_configuration(config_path) {
+    //     initialize(true, &context).await?
+    // }
 
     // It is possible to change the file in the middle of introspection.
     // We want to detect this scenario and retry, or fail if we are unable to.
     // We do that with a few attempts.
     for _attempt in 1..=UPDATE_ATTEMPTS {
         let existing_configuration = parse_configuration(config_path).await?;
-        init_jvm(&existing_configuration);
+        dotenv::dotenv().ok();
+        init_jvm(&existing_configuration, false);
 
         let output = introspect(
             existing_configuration.clone(),

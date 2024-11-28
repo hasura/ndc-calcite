@@ -459,7 +459,7 @@ public class CalciteQuery {
                 return result;
             } else {
 
-                span.setAttribute("Using JSON_OBJECT() method", false);
+                span.setAttribute("Not Using JSON_OBJECT() method", false);
                 // Java's inbuilt DateTimeFormatter doesn't have any predefined format for RFC 3339
                 DateTimeFormatter rfcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ENGLISH).withZone(ZoneId.of("UTC"));
                 DateTimeFormatter rfcDateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH).withZone(ZoneId.of("UTC"));

@@ -23,7 +23,6 @@ use tracing::Instrument;
 use crate::capabilities::calcite_capabilities;
 use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
 use ndc_calcite_schema::calcite::Model;
-use ndc_calcite_schema::models::get_models;
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_values::is_running_in_container::is_running_in_container;
@@ -98,7 +97,6 @@ impl ConnectorSetup for Calcite {
                 .map_err(|err| ErrorResponse::from_error(err))?;
 
             update_model(&mut json_object)?;
-            update_metadata(&mut json_object);
 
             Ok(json_object)
         }
@@ -108,29 +106,21 @@ impl ConnectorSetup for Calcite {
                 .model_file_path
                 .clone()
                 .or_else(|| env::var("MODEL_FILE").ok())
-                .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), serde_json::Value::String("".to_string())))?;
+                .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), serde_json::Value::String(String::new())))?;
 
             let models = fs::read_to_string(model_file_path.clone()).unwrap();
 
             if has_yaml_extension(&model_file_path.clone()) {
                 let model_object: Model = serde_yaml::from_str(&models)
-                    .map_err(|err| ErrorResponse::from_error(err))?;
+                    .map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             } else {
                 let model_object: Model = serde_json::from_str(&models)
-                    .map_err(|err| ErrorResponse::from_error(err))?;
+                    .map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             }
 
             Ok(())
-        }
-
-        fn update_metadata(json_object: &mut ParsedConfiguration) {
-            if json_object.metadata.is_none() {
-                let state = init_state(&json_object).expect("TODO: panic message");
-                json_object.metadata = Some(get_models(&state.calcite_ref));
-                println!("metadata: {:?}", serde_json::to_string_pretty(&json_object.metadata));
-            }
         }
 
         configure_path(span, &configuration_dir);
@@ -181,18 +171,8 @@ impl Connector for Calcite {
         }
             .instrument(info_span!("tracing Calcite"))
             .await;
-        dotenv::dotenv().ok();
-        let calcite;
-        let calcite_ref;
-        {
-            let java_vm = get_jvm().lock().unwrap();
-            let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_query_engine(configuration, &mut env).or(Err(ErrorResponse::from_error(crate::calcite::CalciteError { message: String::from("Failed to lock JVM") })))?;
-            let env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite_ref = env.new_global_ref(calcite).unwrap();
-        }
 
-        let schema = retrieve_schema(configuration, calcite_ref.clone());
+        let schema = retrieve_schema(configuration);
         match schema {
             Ok(schema) => Ok(JsonResponse::from(schema)),
             Err(_) => Err(ErrorResponse::new(StatusCode::from_u16(500).unwrap(),"Problem getting schema.".to_string(),Value::String("".to_string()))),
@@ -323,9 +303,11 @@ fn convert_to_relationship_argument(p0: &models::Argument) -> models::Relationsh
 fn init_state(
     configuration: &ParsedConfiguration,
 ) -> Result<CalciteState> {
+
     dotenv::dotenv().ok();
-    init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()));
-    match get_jvm().lock() {
+    init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()), true);
+    let jvm = get_jvm(true);
+    match jvm.lock() {
         Ok(java_vm) => {
             let calcite;
             let calcite_ref;
@@ -344,7 +326,6 @@ fn init_state(
 }
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
     use std::path::PathBuf;
 
     use axum_test_helper::TestClient;
@@ -354,14 +335,18 @@ mod tests {
 
     #[tokio::test]
     async fn capabilities_match_ndc_spec_version() -> Result<()> {
+
+        let manifest_dir = env!("CARGO_MANIFEST_DIR");
+        let config_dir = PathBuf::from(manifest_dir).join("test_configuration");
+
         let state =
-            ndc_sdk::default_main::init_server_state(Calcite::default(), PathBuf::new()).await?;
+            ndc_sdk::default_main::init_server_state(Calcite::default(), config_dir).await?;
         let app = ndc_sdk::default_main::create_router::<Calcite>(state, None);
 
         let client = TestClient::new(app);
         let response = client.get("/capabilities").send().await;
 
-        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(response.status().as_u16(), StatusCode::OK.as_u16());
 
         let body: ndc_models::CapabilitiesResponse = response.json().await;
         // ideally we would get this version from `ndc_models::VERSION`
