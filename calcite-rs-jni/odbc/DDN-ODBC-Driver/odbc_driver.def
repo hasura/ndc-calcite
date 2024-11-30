@@ -2,35 +2,44 @@
 
 EXPORTS
     SQLAllocHandle
-    SQLFreeHandle
-    SQLConnect=SQLConnect_A
-    SQLConnectW=SQLConnect_W
-    SQLDriverConnect=SQLDriverConnect_A
-    SQLDriverConnectW=SQLDriverConnect_W
-    SQLDisconnect
-    SQLGetInfo=SQLGetInfo_A
-    SQLGetInfoW=SQLGetInfo_W
-    SQLExecDirect
-    SQLExecDirectW
-    SQLSetDescField
-    SQLSetDescFieldW
-    SQLTables=SQLTables_A
-    SQLTablesW=SQLTables_W
-    SQLColumns=SQLColumns_A
-    SQLColumnsW=SQLColumns_W
-    SQLGetStmtAttr
-    SQLGetStmtAttrW=SQLGetStmtAttr
-    SQLSetEnvAttr
-    SQLRowCount
-    SQLNumResultCols
+    SQLBindParameter
     SQLColAttribute
     SQLColAttributeW
+    SQLColumns=SQLColumns_A
+    SQLColumnsW=SQLColumns_W
+    SQLConnect=SQLConnect_A
+    SQLConnectW=SQLConnect_W
+    SQLDisconnect
+    SQLDriverConnect=SQLDriverConnect_A
+    SQLDriverConnectW=SQLDriverConnect_W
+    SQLExecDirect
+    SQLExecDirectW
     SQLFetch
-    SQLGetTypeInfo
-    SQLBindParameter
-    SQLGetTypeInfoW
+    SQLFreeHandle
+    SQLFreeStmt
+    SQLDescribeCol
+    SQLGetConnectAttr
+    SQLGetConnectAttrW
     SQLGetData=SQLGetData_A
     SQLGetDataW=SQLGetData_W
+    SQLGetDiagFieldW
+    SQLGetDiagField
+    SQLGetDiagRec
+    SQLGetDiagRecW
+    SQLGetStmtAttr
+    SQLGetStmtAttrW=SQLGetStmtAttr
+    SQLGetTypeInfo
+    SQLGetTypeInfoW
+    SQLGetInfo=SQLGetInfo_A
+    SQLGetInfoW=SQLGetInfo_W
     SQLMoreResults
-    SQLFreeStmt
+    SQLNumResultCols
+    SQLRowCount
+    SQLSetConnectAttr
+    SQLSetConnectAttrW
+    SQLSetEnvAttr
+    SQLSetStmtAttr
+    SQLSetStmtAttrW
+    SQLTables=SQLTables_A
+    SQLTablesW=SQLTables_W
     DllMain

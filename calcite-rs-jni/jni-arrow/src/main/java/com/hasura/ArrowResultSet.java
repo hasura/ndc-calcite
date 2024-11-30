@@ -10,9 +10,18 @@ import org.apache.arrow.vector.types.pojo.Schema;
 import org.apache.arrow.vector.types.TimeUnit;
 import org.apache.arrow.vector.types.DateUnit;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+
+import static com.hasura.ArrowJdbcWrapper.*;
 
 public class ArrowResultSet implements AutoCloseable {
     private final ResultSet resultSet;
@@ -22,6 +31,7 @@ public class ArrowResultSet implements AutoCloseable {
     private final int batchSize;
     private boolean hasMoreData;
     private VectorSchemaRoot currentBatch;
+    private static final Logger logger = Logger.getLogger(ArrowJdbcWrapper.class.getName());
 
     public ArrowResultSet(ResultSet resultSet, BufferAllocator allocator, int batchSize) throws SQLException {
         this.resultSet = resultSet;
@@ -33,6 +43,18 @@ public class ArrowResultSet implements AutoCloseable {
         ResultSetMetaData metaData = resultSet.getMetaData();
         int columnCount = metaData.getColumnCount();
 
+        logger.info("Debug ResultSetMetaData:");
+        for (int i = 1; i <= columnCount; i++) {
+            logger.info("Column " + i + ":");
+            logger.info("  Name: " + metaData.getColumnName(i));
+            logger.info("  Type: " + metaData.getColumnType(i));
+            logger.info("  TypeName: " + metaData.getColumnTypeName(i));
+            logger.info("  ClassName: " + metaData.getColumnClassName(i));
+            logger.info("  Precision: " + metaData.getPrecision(i));
+            logger.info("  Scale: " + metaData.getScale(i));
+            logger.info("  Nullable: " + metaData.isNullable(i));
+        }
+
         this.fields = new ArrayList<>();
         this.vectors = new ArrayList<>();
 
@@ -40,11 +62,9 @@ public class ArrowResultSet implements AutoCloseable {
             String columnName = metaData.getColumnName(i);
             int dataType = metaData.getColumnType(i);
             ArrowType arrowType = mapJdbcToArrowType(dataType);
-
-            Field field = new Field(columnName, FieldType.nullable(arrowType), null);
+            Field field = new Field(columnName, new FieldType(true, arrowType, null, getMetadataMap(metaData, i)), null);
             fields.add(field);
-
-            FieldVector vector = createVector(field);
+            FieldVector vector = createVector(field, allocator);
             vectors.add(vector);
         }
 
@@ -79,56 +99,15 @@ public class ArrowResultSet implements AutoCloseable {
         return currentBatch;
     }
 
-    private ArrowType mapJdbcToArrowType(int jdbcType) {
-        switch (jdbcType) {
-            case Types.INTEGER:
-                return new ArrowType.Int(32, true);
-            case Types.BIGINT:
-                return new ArrowType.Int(64, true);
-            case Types.DOUBLE:
-                return new ArrowType.FloatingPoint(FloatingPointPrecision.DOUBLE);
-            case Types.FLOAT:
-                return new ArrowType.FloatingPoint(FloatingPointPrecision.SINGLE);
-            case Types.VARCHAR:
-            case Types.CHAR:
-                return new ArrowType.Utf8();
-            case Types.DATE:
-                return new ArrowType.Date(DateUnit.DAY);
-            case Types.TIMESTAMP:
-                return new ArrowType.Timestamp(TimeUnit.MICROSECOND, "UTC");
-            case Types.BOOLEAN:
-                return new ArrowType.Bool();
-            default:
-                return new ArrowType.Utf8(); // Default to string for unsupported types
-        }
-    }
-
-    private FieldVector createVector(Field field) {
-        ArrowType type = field.getType();
-        if (type instanceof ArrowType.Int) {
-            return ((ArrowType.Int) type).getBitWidth() == 64 ?
-                    new BigIntVector(field, allocator) :
-                    new IntVector(field, allocator);
-        } else if (type instanceof ArrowType.FloatingPoint) {
-            return ((ArrowType.FloatingPoint) type).getPrecision() == FloatingPointPrecision.DOUBLE ?
-                    new Float8Vector(field, allocator) :
-                    new Float4Vector(field, allocator);
-        } else if (type instanceof ArrowType.Utf8) {
-            return new VarCharVector(field, allocator);
-        } else if (type instanceof ArrowType.Date) {
-            return new DateDayVector(field, allocator);
-        } else if (type instanceof ArrowType.Timestamp) {
-            return new TimeStampMicroVector(field, allocator);
-        } else if (type instanceof ArrowType.Bool) {
-            return new BitVector(field, allocator);
-        }
-        throw new UnsupportedOperationException("Unsupported type: " + type);
-    }
-
     private void populateVector(FieldVector vector, ResultSet rs, int columnIndex, int rowIndex) throws SQLException {
-        if (rs.getObject(columnIndex) == null) {
-            vector.setNull(rowIndex);
-            return;
+
+        try {
+            if (rs.getObject(columnIndex) == null) {
+                vector.setNull(rowIndex);
+                return;
+            }
+        } catch (Exception ignore) {
+            // do nothing
         }
 
         if (vector instanceof IntVector) {
@@ -136,11 +115,52 @@ public class ArrowResultSet implements AutoCloseable {
         } else if (vector instanceof BigIntVector) {
             ((BigIntVector) vector).set(rowIndex, rs.getLong(columnIndex));
         } else if (vector instanceof Float8Vector) {
-            ((Float8Vector) vector).set(rowIndex, rs.getDouble(columnIndex));
+            try {
+                ((Float8Vector) vector).set(rowIndex, rs.getDouble(columnIndex));
+            } catch (Exception e) {
+                try {
+                    ((Float8Vector) vector).set(rowIndex, rs.getLong(columnIndex));
+                } catch (Exception e1) {
+                    try {
+                        int value = rs.getInt(columnIndex);
+                        ((Float8Vector) vector).set(rowIndex, (double) value);
+                    } catch (Exception e2) {
+                        // Handle error when all attempts fail.
+                        throw new RuntimeException("Failed to get a float, long or int value.", e2);
+                    }
+                }
+            }
         } else if (vector instanceof Float4Vector) {
-            ((Float4Vector) vector).set(rowIndex, rs.getFloat(columnIndex));
-        } else if (vector instanceof VarCharVector) {
-            ((VarCharVector) vector).set(rowIndex, rs.getString(columnIndex).getBytes());
+            try {
+                ((Float4Vector) vector).set(rowIndex, rs.getFloat(columnIndex));
+            } catch (Exception e) {
+                try {
+                    int value = rs.getInt(columnIndex);
+                    ((Float4Vector) vector).set(rowIndex, (float) value);
+                } catch (Exception e1) {
+                    // handle error when all attempts fail
+                    throw new RuntimeException("Failed to acquire a float or int value.", e1);
+                }
+            }
+        } else if (vector instanceof LargeVarCharVector) {
+            String str = rs.getString(columnIndex);
+            if (str != null) {
+                byte[] strBytes = str.getBytes(StandardCharsets.UTF_8); // Specify the appropriate charset if necessary
+                ((LargeVarCharVector) vector).setSafe(rowIndex, strBytes, 0, strBytes.length);
+            } else {
+                vector.setNull(rowIndex);
+            }
+        } else if (vector instanceof LargeVarBinaryVector) {
+            try {
+                byte[] strBytes = rs.getBytes(columnIndex);
+                if (strBytes != null) {
+                    ((LargeVarBinaryVector) vector).setSafe(rowIndex, strBytes, 0, strBytes.length);
+                } else {
+                    vector.setNull(rowIndex);
+                }
+            } catch(Exception ignore) {
+                vector.setNull(rowIndex);
+            }
         } else if (vector instanceof DateDayVector) {
             Date date = rs.getDate(columnIndex);
             ((DateDayVector) vector).set(rowIndex, (int) (date.getTime() / (86400000L)));

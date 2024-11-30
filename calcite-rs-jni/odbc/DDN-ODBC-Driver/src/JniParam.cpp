@@ -1,9 +1,11 @@
+#include <utility>
+
 #include "../include/JniParam.hpp"
 #include "../include/logging.hpp"
 
-JniParam::JniParam(const std::string& value) 
+JniParam::JniParam(std::string  value)
     : type_(Type::String)
-    , stringValue_(value) 
+    , stringValue_(std::move(value))
 {}
 
 JniParam::JniParam(const std::vector<std::string>& value) 
@@ -31,7 +33,7 @@ JniParam::JniParam(bool value)
     , boolValue_(value) 
 {}
 
-JniParam::JniParam() {}
+JniParam::JniParam() = default;
 
 std::string JniParam::getSignature() const {
     switch (type_) {
@@ -79,8 +81,7 @@ jvalue JniParam::toJValue(JNIEnv* env) const {
                 }
 
                 for (size_t i = 0; i < stringArrayValue_.size(); i++) {
-                    jstring str = env->NewStringUTF(stringArrayValue_[i].c_str());
-                    if (str) {
+                    if (jstring str = env->NewStringUTF(stringArrayValue_[i].c_str())) {
                         env->SetObjectArrayElement(arr, i, str);
                         env->DeleteLocalRef(str);
                     }

@@ -10,7 +10,7 @@
         <Logger name="org.apache.hadoop" level="info"/>
         <Logger name="org.apache.calcite.adapter" level="debug"/>
         <Logger name="org.apache.spark" level="info" />
-        <Root level="debug">
+        <Root level="${sys:log_level:-WARN}">
             <AppenderRef ref="console"/>
         </Root>
     </Loggers>

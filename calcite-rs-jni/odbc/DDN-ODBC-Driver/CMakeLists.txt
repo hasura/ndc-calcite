@@ -20,30 +20,30 @@ if (NOT DEFINED CMAKE_GENERATOR_PLATFORM OR CMAKE_GENERATOR_PLATFORM STREQUAL ""
     message(STATUS "[DEBUG] CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
     if (${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "ARM64" OR ${CMAKE_SYSTEM_PROCESSOR} MATCHES "ARM64")
         set(TARGET_ARCH "ARM64")
-    else()
+    else ()
         set(TARGET_ARCH "X64")
-    endif()
-else()
+    endif ()
+else ()
     set(TARGET_ARCH ${CMAKE_GENERATOR_PLATFORM})
-endif()
+endif ()
 
 message(STATUS "[DEBUG] Target Architecture: ${TARGET_ARCH}")
 
 if (TARGET_ARCH STREQUAL "ARM64")
     if (NOT DEFINED ENV{JAVA_HOME_ARM64})
         message(FATAL_ERROR "JAVA_HOME_ARM64 environment variable not set")
-    endif()
+    endif ()
     set(JDK_PATH $ENV{JAVA_HOME_ARM64})
     message(STATUS "[DEBUG] Setting ARM64 JDK path: ${JDK_PATH}")
 elseif (TARGET_ARCH STREQUAL "X64")
     if (NOT DEFINED ENV{JAVA_HOME_X64})
         message(FATAL_ERROR "JAVA_HOME_X64 environment variable not set")
-    endif()
+    endif ()
     set(JDK_PATH $ENV{JAVA_HOME_X64})
     message(STATUS "[DEBUG] Setting X64 JDK path: ${JDK_PATH}")
-else()
+else ()
     message(FATAL_ERROR "Unsupported platform: ${TARGET_ARCH}")
-endif()
+endif ()
 
 # Convert path to CMake format
 file(TO_CMAKE_PATH "${JDK_PATH}" JDK_PATH)
@@ -51,8 +51,8 @@ message(STATUS "[DEBUG] Converted JDK path: ${JDK_PATH}")
 
 # Set JNI paths
 set(JNI_INCLUDE_DIRS
-    "${JDK_PATH}/include"
-    "${JDK_PATH}/include/win32"
+        "${JDK_PATH}/include"
+        "${JDK_PATH}/include/win32"
 )
 
 # Debug Messages
@@ -63,66 +63,75 @@ set(JNI_LIBRARIES "${JDK_PATH}/lib/jvm.lib")
 message(STATUS "[DEBUG] JNI library path: ${JNI_LIBRARIES}")
 
 # Verify JNI paths exist
-foreach(dir ${JNI_INCLUDE_DIRS})
+foreach (dir ${JNI_INCLUDE_DIRS})
     if (NOT EXISTS "${dir}")
         message(FATAL_ERROR "JNI include directory not found: ${dir}")
-    endif()
+    endif ()
     message(STATUS "[DEBUG] Include dir exists: ${dir}")
-endforeach()
+endforeach ()
 
 if (NOT EXISTS "${JNI_LIBRARIES}")
     message(FATAL_ERROR "JNI library not found: ${JNI_LIBRARIES}")
-else()
+else ()
     message(STATUS "[DEBUG] JNI library exists at: ${JNI_LIBRARIES}")
-endif()
+endif ()
 
 # Source files
 set(SOURCE_FILES
-    src/connection.cpp
-    src/logging.cpp
-    src/main.cpp
-    src/statement.cpp
-    src/SQLColAttribute.cpp
-    src/SQLColumns.cpp
-    src/SQLConnect.cpp
-    src/SQLDisconnect.cpp
-    src/SQLDriverConnect.cpp
-    src/SQLFetch.cpp
-    src/SQLFreeStmt.cpp
-    src/SQLGetData.cpp
-    src/SQLInfo.cpp
-    src/SQLMoreResults.cpp
-    src/SQLRowCount.cpp
-    src/SQLTables.cpp
-    src/SQLAllocHandle.cpp
-    src/SQLFreeHandle.cpp
-    src/SQLExecDirect.cpp
-    src/SQLSetEnvAttr.cpp
-        src/SQLGetStmtAttr.cpp
-        src/SQLSetDescField.cpp
-        src/SQLGetTypeInfo.cpp
+        src/Connection.cpp
+        src/JniParam.cpp
+        src/JVMSingleton.cpp
+        src/Logging.cpp
+        src/Main.cpp
+        src/SQLAllocHandle.cpp
         src/SQLBindParameter.cpp
+        src/SQLColAttribute.cpp
+        src/SQLColumns.cpp
+        src/SQLConnect.cpp
+        src/SQLDescribeCol.cpp
+        src/SQLDisconnect.cpp
+        src/SQLDriverConnect.cpp
+        src/SQLExecDirect.cpp
+        src/SQLFetch.cpp
+        src/SQLFreeHandle.cpp
+        src/SQLFreeStmt.cpp
+        src/SQLGetConnectAttr.cpp
+        src/SQLGetData.cpp
+        src/SQLGetDiagField.cpp
+        src/SQLGetDiagRec.cpp
+        src/SQLGetInfo.cpp
+        src/SQLGetStmtAttr.cpp
+        src/SQLGetTypeInfo.cpp
+        src/SQLMoreResults.cpp
+        src/SQLRowCount.cpp
+        src/SQLSetConnectAttr.cpp
+        src/SQLSetEnvAttr.cpp
+        src/SQLSetStmtAttr.cpp
+        src/SQLTables.cpp
+        src/Statement.cpp
 )
 
 # Header files
 set(HEADER_FILES
-    include/connection.hpp
-    include/environment.hpp
-    include/globals.hpp
-    include/logging.hpp
-    include/statement.hpp
+        include/Connection.hpp
+        include/DiagnosticManager.hpp
+        include/Environment.hpp
+        include/Globals.hpp
+        include/JVMSingleton.hpp
+        include/Logging.hpp
+        include/Statement.hpp
         include/JniParam.hpp
-        src/JniParam.cpp
+        include/Error.hpp
 )
 
 # Function to filter files starting with `._`
 function(filter_files file_list)
     set(filtered_files "")
-    foreach(file ${${file_list}})
+    foreach (file ${${file_list}})
         if (NOT file MATCHES "^._")
             list(APPEND filtered_files ${file})
-        endif()
-    endforeach()
+        endif ()
+    endforeach ()
     set(${file_list} "${filtered_files}" PARENT_SCOPE)
 endfunction()
 filter_files(SOURCE_FILES)
@@ -132,29 +141,30 @@ add_definitions(-D_SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING)
 
 # Create the library
 add_library(${PROJECT_NAME} SHARED
-    ${SOURCE_FILES}
-    ${HEADER_FILES}
-    odbc_driver.def
+        ${SOURCE_FILES}
+        ${HEADER_FILES}
+        odbc_driver.def
 )
 
 # Include directories
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${JNI_INCLUDE_DIRS}
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+        ${JNI_INCLUDE_DIRS}
 )
 
 # Link libraries
 target_link_libraries(${PROJECT_NAME} PRIVATE
-    ${JNI_LIBRARIES}
-    odbc32
-    odbccp32
+#        ${JNI_LIBRARIES}
+        odbc32
+        odbccp32
+        Rpcrt4
 )
 
 # Compile definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    WIN32
-    _WINDOWS
-    _USRDLL
+        WIN32
+        _WINDOWS
+        _USRDLL
 )
 
 # Set output directories for all configurations
@@ -173,10 +183,10 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # Copy JAR files to output directory
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_CURRENT_SOURCE_DIR}/../../jni-arrow/target/jni-arrow-1.0.0-jar-with-dependencies.jar"
-    "${CMAKE_BINARY_DIR}/bin/jni-arrow-1.0.0-jar-with-dependencies.jar"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_BINARY_DIR}/bin"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../jni-arrow/target/jni-arrow-1.0.0-jar-with-dependencies.jar"
+        "${CMAKE_BINARY_DIR}/bin/jni-arrow-1.0.0-jar-with-dependencies.jar"
 )
 
 # Print configuration summary

@@ -3,11 +3,14 @@ import com.hasura.ArrowResultSet;
 import org.apache.arrow.vector.IntVector;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.FieldType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -28,6 +31,12 @@ public class ArrowJdbcWrapperTest {
     public void testGetTablesAndViews() {
         try {
             System.out.println("Testing getTables and getTablesAndViews...");
+
+            // Test getting tables matching a pattern
+            System.out.println("\n2. Like Excel:");
+            try (VectorSchemaRoot aTables = wrapper.getTables("%", null, null, new String[]{})) {
+                printTableResults(aTables);
+            }
 
             // Test getting all tables and views
             System.out.println("\n1. Getting all tables and views:");
@@ -86,28 +95,11 @@ public class ArrowJdbcWrapperTest {
     public void testBatchedQuery() {
         try {
             System.out.println("\nTesting batched query execution...");
-            String query = "SELECT * FROM \"Actor\"";
+            String query = "SELECT * from \"TrainedModels\"";
 
-            try (ArrowResultSet resultSet = wrapper.executeQueryBatched(query, 5)) {
-                int batchCount = 0;
-                int totalRows = 0;
-
-                while (resultSet.hasNext()) {
-                    try (VectorSchemaRoot batch = resultSet.nextBatch()) {
-                        batchCount++;
-                        totalRows += batch.getRowCount();
-
-                        System.out.printf("Batch %d: %d rows%n", batchCount, batch.getRowCount());
-
-                        // Print first row of each batch
-                        if (batch.getRowCount() > 0) {
-                            System.out.println("First row in batch:");
-                            printRow(batch, 0);
-                        }
-                    }
-                }
-
-                System.out.printf("Total batches: %d, Total rows: %d%n", batchCount, totalRows);
+            try (VectorSchemaRoot resultSet = wrapper.executeQuery(query)) {
+                printColumnMetadata(resultSet);
+                printRow(resultSet, 0);
             }
 
         } catch (Exception e) {
@@ -116,17 +108,42 @@ public class ArrowJdbcWrapperTest {
         }
     }
 
+    private void printColumnMetadata(VectorSchemaRoot schemaRoot) {
+        System.out.println("\nColumn Metadata:");
+
+        for (Field field : schemaRoot.getSchema().getFields()) {
+            System.out.println("Column Name: " + field.getName());
+            System.out.println("Column Java Type: " + field.getType().toString());
+
+            FieldType fieldType = field.getFieldType();
+            Map<String, String> metadata = fieldType.getMetadata();
+
+            if (metadata != null) {
+                System.out.println("Field Type Metadata:");
+                for (Map.Entry<String, String> entry : metadata.entrySet()) {
+                    System.out.println("  Key: " + entry.getKey() + ", Value: " + entry.getValue());
+                }
+            } else {
+                System.out.println("No field type metadata for this column.");
+            }
+
+            System.out.println();
+        }
+    }
+
     private void printTableResults(VectorSchemaRoot tables) {
+        VarCharVector tableCats = (VarCharVector) tables.getVector("TABLE_CAT");
         VarCharVector tableNames = (VarCharVector) tables.getVector("TABLE_NAME");
         VarCharVector tableTypes = (VarCharVector) tables.getVector("TABLE_TYPE");
         VarCharVector tableSchemas = (VarCharVector) tables.getVector("TABLE_SCHEM");
 
         System.out.printf("Found %d results:%n", tables.getRowCount());
         for (int i = 0; i < tables.getRowCount(); i++) {
-            String schema = tableSchemas.isNull(i) ? "null" : new String(tableSchemas.get(i));
+            String cat = tableCats != null && tableCats.get(i) != null ? new String(tableCats.get(i)) : null;
+            String schema = new String(tableSchemas.get(i));
             String name = new String(tableNames.get(i));
             String type = new String(tableTypes.get(i));
-            System.out.printf("%s.%s (%s)%n", schema, name, type);
+            System.out.printf("%s %s.%s (%s)%n", cat, schema, name, type);
         }
     }
 

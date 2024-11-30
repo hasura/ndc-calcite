@@ -34,7 +34,8 @@ try {
         $buildDir = "..\build\$platform\$configuration"
         Push-Location $projectDir
         cmake -B $buildDir -A $platform -DCMAKE_BUILD_TYPE=$configuration `
-              -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" | Tee-Object -FilePath "..\build-log.txt" -Append
+              -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" `
+              | Tee-Object -FilePath "..\build-log.txt" -Append
         if ($LASTEXITCODE -ne 0) {
             Pop-Location
             throw "CMake configuration for $platform failed"

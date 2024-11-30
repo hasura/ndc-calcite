@@ -1,12 +1,10 @@
 #include <winsock2.h>
 #include <windows.h>
 #define WIN32_LEAN_AND_MEAN
-#include "../include/connection.hpp"
-#include "../include/logging.hpp"
-//#include "../include/httplib.h"
-#include "../include/globals.hpp"
-#include "../include/environment.hpp"
-#include "../include/statement.hpp"
+#include "../include/Connection.hpp"
+#include "../include/Logging.hpp"
+#include "../include/Environment.hpp"
+#include "../include/Statement.hpp"
 
 // Column attribute functions
 extern "C" {
@@ -18,251 +16,313 @@ SQLRETURN SQL_API SQLColAttribute(
     SQLSMALLINT BufferLength,
     SQLSMALLINT *StringLength,
     SQLLEN *NumericAttribute) {
+    // Get the statement object from the provided handle
     auto *stmt = static_cast<Statement *>(StatementHandle);
-    LOGF("SQLColAttribute called - Column: %u, Field: %u, Total Size: %u", ColumnNumber, FieldIdentifier, stmt->resultColumns.size());
-    if (!stmt) {
-        LOG("Invalid statement handle");
-        return SQL_INVALID_HANDLE;
-    }
 
-    if (!stmt->hasResult) {
-        LOG("No result set available");
+    // Log the function call for debugging purposes
+    LOGF("SQLColAttribute called - Column: %u, Field: %u, Total Size: %u", ColumnNumber, FieldIdentifier,
+         stmt->resultColumns.size());
+
+    // Validate the statement handle and ensure a result set is available
+    if (!stmt || !stmt->hasResult) {
+        LOG("Invalid statement handle or no result set available");
+        stmt->setError("HY000", "Invalid statement handle or no result set available", 0);
         return SQL_ERROR;
     }
 
-    LOGF("Accessing column %u of %zu", ColumnNumber, stmt->resultColumns.size());
+    // Ensure the column number is within the valid range of the result set
     if (ColumnNumber <= 0 || ColumnNumber > stmt->resultColumns.size()) {
         LOG("Invalid column number");
+        stmt->setError("07009", "Invalid descriptor index", 0);
         return SQL_ERROR;
     }
 
     const auto &col = stmt->resultColumns[ColumnNumber - 1];
+    SQLRETURN ret = SQL_SUCCESS;
 
-    switch (FieldIdentifier) {
-        // Basic column metadata
-        case SQL_COLUMN_COUNT: // 0
-            if (NumericAttribute) {
-                *NumericAttribute = stmt->resultColumns.size();
-            }
-            break;
+    try {
+        switch (FieldIdentifier) {
+            case SQL_COLUMN_COUNT:
+                if (NumericAttribute) {
+                    *NumericAttribute = stmt->resultColumns.size();
+                }
+                break;
 
-        case SQL_COLUMN_NAME: // 1
-        case SQL_DESC_NAME: // SQL_COLUMN_NAME
-            if (CharacterAttribute && BufferLength > 0) {
-                LOGF("Returning column name: %s, %u", col.name, col.nameLength);
-                strncpy((char *) CharacterAttribute, col.name, BufferLength);
-                if (StringLength) {
+            case SQL_COLUMN_NAME:
+            case SQL_DESC_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    LOGF("Returning column name: %s, %u", col.name, col.nameLength);
+                    strncpy(static_cast<char *>(CharacterAttribute), col.name, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.nameLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.nameLength;
                 }
-            } else {
-                LOG("Did not return column name");
-            }
-            break;
+                break;
 
-        case SQL_DESC_LABEL: // SQL_COLUMN_LABEL
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.label, BufferLength);
-                if (StringLength) {
+            case SQL_DESC_LABEL:
+                if (CharacterAttribute && BufferLength > 0) {
+                    strncpy(static_cast<char *>(CharacterAttribute), col.label, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.labelLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.labelLength;
                 }
-            }
-            break;
+                break;
 
-        // Type information
-        case SQL_COLUMN_TYPE: // 2
-        case SQL_DESC_TYPE: // 1002
-            // case SQL_DESC_CONCISE_TYPE:         // SQL_COLUMN_TYPE
-            if (NumericAttribute) {
-                *NumericAttribute = col.sqlType;
-            }
-            break;
-
-        // Size and length information
-        case SQL_COLUMN_LENGTH: // 3
-        case SQL_DESC_LENGTH: // SQL_COLUMN_LENGTH
-        case SQL_DESC_OCTET_LENGTH: // 1013
-            if (NumericAttribute) {
-                *NumericAttribute = col.columnSize;
-            }
-            break;
-
-        case SQL_COLUMN_DISPLAY_SIZE: // 6
-            if (NumericAttribute) {
-                *NumericAttribute = col.displaySize;
-            }
-            break;
-
-        case SQL_COLUMN_PRECISION: // 4
-        case SQL_DESC_PRECISION: // SQL_COLUMN_PRECISION
-            if (NumericAttribute) {
-                *NumericAttribute = col.decimalDigits;
-            }
-            break;
-
-        case SQL_COLUMN_SCALE: // 5
-        case SQL_DESC_SCALE: // SQL_COLUMN_SCALE
-            if (NumericAttribute) {
-                *NumericAttribute = col.scale; // VARCHAR doesn't have scale
-            }
-            break;
-
-        // Nullability
-        case SQL_COLUMN_NULLABLE: // 7
-        case SQL_DESC_NULLABLE: // SQL_COLUMN_NULLABLE
-            if (NumericAttribute) {
-                *NumericAttribute = col.nullable;
-            }
-            break;
-
-        // Type characteristics
-        case SQL_COLUMN_UNSIGNED: // 8
-            // case SQL_DESC_UNSIGNED:             // SQL_COLUMN_UNSIGNED
-            if (NumericAttribute) {
-                *NumericAttribute = SQL_TRUE; // VARCHAR is unsigned
-            }
-            break;
-
-        case SQL_COLUMN_MONEY: // 9
-        case SQL_COLUMN_AUTO_INCREMENT: // 11
-            // case SQL_DESC_AUTO_UNIQUE_VALUE:    // SQL_COLUMN_AUTO_INCREMENT
-            if (NumericAttribute) {
-                *NumericAttribute = SQL_FALSE; // VARCHAR is not auto-increment
-            }
-            break;
-
-        case SQL_COLUMN_UPDATABLE: // 10
-            // case SQL_DESC_UPDATABLE:            // SQL_COLUMN_UPDATABLE
-            if (NumericAttribute) {
-                *NumericAttribute = SQL_ATTR_READONLY; // Catalog results are read-only
-            }
-            break;
-
-        case SQL_COLUMN_CASE_SENSITIVE: // 12
-            // case SQL_DESC_CASE_SENSITIVE:       // SQL_COLUMN_CASE_SENSITIVE
-            if (NumericAttribute) {
-                *NumericAttribute = SQL_TRUE; // VARCHAR is case sensitive
-            }
-            break;
-
-        case SQL_COLUMN_SEARCHABLE: // 13
-            // case SQL_DESC_SEARCHABLE:           // SQL_COLUMN_SEARCHABLE
-            if (NumericAttribute) {
-                *NumericAttribute = SQL_SEARCHABLE; // VARCHAR is fully searchable
-            }
-            break;
-
-        // Type names and descriptions
-        case SQL_COLUMN_TYPE_NAME: // 14
-            // case SQL_DESC_TYPE_NAME:            // SQL_COLUMN_TYPE_NAME
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, "VARCHAR", BufferLength);
-                if (StringLength) {
-                    *StringLength = 7;
+            case SQL_COLUMN_TYPE_NAME:
+                // case SQL_DESC_TYPE_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    LOGF("Returning column type name: %s, %u", col.typeName, col.typeNameLength);
+                    strncpy(static_cast<char *>(CharacterAttribute), col.typeName, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.typeNameLength;
+                    }
+                } else if (StringLength) {
+                    *StringLength = col.typeNameLength;
                 }
-            }
-            break;
+                break;
 
-        // Table information
-        case SQL_COLUMN_TABLE_NAME: // 15
-            // case SQL_DESC_TABLE_NAME:           // SQL_COLUMN_TABLE_NAME
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.tableName, BufferLength);
-                if (StringLength) {
+            case SQL_COLUMN_TABLE_NAME:
+                // case SQL_DESC_TABLE_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    LOGF("Returning column table name: %s, %u", col.tableName, col.tableNameLength);
+                    strncpy(static_cast<char *>(CharacterAttribute), col.tableName, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.tableNameLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.tableNameLength;
                 }
-            }
-            break;
+                break;
 
-        case SQL_COLUMN_OWNER_NAME: // 16
-            // case SQL_DESC_SCHEMA_NAME:          // SQL_COLUMN_OWNER_NAME
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.schemaName, BufferLength);
-                if (StringLength) {
+            case SQL_COLUMN_OWNER_NAME:
+                // case SQL_DESC_SCHEMA_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    LOGF("Returning column schema name: %s, %u", col.schemaName, col.schemaNameLength);
+                    strncpy(static_cast<char *>(CharacterAttribute), col.schemaName, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.schemaNameLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.schemaNameLength;
                 }
-            }
-            break;
+                break;
 
-        case SQL_COLUMN_QUALIFIER_NAME: // 17
-            // case SQL_DESC_CATALOG_NAME:         // SQL_COLUMN_QUALIFIER_NAME
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.catalogName, BufferLength);
-                if (StringLength) {
+            case SQL_COLUMN_QUALIFIER_NAME:
+                // case SQL_DESC_CATALOG_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    strncpy(static_cast<char *>(CharacterAttribute), col.catalogName, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.catalogNameLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.catalogNameLength;
                 }
-            }
-            break;
+                break;
 
-        // SQL literal formatting
-        case SQL_DESC_LITERAL_PREFIX: // 27
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.literalPrefix, BufferLength);
-                if (StringLength) {
+            case SQL_DESC_LITERAL_PREFIX:
+                if (CharacterAttribute && BufferLength > 0) {
+                    strncpy(static_cast<char *>(CharacterAttribute), col.literalPrefix, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.literalPrefixLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.literalPrefixLength;
                 }
-            }
-            break;
+                break;
 
-        case SQL_DESC_LITERAL_SUFFIX: // 28
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.literalSuffix, BufferLength);
-                if (StringLength) {
+            case SQL_DESC_LITERAL_SUFFIX:
+                if (CharacterAttribute && BufferLength > 0) {
+                    strncpy(static_cast<char *>(CharacterAttribute), col.literalSuffix, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.literalSuffixLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.literalSuffixLength;
                 }
-            }
-            break;
+                break;
 
-        case SQL_DESC_LOCAL_TYPE_NAME: // 29
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.localTypeName, BufferLength);
-                if (StringLength) {
+            case SQL_DESC_LOCAL_TYPE_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    strncpy(static_cast<char *>(CharacterAttribute), col.localTypeName, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.localTypeNameLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.localTypeNameLength;
                 }
-            }
-            break;
+                break;
 
-        case SQL_DESC_NUM_PREC_RADIX: // 32
-            if (NumericAttribute) {
-                *NumericAttribute = 0; // Not applicable for VARCHAR
-            }
-            break;
-
-        case SQL_DESC_UNNAMED: // 1089
-            if (NumericAttribute) {
-                *NumericAttribute = col.unnamed;
-            }
-            break;
-
-        case SQL_DESC_BASE_COLUMN_NAME: // 1025
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.baseColumnName, BufferLength);
-                if (StringLength) {
+            case SQL_DESC_BASE_COLUMN_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    strncpy(static_cast<char *>(CharacterAttribute), col.baseColumnName, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.baseColumnNameLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.baseColumnNameLength;
                 }
-            }
-            break;
+                break;
 
-        case SQL_DESC_BASE_TABLE_NAME: // 1026
-            if (CharacterAttribute && BufferLength > 0) {
-                strncpy((char *) CharacterAttribute, col.baseTableName, BufferLength);
-                if (StringLength) {
+            case SQL_DESC_BASE_TABLE_NAME:
+                if (CharacterAttribute && BufferLength > 0) {
+                    strncpy(static_cast<char *>(CharacterAttribute), col.baseTableName, BufferLength - 1);
+                    static_cast<char *>(CharacterAttribute)[BufferLength - 1] = '\0';
+                    if (StringLength) {
+                        *StringLength = col.baseTableNameLength;
+                    }
+                } else if (StringLength) {
                     *StringLength = col.baseTableNameLength;
                 }
-            }
-            break;
+                break;
 
-        default:
-            LOGF("Unknown field identifier: %u", FieldIdentifier);
-            if (NumericAttribute) {
-                *NumericAttribute = 0;
-            }
-            if (StringLength) {
-                *StringLength = 0;
-            }
-            break;
+            case SQL_COLUMN_TYPE:
+            case SQL_DESC_TYPE:
+                if (NumericAttribute) {
+                    LOGF("Returning Column type: %d", col.sqlType);
+                    *NumericAttribute = col.sqlType;
+                }
+                break;
+
+            case SQL_COLUMN_LENGTH:
+            case SQL_DESC_LENGTH: if (NumericAttribute) {
+                    const auto columnSize = static_cast<SQLLEN>(col.columnSize);
+                    LOGF("Returning Length (column size): %d", columnSize);
+                    LOGF("NumericAttribute address before setting: %p", NumericAttribute);
+                    LOGF("NumericAttribute content before setting: %d", *NumericAttribute);
+                    *NumericAttribute = columnSize;
+                    LOGF("NumericAttribute content after setting: %d", *NumericAttribute);
+                } else { LOG("Warning: NumericAttribute is null"); }
+                break;
+
+            case SQL_DESC_OCTET_LENGTH:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.octetLength;
+                }
+                break;
+
+            case SQL_COLUMN_DISPLAY_SIZE:
+                if (NumericAttribute) {
+                    LOGF("Returning Display size: %d", col.displaySize);
+                    *NumericAttribute = col.displaySize;
+                }
+                break;
+
+            case SQL_COLUMN_PRECISION:
+            case SQL_DESC_PRECISION:
+                if (NumericAttribute) {
+                    LOGF("Returning precision: %d", col.precision);
+                    *NumericAttribute = col.precision;
+                }
+                break;
+
+            case SQL_COLUMN_SCALE:
+            case SQL_DESC_SCALE:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.scale;
+                }
+                break;
+
+            case SQL_COLUMN_NULLABLE:
+            case SQL_DESC_NULLABLE:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.nullable;
+                }
+                break;
+
+            case SQL_COLUMN_UNSIGNED:
+                if (NumericAttribute) {
+                    *NumericAttribute = col._signed ? SQL_FALSE : SQL_TRUE;
+                }
+                break;
+
+            case SQL_COLUMN_MONEY:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.currency;
+                }
+                break;
+
+            case SQL_COLUMN_AUTO_INCREMENT:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.autoIncrement;
+                }
+                break;
+
+            case SQL_COLUMN_UPDATABLE:
+                if (NumericAttribute) {
+                    *NumericAttribute = !col.readOnly;
+                }
+                break;
+
+            case SQL_COLUMN_CASE_SENSITIVE:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.caseSensitive;
+                }
+                break;
+
+            case SQL_COLUMN_SEARCHABLE:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.searchable;
+                }
+                break;
+
+            case SQL_DESC_NUM_PREC_RADIX:
+                if (NumericAttribute) {
+                    switch (col.sqlType) {
+                        case SQL_DECIMAL:
+                        case SQL_NUMERIC:
+                        case SQL_FLOAT:
+                        case SQL_REAL:
+                        case SQL_DOUBLE:
+                            *NumericAttribute = 10;
+                            break;
+                        case SQL_BINARY:
+                        case SQL_VARBINARY:
+                            *NumericAttribute = 2;
+                            break;
+                        default:
+                            *NumericAttribute = 0;
+                            break;
+                    }
+                }
+                break;
+
+            case SQL_DESC_UNNAMED:
+                if (NumericAttribute) {
+                    *NumericAttribute = col.unnamed;
+                }
+                break;
+
+            default:
+                LOGF("Unknown field identifier: %u", FieldIdentifier);
+                if (NumericAttribute) {
+                    *NumericAttribute = 0;
+                }
+                if (StringLength) {
+                    *StringLength = 0;
+                }
+                ret = SQL_SUCCESS;
+                break;
+        }
+    } catch (const std::exception &e) {
+        stmt->setError("HY000", e.what(), 0);
+        return SQL_ERROR;
     }
 
-    return SQL_SUCCESS;
+    return ret;
 }
 
 SQLRETURN SQL_API SQLColAttributeW(
@@ -273,75 +333,158 @@ SQLRETURN SQL_API SQLColAttributeW(
     SQLSMALLINT BufferLength,
     SQLSMALLINT *StringLength,
     SQLLEN *NumericAttribute) {
-    LOG("SQLColAttributeW called");
+    LOGF("SQLColAttributeW - Column: %d, Field: %d, Buffer: %p, Length: %d",
+         ColumnNumber, FieldIdentifier, CharacterAttribute, BufferLength);
 
-    // For non-string attributes, just delegate to the ANSI version
+    // For non-string attributes, delegate to the ANSI version
     switch (FieldIdentifier) {
-        // String attributes that need Unicode conversion
-        case SQL_COLUMN_NAME: // 1
-        case SQL_COLUMN_TYPE_NAME: // 14
-        case SQL_COLUMN_TABLE_NAME: // 15
-        case SQL_COLUMN_OWNER_NAME: // 16
-        case SQL_COLUMN_QUALIFIER_NAME: // 17
-        case SQL_COLUMN_LABEL: // 18
-        case SQL_DESC_NAME: // SQL_COLUMN_NAME
-        // case SQL_DESC_TYPE_NAME:            // SQL_COLUMN_TYPE_NAME
-        // case SQL_DESC_TABLE_NAME:           // SQL_COLUMN_TABLE_NAME
-        // case SQL_DESC_SCHEMA_NAME:          // SQL_COLUMN_OWNER_NAME
-        // case SQL_DESC_CATALOG_NAME:         // SQL_COLUMN_QUALIFIER_NAME
-        // case SQL_DESC_LABEL:                // SQL_COLUMN_LABEL
-        case SQL_DESC_LITERAL_PREFIX: // 27
-        case SQL_DESC_LITERAL_SUFFIX: // 28
-        case SQL_DESC_LOCAL_TYPE_NAME: // 29
-        case SQL_DESC_BASE_COLUMN_NAME: // 1025
-        case SQL_DESC_BASE_TABLE_NAME: // 1026
-            break; // Handle these below with Unicode conversion
+        case SQL_COLUMN_NAME:
+        case SQL_DESC_NAME:
+        case SQL_COLUMN_TYPE_NAME:
+        case SQL_COLUMN_TABLE_NAME:
+        case SQL_COLUMN_OWNER_NAME:
+        case SQL_COLUMN_QUALIFIER_NAME:
+        case SQL_COLUMN_LABEL:
+        case SQL_DESC_LITERAL_PREFIX:
+        case SQL_DESC_LITERAL_SUFFIX:
+        case SQL_DESC_LOCAL_TYPE_NAME:
+        case SQL_DESC_BASE_COLUMN_NAME:
+        case SQL_DESC_BASE_TABLE_NAME:
+            // Handle string attributes below
+            break;
 
-        // All other attributes can go directly to ANSI version
         default:
+            // Non-string attributes can be handled directly by ANSI version
             return SQLColAttribute(StatementHandle, ColumnNumber, FieldIdentifier,
                                    CharacterAttribute, BufferLength, StringLength,
                                    NumericAttribute);
     }
 
-    // Get the ANSI string
-    char ansiBuffer[SQL_MAX_MESSAGE_LENGTH];
+    // Get statement object and validate
+    auto *stmt = static_cast<Statement *>(StatementHandle);
+    if (!stmt || !stmt->hasResult) {
+        LOG("Invalid statement handle or no result set");
+        return SQL_ERROR;
+    }
+
+    // Validate column number
+    if (ColumnNumber <= 0 || ColumnNumber > stmt->resultColumns.size()) {
+        LOG("Invalid column number");
+        return SQL_ERROR;
+    }
+
+    // Get column descriptor
+    const auto &col = stmt->resultColumns[ColumnNumber - 1];
+
+    // First get the ANSI string length
     SQLSMALLINT ansiLength = 0;
+    const char *sourceStr = nullptr;
 
-    SQLRETURN ret = SQLColAttribute(StatementHandle, ColumnNumber, FieldIdentifier,
-                                    ansiBuffer, sizeof(ansiBuffer), &ansiLength, NumericAttribute);
-
-    if (!SQL_SUCCEEDED(ret)) {
-        return ret;
+    // Determine which string attribute to retrieve
+    switch (FieldIdentifier) {
+        case SQL_COLUMN_NAME:
+        case SQL_DESC_NAME:
+            sourceStr = col.name;
+            ansiLength = col.nameLength;
+            break;
+        case SQL_COLUMN_LABEL:
+            sourceStr = col.label;
+            ansiLength = col.labelLength;
+            break;
+        case SQL_COLUMN_TYPE_NAME:
+            sourceStr = col.typeName;
+            ansiLength = col.typeNameLength;
+            break;
+        case SQL_COLUMN_TABLE_NAME:
+            sourceStr = col.tableName;
+            ansiLength = col.tableNameLength;
+            break;
+        case SQL_COLUMN_OWNER_NAME:
+            sourceStr = col.schemaName;
+            ansiLength = col.schemaNameLength;
+            break;
+        case SQL_COLUMN_QUALIFIER_NAME:
+            sourceStr = col.catalogName;
+            ansiLength = col.catalogNameLength;
+            break;
+        case SQL_DESC_LITERAL_PREFIX:
+            sourceStr = col.literalPrefix;
+            ansiLength = col.literalPrefixLength;
+            break;
+        case SQL_DESC_LITERAL_SUFFIX:
+            sourceStr = col.literalSuffix;
+            ansiLength = col.literalSuffixLength;
+            break;
+        case SQL_DESC_LOCAL_TYPE_NAME:
+            sourceStr = col.localTypeName;
+            ansiLength = col.localTypeNameLength;
+            break;
+        case SQL_DESC_BASE_COLUMN_NAME:
+            sourceStr = col.baseColumnName;
+            ansiLength = col.baseColumnNameLength;
+            break;
+        case SQL_DESC_BASE_TABLE_NAME:
+            sourceStr = col.baseTableName;
+            ansiLength = col.baseTableNameLength;
+            break;
+        default:
+            LOG("Unexpected string attribute type");
+            return SQL_ERROR;
     }
 
-    // Convert to wide char if we have a buffer
-    if (SQL_SUCCEEDED(ret) && CharacterAttribute && BufferLength > 0) {
-        if (ansiLength > 0) {
-            size_t numChars = 0;
-            errno_t err = mbstowcs_s(&numChars, (wchar_t *)CharacterAttribute,
-                                     BufferLength / sizeof(wchar_t), ansiBuffer, _TRUNCATE);
-            if (err == 0 && StringLength) {
-                *StringLength = static_cast<SQLSMALLINT>(numChars * sizeof(wchar_t));
-            }
-            LOGF("Converted string to Unicode. Original length: %d, Wide length: %zu", ansiLength, numChars);
-
-        } else {
-            // Empty string case
-            if (BufferLength >= sizeof(wchar_t)) {
-                *((wchar_t *) CharacterAttribute) = L'\0';
-            }
-            if (StringLength) {
-                *StringLength = 0;
-            }
-            LOG("Set empty Unicode string");
+    // Handle null source string
+    if (!sourceStr) {
+        LOGF("Source string is null for field %d", FieldIdentifier);
+        if (StringLength) {
+            *StringLength = 0;
         }
-    } else if (StringLength) {
-        // Just return required length if no buffer provided
-        *StringLength = ansiLength * sizeof(wchar_t);
-        LOGF("Returning required buffer length: %d bytes", *StringLength);
+        if (CharacterAttribute && BufferLength >= sizeof(wchar_t)) {
+            *static_cast<wchar_t *>(CharacterAttribute) = L'\0';
+        }
+        return SQL_SUCCESS;
     }
 
-    return ret;
+    // Calculate required buffer size in bytes for wide-char string
+    // Add 1 for null terminator
+    size_t requiredBytes = (ansiLength + 1) * sizeof(wchar_t);
+
+    // If only asking for length
+    if (!CharacterAttribute || BufferLength == 0) {
+        if (StringLength) {
+            *StringLength = static_cast<SQLSMALLINT>(requiredBytes);
+            LOGF("Returning required buffer size: %d bytes", *StringLength);
+        }
+        return SQL_SUCCESS;
+    }
+
+    // Convert to wide char
+    size_t charsWritten = 0;
+    auto wcharBuf = static_cast<wchar_t *>(CharacterAttribute);
+    size_t maxChars = BufferLength / sizeof(wchar_t);
+
+    LOGF("Converting string '%s' to Unicode (max chars: %zu)", sourceStr, maxChars);
+
+    errno_t err = mbstowcs_s(&charsWritten, wcharBuf, maxChars, sourceStr, _TRUNCATE);
+
+    if (err != 0 && err != STRUNCATE) {
+        LOGF("Unicode conversion failed with error: %d", err);
+        return SQL_ERROR;
+    }
+
+    // Set the string length in bytes
+    if (StringLength) {
+        // Subtract 1 to not count null terminator
+        *StringLength = static_cast<SQLSMALLINT>((charsWritten - 1) * sizeof(wchar_t));
+        LOGF("Set string length to %d bytes", *StringLength);
+    }
+
+    // Check if data was truncated
+    if (charsWritten == maxChars && ansiLength >= static_cast<SQLSMALLINT>(maxChars)) {
+        LOG("String was truncated");
+        return SQL_SUCCESS_WITH_INFO;
+    }
+
+    LOGF("Successfully converted string, wrote %zu chars", charsWritten);
+    return SQL_SUCCESS;
 }
 } // extern "C"

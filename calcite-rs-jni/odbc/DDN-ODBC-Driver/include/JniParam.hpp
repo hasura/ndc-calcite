@@ -25,7 +25,7 @@ public:
     };
 
     // Constructors for different types
-    explicit JniParam(const std::string& value);
+    explicit JniParam(std::string  value);
     explicit JniParam(const std::vector<std::string>& value);
     explicit JniParam(int value);
     explicit JniParam(float value);
