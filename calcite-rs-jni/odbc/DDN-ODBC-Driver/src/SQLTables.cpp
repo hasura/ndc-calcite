@@ -4,98 +4,15 @@
 #define WIN32_LEAN_AND_MEAN
 #include <algorithm>
 #include <sql.h>
-#include <sqlext.h>
 #include <sqltypes.h>
-#include <sqlucode.h>
 #include "../include/connection.hpp"
-#include "../include/logging.hpp"
-//#include "../include/httplib.h"
-#include "../include/globals.hpp"
-#include "../include/environment.hpp"
+#include "../include/Logging.hpp"
+#include "../include/Globals.hpp"
+#include "../include/Environment.hpp"
 #include "../include/statement.hpp"
 
 extern "C" {
 
-
-SQLRETURN debugSQLTables(SQLHSTMT hstmt) {
-    SQLRETURN ret;
-    SQLSMALLINT numCols;
-    SQLLEN rowCount;
-    SQLWCHAR colName[256];
-    SQLWCHAR sqlState[6];
-    SQLINTEGER nativeError;
-    SQLWCHAR msgText[SQL_MAX_MESSAGE_LENGTH];
-    SQLSMALLINT msgLen;
-
-    // Get row count
-    rowCount = -1;
-    ret = SQLRowCount(hstmt, &rowCount);
-    printf("SQLRowCount returned: %d, Count: %I64d\n", ret, (INT64)rowCount);
-
-    // Get column count
-    numCols = 0;
-    ret = SQLNumResultCols(hstmt, &numCols);
-    printf("SQLNumResultCols returned: %d, Columns: %d\n", ret, numCols);
-
-    printf("Checking column 1 metadata:\n");
-
-    // Try getting column info and check for errors after each call
-    SQLLEN attrValue = 0;
-    SQLSMALLINT attrLen = 0;
-
-    // Check SQL_DESC_TYPE
-    ret = SQLColAttributeW(hstmt, 1, SQL_DESC_TYPE, NULL, 0, &attrLen, &attrValue);
-    printf("SQLColAttribute SQL_DESC_TYPE returned: %d\n", ret);
-
-    // Get error info if failed
-    if (!SQL_SUCCEEDED(ret)) {
-        SQLSMALLINT i = 1;
-        while (SQLGetDiagRecW(SQL_HANDLE_STMT, hstmt, i, sqlState, &nativeError,
-                            msgText, SQL_MAX_MESSAGE_LENGTH, &msgLen) == SQL_SUCCESS) {
-            printf("Diagnostic %d: State=%ls, Native=%d, Message=%ls\n",
-                   i, sqlState, nativeError, msgText);
-            i++;
-        }
-    } else {
-        printf("Column type: %I64d, Length: %d\n", (INT64)attrValue, attrLen);
-    }
-
-    // Try SQL_DESC_CONCISE_TYPE
-    ret = SQLColAttributeW(hstmt, 1, SQL_DESC_CONCISE_TYPE, NULL, 0, &attrLen, &attrValue);
-    printf("\nSQLColAttribute SQL_DESC_CONCISE_TYPE returned: %d\n", ret);
-    if (!SQL_SUCCEEDED(ret)) {
-        SQLSMALLINT i = 1;
-        while (SQLGetDiagRecW(SQL_HANDLE_STMT, hstmt, i, sqlState, &nativeError,
-                            msgText, SQL_MAX_MESSAGE_LENGTH, &msgLen) == SQL_SUCCESS) {
-            printf("Diagnostic %d: State=%ls, Native=%d, Message=%ls\n",
-                   i, sqlState, nativeError, msgText);
-            i++;
-        }
-    } else {
-        printf("Concise type: %I64d, Length: %d\n", (INT64)attrValue, attrLen);
-    }
-
-    // Try SQL_DESC_NAME
-    ret = SQLColAttributeW(hstmt, 1, SQL_DESC_NAME, colName, sizeof(colName), &attrLen, NULL);
-    printf("\nSQLColAttribute SQL_DESC_NAME returned: %d\n", ret);
-    if (!SQL_SUCCEEDED(ret)) {
-        SQLSMALLINT i = 1;
-        while (SQLGetDiagRecW(SQL_HANDLE_STMT, hstmt, i, sqlState, &nativeError,
-                            msgText, SQL_MAX_MESSAGE_LENGTH, &msgLen) == SQL_SUCCESS) {
-            printf("Diagnostic %d: State=%ls, Native=%d, Message=%ls\n",
-                   i, sqlState, nativeError, msgText);
-            i++;
-        }
-    } else {
-        printf("Column name length: %d\n", attrLen);
-        if (attrLen > 0) {
-            printf("Column name: %ls\n", colName);
-        }
-    }
-
-    return SQL_SUCCESS;
-}
-    // Common implementation of the SQLTables function
 SQLRETURN SQLTables_Impl(
     SQLHSTMT        hstmt,
     const char*     szCatalogName,
@@ -132,7 +49,7 @@ SQLRETURN SQLTables_Impl(
 
     // Fetch tables using JVM's getTables method
     stmt->conn->GetTables(catalogName, schemaName, tableName, tableType, stmt);
-    debugSQLTables(stmt);
+
     LOG("SQLTables_Impl RETURNS SQL_SUCCESS");
     return SQL_SUCCESS;
 }

@@ -1,20 +1,17 @@
 #include <winsock2.h>
 #include <windows.h>
 #define WIN32_LEAN_AND_MEAN
-#include "../include/connection.hpp"
-#include "../include/logging.hpp"
-//#include "../include/httplib.h"
-#include "../include/globals.hpp"
-#include "../include/environment.hpp"
-#include "../include/statement.hpp"
+#include "../include/Connection.hpp"
+#include "../include/Logging.hpp"
+#include "../include/Environment.hpp"
+#include "../include/Statement.hpp"
 
 SQLRETURN SQL_API SQLFreeStmt(
     SQLHSTMT StatementHandle,
-    SQLUSMALLINT Option)
-{
+    SQLUSMALLINT Option) {
     LOGF("SQLFreeStmt called with Option: %d", Option);
 
-    auto stmt = static_cast<Statement*>(StatementHandle);
+    auto stmt = static_cast<Statement *>(StatementHandle);
 
     if (!stmt) {
         LOG("Invalid statement handle");
@@ -26,7 +23,7 @@ SQLRETURN SQL_API SQLFreeStmt(
             LOGF("Closing statement, currentRow: %zu, resultData.size(): %zu",
                  stmt->currentRow, stmt->resultData.size());
 
-            // Reset the result set state
+        // Reset the result set state
             stmt->currentRow = 0;
             stmt->resultData.clear();
             stmt->resultColumns.clear();
@@ -39,7 +36,7 @@ SQLRETURN SQL_API SQLFreeStmt(
             LOGF("Dropping statement, currentRow: %zu, resultData.size(): %zu",
                  stmt->currentRow, stmt->resultData.size());
 
-            // Free the statement resources
+        // Free the statement resources
             stmt->clearResults();
             delete stmt;
 
@@ -49,8 +46,8 @@ SQLRETURN SQL_API SQLFreeStmt(
         case SQL_UNBIND:
             LOG("Unbinding statement columns");
 
-            // Unbind any bound columns
-            // (not implemented in this example)
+        // Unbind any bound columns
+        // (not implemented in this example)
 
             LOG("Statement columns unbound successfully");
             return SQL_SUCCESS;
@@ -58,8 +55,8 @@ SQLRETURN SQL_API SQLFreeStmt(
         case SQL_RESET_PARAMS:
             LOG("Resetting statement parameters");
 
-            // Reset any bound parameters
-            // (not implemented in this example)
+        // Reset any bound parameters
+        // (not implemented in this example)
 
             LOG("Statement parameters reset successfully");
             return SQL_SUCCESS;

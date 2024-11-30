@@ -4,15 +4,12 @@
 #include <algorithm>
 #include <string>
 #define WIN32_LEAN_AND_MEAN // Reduce size of the Win32 header files
+#include "../include/Connection.hpp"
+#include "../include/Logging.hpp"
+#include "../include/Environment.hpp"
+#include "../include/Statement.hpp"
 
-#include "../include/connection.hpp"
-#include "../include/logging.hpp"
-//#include "../include/httplib.h"
-#include "../include/globals.hpp"
-#include "../include/environment.hpp"
-#include "../include/statement.hpp"
-
-std::string WideCharToString(const std::wstring& wstr) {
+std::string WideCharToString(const std::wstring &wstr) {
     int size = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr, 0, nullptr, nullptr);
     if (size <= 0) {
         return {};
@@ -24,14 +21,12 @@ std::string WideCharToString(const std::wstring& wstr) {
 }
 
 extern "C" {
-
 // Common validation function
 static SQLRETURN ValidateGetDataCall(
-    Statement* stmt,
+    Statement *stmt,
     SQLUSMALLINT ColumnNumber,
-    const char** ppColumnData,
-    const ColumnDesc** ppColumnDesc)
-{
+    const char **ppColumnData,
+    const ColumnDesc **ppColumnDesc) {
     if (!stmt) {
         LOG("Invalid statement handle");
         return SQL_INVALID_HANDLE;
@@ -53,8 +48,8 @@ static SQLRETURN ValidateGetDataCall(
         return SQL_ERROR;
     }
 
-    const auto& columnData = stmt->resultData[stmt->currentRow - 1][ColumnNumber - 1];
-    const auto& columnDesc = stmt->resultColumns[ColumnNumber - 1];
+    const auto &columnData = stmt->resultData[stmt->currentRow - 1][ColumnNumber - 1];
+    const auto &columnDesc = stmt->resultColumns[ColumnNumber - 1];
 
     LOGF("Getting data for column %s (%s)",
          columnDesc.name,
@@ -68,280 +63,379 @@ static SQLRETURN ValidateGetDataCall(
 
 // Common numeric conversion function
 static SQLRETURN ConvertNumeric(
-    const char* sourceData,
+    const char *sourceData,
     SQLSMALLINT TargetType,
     SQLPOINTER TargetValue,
-    SQLLEN* StrLen_or_Ind)
-{
-    switch (TargetType) {
-        case SQL_C_LONG:
-        case SQL_C_SLONG:
-        case SQL_C_LONG + SQL_UNSIGNED_OFFSET: {
-            LOG("Converting to LONG");
-            try {
+    SQLLEN *StrLen_or_Ind) {
+    try {
+        switch (TargetType) {
+            case SQL_C_TYPE_TIMESTAMP: {
+                auto* ts = static_cast<SQL_TIMESTAMP_STRUCT*>(TargetValue);
+                // Format is: YYYY-MM-DDThh:mm:ss.fff
+
+                try {
+                    std::string str(sourceData);
+                    // Parse date part
+                    ts->year = std::stoi(str.substr(0, 4));
+                    ts->month = std::stoi(str.substr(5, 2));
+                    ts->day = std::stoi(str.substr(8, 2));
+
+                    // Parse time part (after T)
+                    ts->hour = std::stoi(str.substr(11, 2));
+                    ts->minute = std::stoi(str.substr(14, 2));
+                    ts->second = std::stoi(str.substr(17, 2));
+
+                    // Parse milliseconds and convert to nanoseconds
+                    if (str.length() > 20 && str[19] == '.') {
+                        std::string fraction = str.substr(20);
+                        // Pad with zeros to ensure we have nanosecond precision
+                        fraction.append(9 - fraction.length(), '0');
+                        ts->fraction = std::stoi(fraction);
+                    } else {
+                        ts->fraction = 0;
+                    }
+
+                    if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQL_TIMESTAMP_STRUCT);
+                    return SQL_SUCCESS;
+                } catch (...) {
+                    LOGF("Failed to parse timestamp string: %s", sourceData);
+                    return SQL_ERROR;
+                }
+            }
+
+            case SQL_C_LONG:
+            case SQL_C_SLONG: {
                 long value = std::stol(sourceData);
-                *static_cast<SQLLEN*>(TargetValue) = value;
-                if (StrLen_or_Ind) {
-                    *StrLen_or_Ind = sizeof(long);
-                }
-                LOGF("Converted to long value: %ld", value);
+                *static_cast<SQLLEN *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLLEN);
                 return SQL_SUCCESS;
-            } catch (const std::exception& e) {
-                LOGF("Failed to convert to long: %s", e.what());
-                return SQL_ERROR;
             }
-        }
 
-        case SQL_C_DOUBLE: {
-            LOG("Converting to DOUBLE");
-            try {
+            case SQL_C_ULONG: {
+                unsigned long value = std::stoul(sourceData);
+                *static_cast<SQLULEN *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLULEN);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_SHORT:
+            case SQL_C_SSHORT: {
+                short value = static_cast<short>(std::stoi(sourceData));
+                *static_cast<SQLSMALLINT *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLSMALLINT);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_USHORT: {
+                unsigned short value = static_cast<unsigned short>(std::stoul(sourceData));
+                *static_cast<SQLUSMALLINT *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLUSMALLINT);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_TINYINT:
+            case SQL_C_STINYINT: {
+                char value = static_cast<char>(std::stoi(sourceData));
+                *static_cast<SQLSCHAR *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLSCHAR);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_UTINYINT: {
+                unsigned char value = static_cast<unsigned char>(std::stoul(sourceData));
+                *static_cast<SQLCHAR *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLCHAR);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_SBIGINT: {
+                long long value = std::stoll(sourceData);
+                *static_cast<SQLBIGINT *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLBIGINT);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_UBIGINT: {
+                unsigned long long value = std::stoull(sourceData);
+                *static_cast<SQLUBIGINT *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLUBIGINT);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_FLOAT: {
+                float value = std::stof(sourceData);
+                *static_cast<SQLREAL *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLREAL);
+                return SQL_SUCCESS;
+            }
+
+            case SQL_C_DOUBLE: {
                 double value = std::stod(sourceData);
-                *static_cast<double*>(TargetValue) = value;
-                if (StrLen_or_Ind) {
-                    *StrLen_or_Ind = sizeof(double);
-                }
-                LOGF("Converted to double value: %f", value);
+                *static_cast<SQLDOUBLE *>(TargetValue) = value;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(SQLDOUBLE);
                 return SQL_SUCCESS;
-            } catch (const std::exception& e) {
-                LOGF("Failed to convert to double: %s", e.what());
-                return SQL_ERROR;
             }
-        }
 
-        default:
-            LOGF("Unsupported numeric target type: %d", TargetType);
-            return SQL_ERROR;
+            case SQL_C_BIT: {
+                bool value = (sourceData[0] == '1' ||
+                            tolower(sourceData[0]) == 't' ||
+                            tolower(sourceData[0]) == 'y');
+                *static_cast<unsigned char *>(TargetValue) = value ? 1 : 0;
+                if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(unsigned char);
+                return SQL_SUCCESS;
+            }
+
+            default:
+                LOGF("Unsupported numeric target type: %d", TargetType);
+                return SQL_ERROR;
+        }
+    } catch (...) {
+        return SQL_ERROR;
     }
 }
 
 SQLRETURN SQL_API SQLGetData_A(
-    SQLHSTMT       StatementHandle,
-    SQLUSMALLINT   ColumnNumber,
-    SQLSMALLINT    TargetType,
-    SQLPOINTER     TargetValue,
-    SQLLEN         BufferLength,
-    SQLLEN*        StrLen_or_Ind)
-{
-    LOGF("SQLGetData called - Column: %d, TargetType: %d, BufferLength: %zd",
+    SQLHSTMT StatementHandle,
+    SQLUSMALLINT ColumnNumber,
+    SQLSMALLINT TargetType,
+    SQLPOINTER TargetValue,
+    SQLLEN BufferLength,
+    SQLLEN *StrLen_or_Ind) {
+
+    LOGF("SQLGetData_A - Column: %d, Type: %d, Buffer: %zd",
          ColumnNumber, TargetType, static_cast<size_t>(BufferLength));
 
-    auto stmt = static_cast<Statement*>(StatementHandle);
-    const char* sourceData;
-    const ColumnDesc* columnDesc;
+    auto stmt = static_cast<Statement *>(StatementHandle);
+    const char *sourceData;
+    const ColumnDesc *columnDesc;
 
     SQLRETURN validationResult = ValidateGetDataCall(stmt, ColumnNumber, &sourceData, &columnDesc);
-    if (validationResult != SQL_SUCCESS) {
-        return validationResult;
-    }
+    if (validationResult != SQL_SUCCESS) return validationResult;
 
     // Handle NULL value
-    if (sourceData == nullptr || *sourceData == '\0') {
-        if (StrLen_or_Ind) {
-            *StrLen_or_Ind = SQL_NULL_DATA;
-            LOGF("NULL value for column %d", ColumnNumber);
-        }
+    if (!sourceData || !*sourceData) {
+        if (StrLen_or_Ind) *StrLen_or_Ind = SQL_NULL_DATA;
 
-        // For string types, we should write an empty string
         if (TargetValue && BufferLength > 0) {
             switch (TargetType) {
-                case SQL_C_WCHAR: {
-                    if (BufferLength >= sizeof(WCHAR)) {
-                        *static_cast<WCHAR*>(TargetValue) = L'\0';
-                    }
+                case SQL_C_WCHAR:
+                    if (BufferLength >= sizeof(WCHAR))
+                        *static_cast<WCHAR *>(TargetValue) = L'\0';
                     break;
-                }
-                case SQL_C_CHAR: {
-                    *static_cast<char*>(TargetValue) = '\0';
+                case SQL_C_CHAR:
+                    *static_cast<char *>(TargetValue) = '\0';
                     break;
-                }
+                case SQL_C_GUID:
+                    if (BufferLength >= sizeof(GUID))
+                        memset(TargetValue, 0, sizeof(GUID));
+                    break;
+                case SQL_C_TYPE_TIMESTAMP:
+                    if (BufferLength >= sizeof(SQL_TIMESTAMP_STRUCT))
+                        memset(TargetValue, 0, sizeof(SQL_TIMESTAMP_STRUCT));
+                break;
             }
         }
         return SQL_SUCCESS;
     }
 
-    LOGF("Source data: '%s'", sourceData);
-
-    // Handle SQL_C_WCHAR
-    if (TargetType == SQL_C_WCHAR) {
-        size_t sourceLen = strlen(sourceData);
-
-        // Calculate required buffer size in bytes (including null terminator)
-        int wideCharsRequired = MultiByteToWideChar(
-            CP_UTF8,
-            0,
-            sourceData,
-            -1,  // null-terminated string
-            nullptr,
-            0
-        );
-
-        if (wideCharsRequired == 0) {
-            LOGF("MultiByteToWideChar sizing failed: %lu", GetLastError());
-            return SQL_ERROR;
-        }
-
-        // Set the required size (in bytes, not including null terminator)
-        SQLLEN bytesNeeded = (wideCharsRequired - 1) * sizeof(WCHAR);
-        if (StrLen_or_Ind) {
-            *StrLen_or_Ind = bytesNeeded;
-            LOGF("Set StrLen_or_Ind to %zd bytes", bytesNeeded);
-        }
-
-        // If no buffer or zero length, just return required size
-        if (!TargetValue || BufferLength <= 0) {
+    switch (TargetType) {
+        case SQL_C_GUID: {
+            if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(GUID);
+            if (TargetValue && BufferLength >= sizeof(GUID)) {
+                GUID guid;
+                if (UuidFromStringA((RPC_CSTR)sourceData, &guid) == RPC_S_OK) {
+                    memcpy(TargetValue, &guid, sizeof(GUID));
+                } else {
+                    memset(TargetValue, 0, sizeof(GUID));
+                }
+            }
             return SQL_SUCCESS;
         }
 
-        // Calculate how many wide chars we can store (including null terminator)
-        int bufferWideChars = BufferLength / sizeof(WCHAR);
-        if (bufferWideChars == 0) {
-            return SQL_ERROR;
-        }
+        case SQL_C_WCHAR: {
+            int wideCharsRequired = MultiByteToWideChar(CP_UTF8, 0, sourceData, -1, nullptr, 0);
+            if (!wideCharsRequired) return SQL_ERROR;
 
-        // Convert the string
-        int charsConverted = MultiByteToWideChar(
-            CP_UTF8,
-            0,
-            sourceData,
-            -1,
-            static_cast<LPWSTR>(TargetValue),
-            bufferWideChars
-        );
+            if (StrLen_or_Ind)
+                *StrLen_or_Ind = (wideCharsRequired - 1) * sizeof(WCHAR);
 
-        if (charsConverted == 0) {
-            LOGF("MultiByteToWideChar conversion failed: %lu", GetLastError());
-            return SQL_ERROR;
-        }
+            if (!TargetValue || BufferLength <= 0) return SQL_SUCCESS;
 
-        // Log what we wrote
-        LOGF("Converted %d wide chars from '%s'", charsConverted - 1, sourceData);
+            int bufferWideChars = BufferLength / sizeof(WCHAR);
+            if (!bufferWideChars) return SQL_ERROR;
 
-        // Check if truncation occurred
-        if (charsConverted < wideCharsRequired) {
-            // Ensure null termination
-            static_cast<WCHAR*>(TargetValue)[bufferWideChars - 1] = L'\0';
-            LOGF("Data truncated from %d to %d chars", wideCharsRequired - 1, charsConverted - 1);
-            return SQL_SUCCESS_WITH_INFO;
-        }
+            int charsConverted = MultiByteToWideChar(CP_UTF8, 0, sourceData, -1,
+                static_cast<LPWSTR>(TargetValue), bufferWideChars);
 
-        return SQL_SUCCESS;
-    }
+            if (!charsConverted) return SQL_ERROR;
 
-    // Handle non-Unicode string types
-    if (TargetType == SQL_C_CHAR) {
-        size_t sourceLen = strlen(sourceData);
-        if (StrLen_or_Ind) {
-            *StrLen_or_Ind = static_cast<SQLLEN>(sourceLen);
-        }
-
-        if (TargetValue && BufferLength > 0) {
-            size_t copyLen = std::min<size_t>(sourceLen, BufferLength - 1);
-            strncpy(static_cast<char*>(TargetValue), sourceData, copyLen);
-            static_cast<char*>(TargetValue)[copyLen] = '\0';
-
-            if (copyLen < sourceLen) {
+            if (charsConverted < wideCharsRequired) {
+                static_cast<WCHAR *>(TargetValue)[bufferWideChars - 1] = L'\0';
                 return SQL_SUCCESS_WITH_INFO;
             }
+            return SQL_SUCCESS;
         }
-        return SQL_SUCCESS;
-    }
 
-    return ConvertNumeric(sourceData, TargetType, TargetValue, StrLen_or_Ind);
+        case SQL_C_CHAR: {
+            size_t sourceLen = strlen(sourceData);
+            if (StrLen_or_Ind) *StrLen_or_Ind = static_cast<SQLLEN>(sourceLen);
+
+            if (TargetValue && BufferLength > 0) {
+                size_t copyLen = std::min<size_t>(sourceLen, BufferLength - 1);
+                strncpy(static_cast<char *>(TargetValue), sourceData, copyLen);
+                static_cast<char *>(TargetValue)[copyLen] = '\0';
+                if (copyLen < sourceLen) return SQL_SUCCESS_WITH_INFO;
+            }
+            return SQL_SUCCESS;
+        }
+
+        case SQL_C_BINARY: {
+            // If this is a boolean/bit column
+            if (columnDesc->sqlType == SQL_BIT) {
+                if (StrLen_or_Ind) *StrLen_or_Ind = 1; // One byte for boolean
+
+                if (TargetValue && BufferLength > 0) {
+                    // Convert the string representation to a single byte
+                    unsigned char value = (sourceData[0] == '1' ||
+                                        tolower(sourceData[0]) == 't' ||
+                                        tolower(sourceData[0]) == 'y') ? 1 : 0;
+                    *static_cast<unsigned char*>(TargetValue) = value;
+                }
+                return SQL_SUCCESS;
+            }
+            // For other types, handle binary conversion or return error
+            LOGF("SQL_C_BINARY conversion not supported for type: %d", columnDesc->sqlType);
+            return SQL_ERROR;
+        }
+
+        default:
+            return ConvertNumeric(sourceData, TargetType, TargetValue, StrLen_or_Ind);
+    }
 }
 
 SQLRETURN SQL_API SQLGetData_W(
-    SQLHSTMT       StatementHandle,
-    SQLUSMALLINT   ColumnNumber,
-    SQLSMALLINT    TargetType,
-    SQLPOINTER     TargetValue,
-    SQLLEN         BufferLength,
-    SQLLEN*        StrLen_or_Ind)
-{
-    LOGF("SQLGetDataW (Unicode) called - Column: %d, TargetType: %d, BufferLength: %zd",
+    SQLHSTMT StatementHandle,
+    SQLUSMALLINT ColumnNumber,
+    SQLSMALLINT TargetType,
+    SQLPOINTER TargetValue,
+    SQLLEN BufferLength,
+    SQLLEN *StrLen_or_Ind) {
+
+    LOGF("SQLGetDataW called - Column: %d, TargetType: %d, BufferLength: %zd",
          ColumnNumber, TargetType, static_cast<size_t>(BufferLength));
 
-    auto stmt = static_cast<Statement*>(StatementHandle);
-    const char* sourceData;
-    const ColumnDesc* columnDesc;
+    auto stmt = static_cast<Statement *>(StatementHandle);
+    const char *sourceData;
+    const ColumnDesc *columnDesc;
 
     SQLRETURN validationResult = ValidateGetDataCall(stmt, ColumnNumber, &sourceData, &columnDesc);
-    if (validationResult != SQL_SUCCESS) {
-        return validationResult;
-    }
+    if (validationResult != SQL_SUCCESS) return validationResult;
 
     // Handle NULL value
     if (*sourceData == '\0') {
-        if (StrLen_or_Ind) {
-            *StrLen_or_Ind = SQL_NULL_DATA;
-            LOG("Returning NULL value indicator");
+        if (StrLen_or_Ind) *StrLen_or_Ind = SQL_NULL_DATA;
+        if (TargetValue && BufferLength > 0) {
+            switch (TargetType) {
+                case SQL_C_WCHAR:
+                    if (BufferLength >= sizeof(WCHAR)) {
+                        *static_cast<WCHAR *>(TargetValue) = L'\0';
+                    }
+                    break;
+                case SQL_C_CHAR:
+                    *static_cast<char *>(TargetValue) = '\0';
+                    break;
+                case SQL_C_TYPE_TIMESTAMP:
+                    if (BufferLength >= sizeof(SQL_TIMESTAMP_STRUCT))
+                        memset(TargetValue, 0, sizeof(SQL_TIMESTAMP_STRUCT));
+                break;
+            }
         }
         return SQL_SUCCESS;
     }
 
-    // For Unicode string types (SQL_C_WCHAR)
-    if (TargetType == SQL_C_WCHAR) {
-        LOGF("Converting to SQL_C_WCHAR, source data: '%s'", sourceData);
-
-        // First convert source UTF-8 to wide chars to get required buffer size
-        int wideCharsRequired = MultiByteToWideChar(
-            CP_UTF8,
-            0,
-            sourceData,
-            -1,  // null-terminated string
-            nullptr,
-            0
-        );
-
-        if (wideCharsRequired == 0) {
-            LOGF("Failed to get required buffer size for wide char conversion: %lu", GetLastError());
-            return SQL_ERROR;
-        }
-
-        // wideCharsRequired includes null terminator
-        if (StrLen_or_Ind) {
-            *StrLen_or_Ind = (wideCharsRequired - 1) * sizeof(WCHAR);  // Size in bytes, excluding null terminator
-        }
-
-        // If no buffer provided or zero length, just return required size
-        if (!TargetValue || BufferLength == 0) {
+    switch (TargetType) {
+        case SQL_C_GUID: {
+            if (StrLen_or_Ind) *StrLen_or_Ind = sizeof(GUID);
+            if (TargetValue && BufferLength >= sizeof(GUID)) {
+                GUID guid;
+                if (UuidFromStringA((RPC_CSTR)sourceData, &guid) == RPC_S_OK) {
+                    memcpy(TargetValue, &guid, sizeof(GUID));
+                } else {
+                    // Zero out the GUID if conversion fails
+                    memset(TargetValue, 0, sizeof(GUID));
+                }
+            }
             return SQL_SUCCESS;
         }
 
-        // Calculate how many wide chars we can actually store
-        int bufferWideChars = BufferLength / sizeof(WCHAR);
-        if (bufferWideChars == 0) {
+        case SQL_C_WCHAR: {
+            int wideCharsRequired = MultiByteToWideChar(CP_UTF8, 0, sourceData, -1, nullptr, 0);
+            if (wideCharsRequired == 0) {
+                LOGF("Failed to get required buffer size: %lu", GetLastError());
+                return SQL_ERROR;
+            }
+
+            if (StrLen_or_Ind) {
+                *StrLen_or_Ind = (wideCharsRequired - 1) * sizeof(WCHAR);
+            }
+
+            if (!TargetValue || BufferLength == 0) return SQL_SUCCESS;
+
+            int bufferWideChars = BufferLength / sizeof(WCHAR);
+            if (bufferWideChars == 0) return SQL_ERROR;
+
+            int charsConverted = MultiByteToWideChar(
+                CP_UTF8, 0, sourceData, -1,
+                static_cast<LPWSTR>(TargetValue), bufferWideChars
+            );
+
+            if (charsConverted == 0) {
+                LOGF("Failed to convert string: %lu", GetLastError());
+                return SQL_ERROR;
+            }
+
+            if (charsConverted < wideCharsRequired) {
+                static_cast<WCHAR *>(TargetValue)[bufferWideChars - 1] = L'\0';
+                return SQL_SUCCESS_WITH_INFO;
+            }
+            return SQL_SUCCESS;
+        }
+
+        case SQL_C_CHAR: {
+            size_t sourceLen = strlen(sourceData);
+            if (StrLen_or_Ind) *StrLen_or_Ind = static_cast<SQLLEN>(sourceLen);
+
+            if (TargetValue && BufferLength > 0) {
+                size_t copyLen = std::min<size_t>(sourceLen, BufferLength - 1);
+                strncpy(static_cast<char *>(TargetValue), sourceData, copyLen);
+                static_cast<char *>(TargetValue)[copyLen] = '\0';
+
+                if (copyLen < sourceLen) return SQL_SUCCESS_WITH_INFO;
+            }
+            return SQL_SUCCESS;
+        }
+
+        case SQL_C_BINARY: {
+            // If this is a boolean/bit column
+            if (columnDesc->sqlType == SQL_BIT) {
+                if (StrLen_or_Ind) *StrLen_or_Ind = 1; // One byte for boolean
+
+                if (TargetValue && BufferLength > 0) {
+                    // Convert the string representation to a single byte
+                    unsigned char value = (sourceData[0] == '1' ||
+                                        tolower(sourceData[0]) == 't' ||
+                                        tolower(sourceData[0]) == 'y') ? 1 : 0;
+                    *static_cast<unsigned char*>(TargetValue) = value;
+                }
+                return SQL_SUCCESS;
+            }
+            // For other types, handle binary conversion or return error
+            LOGF("SQL_C_BINARY conversion not supported for type: %d", columnDesc->sqlType);
             return SQL_ERROR;
         }
 
-        // Convert the string
-        int charsConverted = MultiByteToWideChar(
-            CP_UTF8,
-            0,
-            sourceData,
-            -1,
-            static_cast<LPWSTR>(TargetValue),
-            bufferWideChars
-        );
-
-        if (charsConverted == 0) {
-            LOGF("Failed to convert string to wide char: %lu", GetLastError());
-            return SQL_ERROR;
-        }
-
-        // Check if data was truncated
-        if (charsConverted < wideCharsRequired) {
-            // Ensure null termination on truncation
-            static_cast<WCHAR*>(TargetValue)[bufferWideChars - 1] = L'\0';
-            LOG("Data truncated (SQL_SUCCESS_WITH_INFO)");
-            return SQL_SUCCESS_WITH_INFO;
-        }
-
-        return SQL_SUCCESS;
-    }
-    // For non-string types, use the original numeric conversion
-    else {
-        return ConvertNumeric(sourceData, TargetType, TargetValue, StrLen_or_Ind);
+        default:
+            return ConvertNumeric(sourceData, TargetType, TargetValue, StrLen_or_Ind);
     }
 }
-
 } // extern "C"
