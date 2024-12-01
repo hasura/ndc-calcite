@@ -21,3 +21,7 @@ bld/
 vcpkg_installed
 cmake-build-*
 UpgradeLog.htm
+.idea/*
+._*
+._*/
+

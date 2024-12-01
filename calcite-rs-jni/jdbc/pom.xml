@@ -285,6 +285,19 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <argLine>
+                        --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED
+                        -Dotel.java.global-autoconfigure.enabled=true
+                        -Dlog_level=verbose
+                    </argLine>
+                    <skipTests>true</skipTests>
+                </configuration>
+            </plugin>
 
             <!-- Exec Plugin for Installing Local Dependencies -->
             <plugin>

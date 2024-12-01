@@ -46,3 +46,5 @@ bld/
 [Oo]bj/
 [Ll]og/
 /calcite-rs-jni/odbc/.vs/DDN-ODBC/DesignTimeBuild/.dtbcache.v2
+._*
+._*/*
