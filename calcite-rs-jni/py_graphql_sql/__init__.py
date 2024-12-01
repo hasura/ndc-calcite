@@ -32,8 +32,7 @@ from .py_graphql_sql import (
 
 # SQLAlchemy registration
 from sqlalchemy.dialects import registry
-logger.debug("Attempting to register the 'hasura.py_graphql_sql' dialect.")
-registry.register('hasura.py_graphql_sql', 'py_graphql_sql.sqlalchemy.hasura.ddnbase', 'HasuraDDNDialect')
+logger.debug("Attempting to register the 'hasura' dialect.")
 registry.register('hasura', 'py_graphql_sql.sqlalchemy.hasura.ddnbase', 'HasuraDDNDialect')
 logger.debug("Registered the 'hasura.py_graphql_sql' dialect.")
 

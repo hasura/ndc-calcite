@@ -13,7 +13,7 @@ print("\n=== Testing Connection ===")
 # Ensure dialect is registered
 from py_graphql_sql.sqlalchemy.hasura.ddnbase import HasuraDDNDialect
 
-url = 'hasura+py_graphql_sql:///?url=http://localhost:3000/graphql'
+url = 'hasura+py_graphql_sql:///?url=http://localhost:3280/graphql'
 
 try:
     # registered_dialects = list(registry._entry_points.keys())
@@ -50,7 +50,7 @@ try:
 
         # Test a simple query
         print("\n=== Testing Simple Query ===")
-        query = "SELECT * FROM GRAPHQL.Albums LIMIT 1"
+        query = f"SELECT * FROM {schema}.{first_table} LIMIT 1"
         result = conn.execute(query)
         print("Query result:")
         for row in result:

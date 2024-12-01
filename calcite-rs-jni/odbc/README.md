@@ -115,6 +115,10 @@ var columns = connection.GetSchema("Columns");
 
 ## Contributing to DDN ODBC Driver Development
 
+### To Do
+
+I've only tested this build on a Windows ARM64 device. It relies on dotnet core, and 
+it should be possible to build on any device that supports cmake an vc++, but I have not tested it it.
 ### Development Prerequisites
 
 1. Core Development Tools:

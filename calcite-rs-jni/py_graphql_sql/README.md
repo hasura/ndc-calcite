@@ -6,10 +6,10 @@ This is a Python DB-API 2.0 compliant implementation for connecting to Hasura DD
 
 ```bash
 # Using poetry (recommended)
-poetry add python-db-api
+poetry add py_graphql_sql
 
 # Or using pip
-pip install python-db-api
+pip install py_graphql_sql
 ```
 
 ## Prerequisites
@@ -27,7 +27,7 @@ from python_db_api import connect
 import os
 
 # Connection parameters
-host = "http://localhost:3000/graphql"  # Your Hasura DDN endpoint
+host = "http://localhost:3280/graphql"  # Your Hasura DDN endpoint
 jdbc_args = {"role": "admin"}  # Connection properties
 
 # Path to directory containing the all-in-one driver JAR
@@ -142,6 +142,19 @@ The connection is not thread-safe. Each thread should create its own connection 
 - `jpype1`: Java to Python integration
 - Java JDK 11+
 - `graphql-jdbc-driver-1.0.0-jar-with-dependencies.jar`
+
+### Download Parent Git Repo
+
+`git clone https://github.com/hasura/ndc-calcite.git`
+
+Follow instructions for building. This will auto-generate the JDBC jar file.
+
+### Validation
+
+Easiest way to validate is to use superset. Download this repo, which is already setup
+with the JDBC database connection. Download it as a peer to the `calcite connection`.
+
+`git clone https://github.com/kenstott/superset.git`
 
 ## Limitations
 

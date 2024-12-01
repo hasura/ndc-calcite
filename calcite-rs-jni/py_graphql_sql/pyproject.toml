@@ -1,44 +1,40 @@
-[build-system]
-requires = ["setuptools>=42", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "py_graphql_sql"
 version = "0.1.0"
 description = "A SQLAlchemy dialect for interacting with Hasura GraphQL endpoints."
-requires-python = ">=3.8"
-readme = {file = "README.md", content-type = "text/markdown"}
-license = {file = "LICENSE.md", content-type = "text/markdown"}
-authors = [
-    {name = "Kenneth Stott", email = "ken@hasura.io"}
-]
-dependencies = [
-    "sqlalchemy >= 1.4.0",
-    "JPype1 >= 1.2.0",
-    "jaydebeapi >= 1.2.3",
-    "typing-extensions >= 4.5.0"
-]
+authors = ["Kenneth Stott <ken@hasura.io>"]
+readme = "README.md"
+license = "LICENSE.md"
+homepage = "https://github.com/hasura/ndc-calcite"
+keywords = ["sqlalchemy", "graphql", "hasura", "dialect"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent"
 ]
+packages = [
+    { include = "py_graphql_sql" },
+    { include = "py_graphql_sql/jars/*" }
+]
 
-# Optional dependencies section
-[project.optional-dependencies]
-test = ["pytest", "pytest-cov"]
-docs = ["sphinx", "sphinx-rtd-theme"]
-dev = ["black", "isort"]
+[tool.poetry.dependencies]
+python = ">=3.8"
+sqlalchemy = ">=1.4.0"
+JPype1 = ">=1.2.0"
+jaydebeapi = ">=1.2.3"
+typing-extensions = ">=4.5.0"
 
-[project.urls]
-homepage = "https://github.com/hasura/ndc-calcite"
+[tool.poetry.dev-dependencies]
+pytest = "^6.2"
+pytest-cov = "^2.10"
+sphinx = "^4.0"
+sphinx-rtd-theme = "^0.5"
+black = "^22.0"
+isort = "^5.0"
 
-[project.entry-points."sqlalchemy.dialects"]
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.plugins."sqlalchemy.dialects"]
 "hasura.py_graphql_sql" = "py_graphql_sql.sqlalchemy.hasura.ddnbase:HasuraDDNDialect"
-
-[tool.setuptools]
-packages = { find = {} }
-include-package-data = true
-
-[tool.setuptools.package-data]
-"py_graphql_sql" = ["jars/*"]
