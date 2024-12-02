@@ -50,7 +50,7 @@ try:
 
         # Test a simple query
         print("\n=== Testing Simple Query ===")
-        query = f"SELECT * FROM {schema}.{first_table} LIMIT 1"
+        query = f"SELECT * FROM \"{schema}\".\"{first_table}\" LIMIT 1"
         result = conn.execute(query)
         print("Query result:")
         for row in result:
