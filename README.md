@@ -41,6 +41,8 @@ Databases:
 
 ## SQL Access Tools for Hasura DDN
 
+![Tools](./docs/JDBC_ODBC_HasuraDDN.jpg)
+
 ### [Hasura GraphQL SQL Adapter](calcite-rs-jni/calcite/graphql/README.md)
 Apache Calcite adapter optimized for querying Hasura DDN endpoints using SQL:
 - SQL:2003 compliance with extensive feature support
