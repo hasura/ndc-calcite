@@ -95,7 +95,7 @@ public class ArrowJdbcWrapperTest {
     public void testBatchedQuery() {
         try {
             System.out.println("\nTesting batched query execution...");
-            String query = "SELECT * from \"TrainedModels\"";
+            String query = "select analysisMode, anomaliesDetected from AnomalyAnalyses where timestamp_ = '2024-11-13 18:08:31.906000'";
 
             try (VectorSchemaRoot resultSet = wrapper.executeQuery(query)) {
                 printColumnMetadata(resultSet);

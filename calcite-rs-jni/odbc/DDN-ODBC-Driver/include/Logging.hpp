@@ -29,10 +29,10 @@ public:
     Logger& operator=(Logger&&) = delete;
 };
 
-// #ifdef DEBUG
+#ifdef DEBUG
 #define LOG(msg) Logger::getInstance().log(msg)
 #define LOGF(...) Logger::getInstance().logf(__VA_ARGS__)
-// #else
-// #define LOG(msg) (void)0
-// #define LOGF(...) (void)0
-// #endif
+#else
+#define LOG(msg) (void)0
+#define LOGF(...) (void)0
+#endif

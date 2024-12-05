@@ -20,6 +20,7 @@
 
     <modules>
         <module>./jni</module>
+        <module>./jni-arrow</module>
         <module>./bigquery</module>
         <module>./calcite</module>
         <module>./jdbc</module>

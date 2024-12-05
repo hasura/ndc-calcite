@@ -20,35 +20,36 @@ public class Main {
         Connection calciteConnection = null;
 
         try {
-            String sql = "SELECT al.\"albumId\", al.\"title\"\n" +
-                    ", COUNT(tr.\"trackId\") AS trackCount\n" +
-                    "FROM \"graphql\".\"Albums\" al\n" +
-                    "JOIN \"graphql\".\"Tracks\" tr ON al.\"albumId\" = tr.\"albumId\"\n" +
-                    "WHERE al.\"albumId\" > 200\n" +
-                    "GROUP BY al.\"albumId\", al.\"title\"\n" +
-                    "ORDER BY trackCount\n" +
-                    "OFFSET 1 ROWS\n" +
-                    "FETCH NEXT 150 ROWS ONLY\n";
-            CalciteVerboseDebugger.debugVerbose(modelPath);
-            try {
-                System.out.println("************QUERY PLANNER************");
-                CalciteModelPlanner.displayQueryPlan(modelPath, sql);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            System.out.println("************EXECUTE QUERY************");
+//            String sql = "SELECT al.\"albumId\", al.\"title\"\n" +
+//                    ", COUNT(tr.\"trackId\") AS trackCount\n" +
+//                    "FROM \"graphql\".\"Albums\" al\n" +
+//                    "JOIN \"graphql\".\"Tracks\" tr ON al.\"albumId\" = tr.\"albumId\"\n" +
+//                    "WHERE al.\"albumId\" > 200\n" +
+//                    "GROUP BY al.\"albumId\", al.\"title\"\n" +
+//                    "ORDER BY trackCount\n" +
+//                    "OFFSET 1 ROWS\n" +
+//                    "FETCH NEXT 150 ROWS ONLY\n";
+//            CalciteVerboseDebugger.debugVerbose(modelPath);
+//            try {
+//                System.out.println("************QUERY PLANNER************");
+//                CalciteModelPlanner.displayQueryPlan(modelPath, sql);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//
+//            System.out.println("************EXECUTE QUERY************");
             CalciteQuery query = new CalciteQuery();
             try {
                 calciteConnection = query.createCalciteConnection(modelPath);
             } catch (Throwable e) {
                 e.printStackTrace();
             }
-            String x = query.getModels();
-            System.out.println(x);
+//            String x = query.getModels();
+//            System.out.println(x);
 
+            String sql = "select analysisMode, anomaliesDetected from AnomalyAnalyses where timestamp_ = '2024-11-13 18:08:31.906000'";
             String z1 = query.queryModels(sql);
-            z1 = query.queryModels(sql);
+//            z1 = query.queryModels(sql);
             System.out.println(z1);
             calciteConnection.close();
             calciteConnection = null;
