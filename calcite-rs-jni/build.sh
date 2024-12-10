@@ -79,15 +79,18 @@ main() {
     
     echo "Creating Python virtual environment..."
     python3 -m venv .venv
+    clean_mac_metadata "."
     
     echo "Activating virtual environment..."
     source .venv/bin/activate
+    clean_mac_metadata "."
     
     echo "Installing poetry..."
     if ! pip install poetry; then
         echo "Error: Failed to install poetry"
         exit 1
     fi
+    clean_mac_metadata "."
     
     echo "Running Python build..."
     if ! python3 build.py; then
