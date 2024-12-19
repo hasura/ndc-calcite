@@ -33,7 +33,7 @@ run_gradle() {
             exit 1
         fi
     fi
-    
+
     clean_mac_metadata "."
 }
 
@@ -41,19 +41,19 @@ run_gradle() {
 main() {
     # Check if calcite directory exists
     check_directory "calcite"
-    
+
     # Navigate to calcite directory
     echo "Entering calcite directory..."
     cd calcite || exit 1
     clean_mac_metadata "."
-    
+
     # Run Gradle commands
     echo "Running Gradle clean..."
     run_gradle "clean"
-    
+
     echo "Running Gradle assemble..."
     run_gradle "assemble"
-    
+
     # Return to parent directory
     echo "Returning to parent directory..."
 cd ..
@@ -74,33 +74,33 @@ mvn install:install-file -Dfile=calcite/linq4j/build/libs/calcite-linq4j-1.38.0-
         exit 1
     fi
     clean_mac_metadata "."
-    
+
     echo "Running Maven dependency copy..."
     if ! mvn dependency:copy-dependencies; then
         echo "Error: Maven dependency copy failed"
         exit 1
     fi
     clean_mac_metadata "."
-    
+
     # Setup Python environment
     check_directory "py_graphql_sql"
     cd py_graphql_sql || exit 1
-    
+
     echo "Creating Python virtual environment..."
     python3 -m venv .venv
     clean_mac_metadata "."
-    
+
     echo "Activating virtual environment..."
     source .venv/bin/activate
     clean_mac_metadata "."
-    
+
     echo "Installing poetry..."
     if ! pip install poetry; then
         echo "Error: Failed to install poetry"
         exit 1
     fi
     clean_mac_metadata "."
-    
+
     echo "Running Python build..."
     if ! python3 build.py; then
         echo "Error: Python build failed"
@@ -110,6 +110,3 @@ mvn install:install-file -Dfile=calcite/linq4j/build/libs/calcite-linq4j-1.38.0-
 cd ..
 echo "Build process completed successfully!"
 }
-
-# Run the main function
-main
