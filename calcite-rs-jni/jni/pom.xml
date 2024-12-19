@@ -114,28 +114,6 @@
             <version>1.27.0-alpha</version>
         </dependency>
 
-        <!-- Logging -->
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.17.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.13</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.17.1</version>
-        </dependency>
-
         <!-- Not clear if all of these are necessary -->
         <dependency>
             <groupId>org.apache.calcite.avatica</groupId>
@@ -311,11 +289,6 @@
                 <version>5.5.1</version>
             </dependency>
             <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.5.8</version>
-            </dependency>
-            <dependency>
                 <groupId>com.beust</groupId>
                 <artifactId>jcommander</artifactId>
                 <version>1.82</version>
@@ -346,7 +319,7 @@
                     <argLine>
                         --add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED
                         -Dotel.java.global-autoconfigure.enabled=true
-                        -Dlog_level=verbose
+                        -Dlog_level=debug
                     </argLine>
                 </configuration>
             </plugin>

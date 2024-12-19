@@ -12,9 +12,9 @@ import java.sql.SQLException;
 public class Main {
     public static void main(String[] args) throws IOException, SQLException, ClassNotFoundException {
 
-        JdbcTest.test();
+//        JdbcTest.test();
 
-        String modelPath = "../../adapters/graphql/model.json";
+        String modelPath = "../../adapters/databricks/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -44,10 +44,10 @@ public class Main {
             } catch (Throwable e) {
                 e.printStackTrace();
             }
-//            String x = query.getModels();
-//            System.out.println(x);
+            String x = query.getModels();
+            System.out.println(x);
 
-            String sql = "select analysisMode, anomaliesDetected from AnomalyAnalyses where timestamp_ = '2024-11-13 18:08:31.906000'";
+            String sql = "select * from lineitem LIMIT 100";
             String z1 = query.queryModels(sql);
 //            z1 = query.queryModels(sql);
             System.out.println(z1);
