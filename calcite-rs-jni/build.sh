@@ -110,3 +110,6 @@ mvn install:install-file -Dfile=calcite/linq4j/build/libs/calcite-linq4j-1.38.0-
 cd ..
 echo "Build process completed successfully!"
 }
+
+# Run the main function
+main
