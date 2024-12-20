@@ -4,7 +4,7 @@ cd test-connector
 ddn connector-link add calcite --configure-host http://local.hasura.dev:8080
 sed -i.bak -e '11,13d' ./app/metadata/calcite.hml
 ddn run docker-start
-ddn connector-link update calcite --add-all-resources
+ddn connector-link update calcite --add-all-resources --timeout 100000
 ddn supergraph build local
 docker compose down
 ddn run docker-start

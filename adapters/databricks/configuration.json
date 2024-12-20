@@ -1,0 +1,6 @@
+{
+  "version": "5",
+  "$schema": "schema.json",
+  "model_file_path": "/Users/kennethstott/test/calcite-connector/adapters/databricks/model.json",
+  "fixes": true
+}

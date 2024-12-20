@@ -1,5 +1,6 @@
 package com.hasura;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -13,7 +14,10 @@ import org.apache.calcite.jdbc.CalciteSchema;
 import org.apache.calcite.schema.Schema;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.yaml.snakeyaml.Yaml;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.io.IOException;
@@ -117,13 +121,45 @@ public class CalciteQuery {
     private static final Tracer tracer = openTelemetry.getTracer("calcite-driver");
     private static final Gson gson = new Gson();
 
+    public static final Set<String> DATE_HANDLING_EXCEPTION = new HashSet<>(Arrays.asList(new String[]{"com.databricks.client.jdbc.Driver"}));
+
     Connection connection;
     CalciteSchema rootSchema;
     boolean sqliteFlag;
+    HashMap<String, Object> model;
+
 
     public static void noOpMethod() {
         Span span = tracer.spanBuilder("noOpMethod").startSpan();
         span.end();
+    }
+
+
+    public void setModel(String modelPath) throws IOException {
+        // Read the template file
+        String content = new String(Files.readAllBytes(Paths.get(modelPath)));
+        // Determine if the file is JSON or YAML
+        boolean isJson = modelPath.endsWith(".json");
+
+        // Parse the content
+        ObjectMapper objectMapper = new ObjectMapper();
+        Object data;
+        if (isJson) {
+            data = objectMapper.readValue(content, Object.class);
+        } else {
+            Yaml yaml = new Yaml();
+            data = yaml.load(content);
+        }
+        model = (HashMap<String, Object>) data;
+    }
+
+    public Boolean handleDates() {
+        ArrayList<HashMap<String, Object>> schemas = (ArrayList<HashMap<String, Object>>) model.get("schemas");
+        if (schemas != null && schemas.size() > 0) {
+            String jdbcUrl = (String) schemas.get(0).get("jdbcDriver");
+            return jdbcUrl == null || !DATE_HANDLING_EXCEPTION.contains(jdbcUrl);
+        }
+        return true;
     }
 
     /**
@@ -138,6 +174,7 @@ public class CalciteQuery {
         span.setAttribute("modelPath", modelPath);
         Properties info = new Properties();
         info.setProperty("model", ConfigPreprocessor.preprocessConfig(modelPath));
+        setModel(info.getProperty("model"));
         info.setProperty("caseSensitive", "true");
         info.setProperty("unquotedCasing", "UNCHANGED");
         info.setProperty("quotedCasing", "UNCHANGED");
@@ -442,7 +479,7 @@ public class CalciteQuery {
         try {
             Statement statement = connection.createStatement();
             span.setAttribute("query", query);
-            PreparedStatement preparedStatement = StatementPreparer.prepare(query, connection);
+            PreparedStatement preparedStatement = StatementPreparer.prepare(query, connection, handleDates());
             ResultSet resultSet = preparedStatement.executeQuery();
             if (query.toLowerCase().trim().startsWith("select json_object(")) {
                 span.setAttribute("Using JSON_OBJECT() method", true);
@@ -537,7 +574,7 @@ public class CalciteQuery {
         try {
             Statement statement = connection.createStatement();
             span.setAttribute("query", query);
-            PreparedStatement preparedStatement = StatementPreparer.prepare("explain plan for " + query, connection);
+            PreparedStatement preparedStatement = StatementPreparer.prepare("explain plan for " + query, connection, handleDates());
             ResultSet resultSet = preparedStatement.executeQuery();
             JsonArray jsonArray = new JsonArray();
             JsonObject jsonObject = new JsonObject();

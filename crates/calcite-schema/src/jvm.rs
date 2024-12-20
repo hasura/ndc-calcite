@@ -111,7 +111,9 @@ pub fn init_jvm(calcite_configuration: &ParsedConfiguration, should_initialize_o
         let mut jvm_args = InitArgsBuilder::new()
             .version(JNIVersion::V8)
             .option(format!("-Dlog4j2.debug={}", log4j2_debug))
-//            .option("--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED")
+            // This is REQUIRED when using a JDBC connector that uses the arrow memory buffer
+            // It will return a warning if the JDBC connector is not using arrow. Ignore this warning.
+            .option("--add-opens=java.base/java.nio=org.apache.arrow.memory.core,ALL-UNNAMED")
             .option("-Dotel.java.global-autoconfigure.enabled=true")
             .option(format!("-Dlog4j.configurationFile={}", log4j_configuration_file));
 

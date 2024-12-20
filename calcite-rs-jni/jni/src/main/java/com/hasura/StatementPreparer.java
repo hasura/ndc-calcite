@@ -10,6 +10,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,9 +31,9 @@ class StatementPreparer {
      * @return A PreparedStatement object representing the prepared SQL statement.
      * @throws SQLException If an error occurs while preparing the statement.
      */
-    public static PreparedStatement prepare(String input, Connection connection) throws SQLException {
+    public static PreparedStatement prepare(String input, Connection connection, Boolean convertDates) throws SQLException {
         ArrayList<Object> extractedStrings = extractMarkedUpStrings(input);
-        String modifiedInput = replaceWithIndexedQuestionMarks(input, extractedStrings);
+        String modifiedInput = replaceWithIndexedQuestionMarks(input, extractedStrings, convertDates);
         ArrayList<Object> extractedStringParams = new ArrayList<>();
         modifiedInput = findParams(modifiedInput, extractedStrings, extractedStringParams);
         PreparedStatement preparedStatement = connection.prepareStatement(modifiedInput);
@@ -89,12 +90,12 @@ class StatementPreparer {
      * @param extractedStrings The list of extracted marked-up strings.
      * @return The input SQL statement with marked up strings replaced by indexed question marks.
      */
-    private static String replaceWithIndexedQuestionMarks(String input, ArrayList<Object> extractedStrings) {
+    private static String replaceWithIndexedQuestionMarks(String input, ArrayList<Object> extractedStrings, Boolean convertDates) {
         Pattern pattern = Pattern.compile("^\\d{4}-\\d{1,2}-\\d{1,2}([T\\s]\\d{2}:\\d{2}:\\d{2}(\\.\\d{3}))Z$");
         DateTimeFormatter rfcFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
         for (int i = 0; i < extractedStrings.size(); ++i) {
             Matcher matcher = pattern.matcher((String) extractedStrings.get(i));
-            if (matcher.matches()) {
+            if (convertDates && matcher.matches()) {
                 // if it seems like it is a date - we are going to try and make it a date constant
                 try {
                     // if the pattern follows the exact pattern that comes from the hasura NDC
@@ -123,7 +124,7 @@ class StatementPreparer {
                             PARAM_MARKER + i + PARAM_MARKER
                     );
                 }
-            } else if (((String) extractedStrings.get(i)).matches("\\d{4}-\\d{2}-\\d{2}")) {  // Match YYYY-MM-DD pattern
+            } else if (convertDates && ((String) extractedStrings.get(i)).matches("\\d{4}-\\d{2}-\\d{2}")) {  // Match YYYY-MM-DD pattern
                 try {
                     Date date = Date.valueOf((String) extractedStrings.get(i));  // Convert to java.sql.Date
                     input = input.replace(

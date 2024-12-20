@@ -107,7 +107,7 @@ HASURA_DDN_PAT=$(ddn auth print-pat) docker compose --env-file .env up --build -
 ### Introspect
 
 ```shell
-ddn connector-link update calcite --add-all-resources --subgraph app/subgraph.yaml
+ddn connector-link update calcite --add-all-resources --subgraph app/subgraph.yaml --timeout 100000
 ```
 
 ### Build supergraph

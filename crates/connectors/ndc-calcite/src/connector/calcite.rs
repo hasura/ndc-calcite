@@ -106,7 +106,7 @@ impl ConnectorSetup for Calcite {
                 .model_file_path
                 .clone()
                 .or_else(|| env::var("MODEL_FILE").ok())
-                .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), serde_json::Value::String(String::new())))?;
+                .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), Value::String(String::new())))?;
 
             let models = fs::read_to_string(model_file_path.clone()).unwrap();
 
@@ -171,8 +171,18 @@ impl Connector for Calcite {
         }
             .instrument(info_span!("tracing Calcite"))
             .await;
+        dotenv::dotenv().ok();
+        let calcite;
+        let calcite_ref;
+        {
+            let java_vm = get_jvm(false).lock().unwrap();
+            let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
+            calcite = calcite::create_query_engine(configuration, &mut env).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to lock JVM") })))?;
+            let env = java_vm.attach_current_thread_as_daemon().unwrap();
+            calcite_ref = env.new_global_ref(calcite).unwrap();
+        }
 
-        let schema = retrieve_schema(configuration);
+        let schema = retrieve_schema(configuration, calcite_ref);
         match schema {
             Ok(schema) => Ok(JsonResponse::from(schema)),
             Err(_) => Err(ErrorResponse::new(StatusCode::from_u16(500).unwrap(),"Problem getting schema.".to_string(),Value::String("".to_string()))),

@@ -1,19 +1,6 @@
 {
   "version": "5",
   "$schema": "schema.json",
-  "model": {
-    "version": "1.0",
-    "defaultSchema": "default",
-    "schemas": [
-      {
-        "type": "custom",
-        "name": "default",
-        "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
-        "operand": {
-          "directory": "/data"
-        }
-      }
-    ]
-  },
+  "model_file_path": "./model.json",
   "fixes": true
 }
