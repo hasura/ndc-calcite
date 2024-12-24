@@ -1,5 +1,5 @@
 # build stage for cargo-chef
-FROM rust:1.75.0 AS chef
+FROM rust:1.78.0 AS chef
 WORKDIR /app
 RUN cargo install cargo-chef
 
@@ -27,10 +27,8 @@ RUN java -version && mvn --version
 COPY calcite-rs-jni/ /calcite-rs-jni/
 RUN mkdir -p /root/.m2 /root/.gradle
 VOLUME /root/.m2 /root/.gradle
-WORKDIR /calcite-rs-jni/calcite
-RUN ./gradlew assemble --no-daemon
 WORKDIR /calcite-rs-jni
-RUN mvn clean install -DskipTests
+RUN sh build.sh
 
 # Put all the jars into target/dependency folder
 RUN mvn dependency:copy-dependencies
