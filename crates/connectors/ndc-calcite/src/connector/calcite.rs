@@ -39,6 +39,35 @@ pub struct CalciteState {
     pub calcite_ref: GlobalRef,
 }
 
+/// Executes a query with variables and orchestrates the query execution.
+///
+/// This function is decorated with a tracing instrument macro that logs the execution information at INFO level.
+///
+/// # Arguments
+///
+/// * `config` - A reference to the parsed configuration.
+/// * `coll` - A reference to the collection name.
+/// * `args` - A map of argument names to relationship arguments.
+/// * `coll_rel` - A map of relationship names to relationships.
+/// * `query` - A reference to the query model.
+/// * `vars` - A map of variable names to values.
+/// * `state` - A reference to the Calcite state.
+/// * `explain` - A reference to a boolean value indicating whether to explain the query.
+/// * `is_group_by` - A boolean flag indicating whether the query contains a GROUP BY clause.
+///
+/// # Returns
+///
+/// A Result containing the row set resulting from the query execution.
+///
+/// # Errors
+///
+/// An error is returned if there are issues during query orchestration.
+///
+/// # Example
+///
+/// ```rust
+/// let result = execute_query_with_variables(&config, &coll, &args, &coll_rel, &query, &vars, &state, &explain, is_group_by);
+/// ```
 #[tracing::instrument(skip(config, coll, args, coll_rel, query, vars, state), level=Level::INFO)]
 fn execute_query_with_variables(
     config: &ParsedConfiguration,
@@ -48,9 +77,10 @@ fn execute_query_with_variables(
     query: &models::Query,
     vars: &BTreeMap<VariableName, Value>,
     state: &CalciteState,
-    explain: &bool
+    explain: &bool,
+    is_group_by: bool
 ) -> Result<models::RowSet> {
-    query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state, explain})
+    query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state, explain}, is_group_by)
 }
 
 const CONFIG_ERROR_MSG: &str = "Could not find model file.";
@@ -212,7 +242,7 @@ impl Connector for Calcite {
                 &request.query,
                 variables,
                 &state,
-                &true
+                &true, false
             ).map_err(|error| ErrorResponse::from_error(error))?;
             match row_set.aggregates {
                 None => {}
@@ -282,7 +312,8 @@ impl Connector for Calcite {
                 &request.query,
                 variables,
                 &state,
-                &false
+                &false,
+                false
             ) {
                 Ok(row_set) => {
                     event!(Level::INFO, result = "execute_query_with_variables was successful");

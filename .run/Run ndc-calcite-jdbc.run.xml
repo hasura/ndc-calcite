@@ -5,6 +5,7 @@
     <envs>
       <env name="OTEL_LOG_LEVEL" value="info" />
       <env name="LOG_LEVEL" value="info" />
+      <env name="RUST_LOG" value="debug" />
     </envs>
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />

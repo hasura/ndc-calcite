@@ -6,6 +6,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
+use indexmap::IndexMap;
 use ndc_models::{OrderByTarget, Aggregate, ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ExistsInCollection, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, UnaryComparisonOperator, VariableName};
 use ndc_sdk::connector::ErrorResponse;
 use serde_json::Value;
@@ -454,6 +455,21 @@ fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
     path.join(".")
 }
 
+/// Queries a collection from the database with the specified parameters.
+///
+/// # Arguments
+/// * `configuration` - The parsed configuration for the database connection.
+/// * `collection_name` - The name of the collection to query.
+/// * `_arguments` - Additional query arguments (not used in the query).
+/// * `select` - Optional SELECT clause for the query.
+/// * `order_by` - Optional ORDER BY clause for the query.
+/// * `pagination` - Optional pagination parameters for the query.
+/// * `where_clause` - Optional WHERE clause for filtering the query.
+/// * `join_clause` - Optional JOIN clause for the query.
+/// * `group_by` - Optional GROUP BY clause for the query.
+///
+/// # Returns
+/// The generated SQL query string based on the input parameters.
 #[tracing::instrument(skip(configuration,_arguments),level=Level::INFO)]
 pub fn query_collection(
     configuration: &ParsedConfiguration,
@@ -464,6 +480,7 @@ pub fn query_collection(
     pagination: Option<String>,
     where_clause: Option<String>,
     join_clause: Option<String>,
+    group_by: Option<String>
 ) -> String {
     let select_clause: String = match select {
         None => "".into(),
@@ -487,6 +504,17 @@ pub fn query_collection(
                 "".into()
             } else {
                 format!(" ORDER BY {}", ord)
+            }
+        }
+    };
+
+    let group_by_clause = match group_by {
+        None => "".into(),
+        Some(ord) => {
+            if ord.is_empty() {
+                "".into()
+            } else {
+                format!(" GROUP BY {}", ord)
             }
         }
     };
@@ -524,31 +552,91 @@ pub fn query_collection(
 
     if configuration.supports_json_object.unwrap_or_else(|| false) {
         let query = format!(
-            "SELECT JSON_OBJECT({}) FROM {}{}{}{}{}",
-            select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
+            "SELECT JSON_OBJECT({}) FROM {}{}{}{}{}{}",
+            select_clause, table, join, expanded_where_clause, group_by_clause, order_by_clause, pagination_clause
         );
         event!(Level::INFO, message = format!("Generated query {}", query));
         query
     } else {
         let query = format!(
-            "SELECT {} FROM {}{}{}{}{}",
-            select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
+            "SELECT {} FROM {}{}{}{}{}{}",
+            select_clause, table, join, expanded_where_clause, group_by_clause, order_by_clause, pagination_clause
         );
         event!(Level::INFO, message = format!("Generated query {}", query));
         query
     }
 }
 
-#[tracing::instrument(skip(
-    configuration,
-    collection,
-    collection_relationships,
-    arguments,
-    query,
-    variables
-), level=Level::DEBUG)]
-pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents> {
+/// Parses the given query and constructs the necessary components for building a SQL query.
+///
+/// This function takes in various inputs including the configuration, collection information,
+/// query, and variables to parse the query and generate the components required for constructing a SQL query.
+///
+/// # Arguments
+/// * `configuration`: A reference to the parsed configuration for the application.
+/// * `collection`: A reference to the name of the collection being queried.
+/// * `collection_relationships`: A reference to a map of relationship names to their corresponding relationship information.
+/// * `arguments`: A reference to a map of argument names to their corresponding relationship arguments.
+/// * `query`: A reference to the query to be parsed.
+/// * `variables`: A reference to a map of variable names to their corresponding values used in the query.
+/// * `is_group_by`: A boolean flag indicating whether the query involves grouping.
+///
+/// # Returns
+/// A Result containing the query components needed for building a SQL query.
+#[tracing::instrument(
+    skip(configuration, collection, collection_relationships, arguments, query, variables),
+    level = Level::DEBUG
+)]
+pub fn parse_query<'a>(
+    configuration: &'a ParsedConfiguration,
+    collection: &'a CollectionName,
+    collection_relationships: &'a BTreeMap<RelationshipName, Relationship>,
+    arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>,
+    query: &'a Query,
+    variables: &'a BTreeMap<VariableName, Value>,
+    is_group_by: bool,
+) -> Result<QueryComponents> {
+    let argument_values = parse_arguments(arguments, variables)?;
+    let (select_clause, join_clause) = select(
+        configuration,
+        variables,
+        collection,
+        query,
+        collection_relationships,
+        None,
+    );
+
+    let predicates = predicates(
+        &configuration,
+        collection,
+        collection_relationships,
+        variables,
+        query,
+    )
+        .map_err(ErrorResponse::from_error)?;
+
+    let group_by = build_group_by(is_group_by, &query.fields);
+    let final_aggregates = aggregates(configuration, query).join(", ");
+
+    Ok(QueryComponents {
+        argument_values,
+        select: Some(select_clause.join(",")),
+        join: Some(join_clause.join(" ")),
+        order_by: Some(order_by(query).join(", ")),
+        group_by,
+        pagination: Some(pagination(query)?.join(" ")),
+        aggregates: Some(final_aggregates.clone()),
+        predicates: Some(predicates),
+        final_aggregates,
+    })
+}
+
+fn parse_arguments(
+    arguments: &BTreeMap<ArgumentName, RelationshipArgument>,
+    variables: &BTreeMap<VariableName, Value>,
+) -> Result<BTreeMap<ArgumentName, Value>> {
     let mut argument_values = BTreeMap::new();
+
     for (argument_name, argument_value) in arguments {
         if argument_values
             .insert(
@@ -557,26 +645,27 @@ pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a C
             )
             .is_some()
         {
-            return Err(ErrorResponse::new(http::StatusCode::from_u16(500).unwrap(), format!(
-                    "Duplicate argument: {}",
-                    argument_name
-                ),
-                Value::String(argument_name.to_string())));
+            return Err(ErrorResponse::new(
+                http::StatusCode::from_u16(500).unwrap(),
+                format!("Duplicate argument: {}", argument_name),
+                Value::String(argument_name.to_string()),
+            ));
         }
     }
-    let (select_clause, join_clause) = select(configuration, variables, collection, query, collection_relationships, None);
-    let select = Some(select_clause.join(","));
-    let join = Some(join_clause.join(" "));
-    let order_by = Some(order_by(query).join(", "));
-    let pagination = Some(pagination(query).unwrap().join(" "));
-    let aggregates = Some(aggregates(configuration, query).join(", "));
-    let predicates = predicates(&configuration, collection, collection_relationships, variables, query);
-    let predicates: Option<String> = match predicates {
-        Ok(p) => Some(p),
-        Err(e) => {
-            return Err(ErrorResponse::from_error(e));
-        }
-    };
-    let final_aggregates = aggregates.clone().unwrap_or_default();
-    Ok(QueryComponents { argument_values, select, order_by, pagination, aggregates, predicates, final_aggregates, join })
+
+    Ok(argument_values)
+}
+
+fn build_group_by(is_group_by: bool, fields: &Option<IndexMap<FieldName, Field>>) -> Option<String> {
+    if is_group_by {
+        fields.as_ref().map(|fields| {
+            fields
+                .keys()
+                .map(|field| field.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        })
+    } else {
+        None
+    }
 }

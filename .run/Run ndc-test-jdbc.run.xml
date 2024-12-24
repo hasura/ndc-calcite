@@ -3,11 +3,11 @@
     <option name="command" value="run --package ndc-calcite --bin ndc-calcite  -- test --configuration . " />
     <option name="workingDirectory" value="file://$PROJECT_DIR$/adapters/jdbc" />
     <envs>
-      <env name="LOG_LEVEL" value="info" />
+      <env name="LOG_LEVEL" value="debug" />
       <env name="OTEL_LOG_LEVEL" value="info" />
       <env name="OTEL_LOGS_EXPORTER" value="console" />
       <env name="OTEL_TRACES_EXPORTER" value="console" />
-      <env name="RUST_LOG" value="info" />
+      <env name="RUST_LOG" value="debug" />
     </envs>
     <option name="emulateTerminal" value="true" />
     <option name="channel" value="DEFAULT" />

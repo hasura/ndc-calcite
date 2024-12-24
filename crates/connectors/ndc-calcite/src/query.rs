@@ -5,9 +5,10 @@
 //!
 //! Aggregate are generated as additional queries, and stitched into the
 //! RowSet aggregates response.
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 use http::StatusCode;
 use indexmap::IndexMap;
+use log::debug;
 use ndc_models::{ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, RelationshipType, RowFieldValue, VariableName};
 use ndc_sdk::connector::error::Result;
 use ndc_models as models;
@@ -56,53 +57,34 @@ pub struct QueryComponents {
     pub predicates: Option<String>,
     pub final_aggregates: String,
     pub join: Option<String>,
+    pub group_by: Option<String>
 }
 
-/// Orchestrates a query by parsing query components, processing rows and aggregates,
-/// and generating modified rows based on relationships.
+/// Orchestrates the querying process based on the given query parameters and group-by flag.
+///
+/// This function parses the query components, processes the rows, processes the aggregates,
+/// iterates over query fields, and performs operations based on field type.
 ///
 /// # Arguments
 ///
-/// * `query_params` - The query parameters.
+/// * `query_params` - Query parameters containing configuration, collection details, arguments, and query information.
+/// * `is_group_by` - Flag indicating whether the query includes a group-by operation.
 ///
 /// # Returns
 ///
-/// Returns a `Result` containing a `RowSet` if the query is successful, or a `QueryError` if there's an error.
+/// A result containing a RowSet with parsed aggregates and rows data after processing the query.
 ///
-/// # Example
-/// ```
+/// The function uses tracing to log information at INFO and DEBUG levels during various stages of query orchestration.
 ///
-/// use ndc_models::Query;
-/// use calcite::connector::calcite::CalciteState;
-/// use calcite::query::{orchestrate_query, QueryParams};
-/// use ndc_calcite_schema::version5::{ParsedConfiguration, Version};
+/// # Errors
 ///
-/// let params = QueryParams {
-///  config: &ParsedConfiguration { version: Version::This,_schema: None,model: None,model_file_path: None,fixes: None,supports_json_object: None,jars: None,metadata: None,},
-///  coll: &Default::default(),
-///  coll_rel: &Default::default(),
-///  args: &Default::default(),
-///  query: &Query { aggregates: None,fields: None,limit: None,offset: None,order_by: None,predicate: None,},
-///  vars: &Default::default(),
-///  state: &CalciteState { calcite_ref: ()},
-///  explain: &false,
-/// };
-///
-/// let result = orchestrate_query(query_params);
-/// match result {
-///     Ok(row_set) => {
-///         // Process the row set
-///     }
-///     Err(query_error) => {
-///         // Handle the query error
-///     }
-/// }
-/// ```
+/// Returns an error if there are issues with parsing the query or processing relationships.
 #[tracing::instrument(skip(query_params), level = Level::INFO)]
 pub fn orchestrate_query(
-    query_params: QueryParams
+    query_params: QueryParams,
+    is_group_by: bool
 ) -> Result<models::RowSet> {
-    let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.coll_rel, query_params.args, query_params.query, query_params.vars)?;
+    let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.coll_rel, query_params.args, query_params.query, query_params.vars, is_group_by)?;
     let mut rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
     let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
     let query_fields = query_params.query.clone().fields.unwrap_or_default();
@@ -116,15 +98,15 @@ pub fn orchestrate_query(
                         let sub_relationship = query_params.coll_rel.get(relationship).unwrap();
                         let (primary_keys, foreign_keys, relationship_type) = parse_relationship(sub_relationship)?;
                         let relationship_value = generate_value_from_rows(rows, &sub_relationship)?;
-                        event!(Level::DEBUG, "Primary Keys: {:?}, Values: {:?}", primary_keys, relationship_value);
+                        event!(Level::DEBUG, "Field Name: {:?}, Primary Keys: {:?}, Values: {:?}", field_name, primary_keys, relationship_value);
                         let predicate_expression = generate_predicate(&primary_keys, relationship_value)?;
                         event!(Level::DEBUG, "Predicate expression: {:?}", predicate_expression);
                         let revised_query = revise_query(query.clone(), predicate_expression, &primary_keys)?;
-                        let res_relationship_rows = execute_query(query_params.clone(), arguments, &sub_relationship, &revised_query)?;
+                        let res_relationship_rows = execute_query(query_params.clone(), arguments, &sub_relationship, &revised_query, query.aggregates != None)?;
                         if RelationshipType::Object == relationship_type {
                             rows_data = process_object_relationship(rows_data.unwrap(), &field_name, &res_relationship_rows, &primary_keys, &foreign_keys)?
                         } else {
-                            rows_data = process_array_relationship(rows_data, &field_name, &res_relationship_rows, &primary_keys, &foreign_keys, &query)?
+                            rows_data = process_array_relationship(rows_data, &field_name, &res_relationship_rows, &primary_keys, &foreign_keys, &query, query.aggregates != None)?
                         }
                         event!(Level::DEBUG, "Result of relationship: {:?}", serde_json::to_string_pretty(&rows_data))
                     }
@@ -132,28 +114,42 @@ pub fn orchestrate_query(
             }
         }
     }
-    return Ok(models::RowSet { aggregates: parsed_aggregates, rows: rows_data });
+    Ok(models::RowSet { aggregates: parsed_aggregates, rows: rows_data })
 }
 
 #[tracing::instrument(skip(rows_data, sub_relationship), level = Level::DEBUG)]
 fn generate_value_from_rows(rows_data: &Vec<Row>, sub_relationship: &Relationship) -> Result<Value> {
-    let relationship_value: Value = rows_data.into_iter().map(|row| {
+    let mut unique_values = HashSet::new();
+
+    for row in rows_data.iter() {
         let mut row_values: Vec<Value> = Vec::new();
         for (foreign_key, _) in sub_relationship.column_mapping.iter() {
-            let column_value = match row.get(foreign_key) {
-                Some(value) => value.0.clone(),
-                None => Value::Null,
-            };
-            row_values.push(column_value);
+            match row.get(foreign_key) {
+                Some(value) if !value.0.is_null() => {
+                    row_values.push(value.0.clone());
+                }
+                _ => {
+                    // If any part of the composite key is NULL, we skip the entire row
+                    row_values.clear();
+                    break;
+                }
+            }
         }
-        if row_values.len() == 1 {
-            row_values[0].clone()
-        } else {
-            Value::Array(row_values)
+
+        // Only add to unique_values if we have all parts of the composite key
+        if !row_values.is_empty() {
+            if row_values.len() == 1 {
+                unique_values.insert(row_values[0].clone());
+            } else {
+                unique_values.insert(Value::Array(row_values));
+            }
         }
-    }).collect();
-    Ok(relationship_value)
+    }
+
+    let values: Vec<Value> = unique_values.into_iter().collect();
+    Ok(Value::Array(values))
 }
+
 
 #[tracing::instrument(skip(sub_relationship), level = Level::DEBUG)]
 fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName, FieldName)>, Vec<&FieldName>, RelationshipType)> {
@@ -171,12 +167,19 @@ fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName
 
 #[tracing::instrument(skip(params, query_components), level = Level::INFO)]
 fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>> {
-    execute_query_collection(params, query_components, query_components.select.clone())
+    let selection = if let (Some(aggregates), Some(group_by)) = (&query_components.aggregates, &query_components.group_by) {
+        Some(format!("{}, {}", query_components.select.as_ref().unwrap(), aggregates))
+    } else {
+        query_components.select.clone()
+    };
+    execute_query_collection(params, query_components, selection)
 }
-
 
 #[tracing::instrument(skip(params, query_components), level = Level::INFO)]
 fn process_aggregates(params: QueryParams, query_components: &QueryComponents) -> Result<Option<IndexMap<FieldName, Value>>> {
+    if query_components.group_by.is_some() {
+        return Ok(None);
+    }
     match execute_query_collection(params, query_components, query_components.aggregates.clone()) {
         Ok(collection_option) => {
             if let Some(collection) = collection_option {
@@ -225,7 +228,8 @@ fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, 
     revised_query.predicate = Some(predicate);
     revised_query.offset = None;
     revised_query.limit = None;
-    let mut fields = query.fields.unwrap();
+    debug!("Aggregates: {:?}", query.aggregates);
+    let mut fields = query.fields.unwrap_or(IndexMap::<FieldName, Field>::new());
     for pk in pks {
         let (key, name) = pk;
         if !fields.contains_key(name) {
@@ -243,7 +247,7 @@ fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, 
 #[tracing::instrument(
     skip(params, arguments, sub_relationship, revised_query), level = Level::INFO
 )]
-fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>> {
+fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query, is_group_by: bool) -> Result<Vec<Row>> {
     let fk_rows = orchestrate_query(QueryParams {
         config: params.config,
         coll: &sub_relationship.target_collection,
@@ -253,7 +257,8 @@ fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, Relatio
         vars: params.vars,
         state: params.state,
         explain: params.explain,
-    })?;
+
+    }, is_group_by)?;
     Ok(fk_rows.rows.unwrap())
 }
 
@@ -261,7 +266,7 @@ fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, Relatio
 fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>) -> Result<Option<Vec<Row>>> {
     let modified_rows: Vec<Row> = rows.clone().into_iter().map(|mut row| {
         event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
-        let pk_value = row.get(fks[0]).unwrap().0.clone();
+        let pk_value = row.get(fks[0]).unwrap_or(&RowFieldValue(Value::Null)).0.clone();
         let rowset = serde_json::map::Map::new();
         if let Some(value) = row.get_mut(field_name) {
             event!(Level::DEBUG, "value: {:?}", value);
@@ -290,13 +295,13 @@ fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: 
 }
 
 #[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks, query), level = Level::DEBUG)]
-fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>, query: &Query) -> Result<Option<Vec<Row>>> {
+fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>, query: &Query, is_group_by: bool) -> Result<Option<Vec<Row>>> {
     let modified_rows: Vec<Row> = rows.clone().unwrap().into_iter().map(|mut row| {
         event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
         let rowset = serde_json::map::Map::new();
         let offset = query.offset.unwrap_or(0);
         let limit = query.limit.unwrap_or(0);
-        let pk_value = row.get(fks[0]).unwrap().0.clone();
+        let pk_value = row.get(fks[0]).unwrap_or(&RowFieldValue(Value::Null)).0.clone();
         if let Some(value) = row.get_mut(field_name) {
             event!(Level::DEBUG, "value: {:?}", value);
 
@@ -315,7 +320,11 @@ fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk
                     child_rows = child_rows[offset as usize..max_rows as usize].to_vec();
                 }
                 event!(Level::DEBUG, "Key: {:?}, Name: {:?}, Child Rows: {:?}", key, name, child_rows);
-                process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
+                if is_group_by {
+                    process_child_rows_aggregate(&child_rows, rowset, value).expect("TODO: panic message")
+                } else {
+                    process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
+                }
 
         }
         row
@@ -344,6 +353,29 @@ fn process_child_rows(child_rows: &Vec<&Row>, mut rowset: serde_json::map::Map<S
     Ok(())
 }
 
+#[tracing::instrument(skip(child_rows, rowset, value), level = Level::DEBUG)]
+fn process_child_rows_aggregate(child_rows: &Vec<&Row>, mut rowset: serde_json::map::Map<String, Value>, value: &mut RowFieldValue) -> Result<()> {
+    rowset.insert("rows".to_string(), Value::Null);
+    if !child_rows.is_empty() {
+        let mut result: Vec<serde_json::map::Map<String, Value>> = vec![];
+        for child in child_rows {
+            let mut map = serde_json::map::Map::new();
+            for (key, value) in *child {
+                map.insert(key.to_string(), value.0.clone());
+            }
+            result.push(map);
+        }
+        if let Some(first) = result.first() {
+            rowset.insert("aggregates".to_string(), Value::from(first.clone()));
+        }
+        *value = RowFieldValue(Value::from(rowset));
+    } else {
+        rowset.insert("aggregates".to_string(), Value::Null);
+        *value = RowFieldValue(Value::from(rowset));
+    }
+    Ok(())
+}
+
 #[tracing::instrument(
     fields(internal.visibility = "user"), skip(params, query_components, phrase), level = Level::INFO
 )]
@@ -356,7 +388,7 @@ fn execute_query_collection(
         return Ok(None);
     }
 
-    let span = span!(tracing::Level::INFO, "query_collection_span", collection = params.coll.to_string(), explain = params.explain, internal_visibility="user");
+    let span = span!(Level::INFO, "query_collection_span", collection = params.coll.to_string(), explain = params.explain, internal_visibility="user");
 
     // Parent span attach to the current context
     let _enter = span.enter();
@@ -364,7 +396,7 @@ fn execute_query_collection(
         Some(fields) => {
             // Create sub-span for each field attribute
             for field in fields.keys() {
-                let sub_span = span!(tracing::Level::INFO, "field_span", field_attribute = format!("{}.{}", params.coll.to_string(), field));
+                let sub_span = span!(Level::INFO, "field_span", field_attribute = format!("{}.{}", params.coll.to_string(), field));
                 let _enter_sub_span = sub_span.enter();
             }
         }
@@ -382,6 +414,7 @@ fn execute_query_collection(
         query_components.pagination.clone(),
         query_components.predicates.clone(),
         query_components.join.clone(),
+        query_components.group_by.clone()
     );
 
     match connector_query(

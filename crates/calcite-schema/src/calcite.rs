@@ -240,6 +240,12 @@ pub struct Operand {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub port: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "objectDepth")]
+    pub object_depth: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "pseudoKeys")]
+    pub pseudo_keys: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub database: Option<i32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub password: Option<String>,
