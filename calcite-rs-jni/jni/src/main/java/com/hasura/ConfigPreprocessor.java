@@ -8,10 +8,34 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class ConfigPreprocessor {
+
+
+    private static final List<String> ATTRIBUTES_TO_CHANGE = Arrays.asList("directory", "pathToRootCert");
+    private static void processAttributes(Object data, String inputFilePath) {
+        if (data instanceof Map) {
+            //noinspection unchecked
+            for (Map.Entry<String, Object> entry : ((Map<String, Object>) data).entrySet()) {
+                if (ATTRIBUTES_TO_CHANGE.contains(entry.getKey())) {
+                    String directory = (String) entry.getValue();
+                    String fullFilePath = Paths.get(inputFilePath).toAbsolutePath().getParent().resolve(directory).normalize().toString();
+                    entry.setValue(fullFilePath);
+                } else {
+                    processAttributes(entry.getValue(), inputFilePath);
+                }
+            }
+        } else if (data instanceof Iterable) {
+            for (Object obj : (Iterable) data) {
+                processAttributes(obj, inputFilePath);
+            }
+        }
+    }
+
     public static String preprocessConfig(String inputFilePath) throws IOException {
         // Read the template file
         String content = new String(Files.readAllBytes(Paths.get(inputFilePath)));
@@ -35,6 +59,9 @@ public class ConfigPreprocessor {
             Yaml yaml = new Yaml();
             data = yaml.load(content);
         }
+
+        // Process directories
+        processAttributes(data, inputFilePath);
 
         // Convert the data to JSON formatted string
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
