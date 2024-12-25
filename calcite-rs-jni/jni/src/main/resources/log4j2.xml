@@ -9,6 +9,7 @@
         <Logger name="io.opentelemetry" level="info"/>
         <Logger name="org.apache.hadoop" level="info"/>
         <Logger name="org.apache.calcite.adapter" level="debug"/>
+        <Logger name="org.apache.calcite.adapter.graphql" level="debug"/>
         <Logger name="org.apache.spark" level="info" />
         <Root level="debug">
             <AppenderRef ref="console"/>

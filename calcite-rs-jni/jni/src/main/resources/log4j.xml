@@ -16,6 +16,9 @@
     <logger name="org.apache.calcite.adapter">
         <level value="fine" />
     </logger>
+    <logger name="org.apache.calcite.adapter.graphql">
+        <level value="fine" />
+    </logger>
     <logger name="org.apache.spark">
         <level value="info" />
     </logger>

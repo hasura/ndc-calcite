@@ -8,7 +8,7 @@
       "type": "jdbc",
       "jdbcDriver": "org.sqlite.JDBC",
       "sqlDialectFactory": "com.hasura.SQLiteSqlDialectFactory",
-      "jdbcUrl": "jdbc:sqlite:/Users/kennethstott/Documents/GitHub/calcite-connector/adapters/jdbc/chinook.db"
+      "jdbcUrl": "jdbc:sqlite:./chinook.db"
     }
   ]
 }
