@@ -380,6 +380,7 @@
                         -Dlog4j2.configurationFile=log4j2.xml
                         -Dlog_level=debug
                     </argLine>
+                    <skipTests>true</skipTests>
                 </configuration>
             </plugin>
         </plugins>

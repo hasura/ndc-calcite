@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "defaultSchema": "TEST",
+  "schemas": [
+    {
+      "name": "TEST",
+      "type": "jdbc",
+      "jdbcDriver": "net.snowflake.client.jdbc.SnowflakeDriver",
+      "jdbcUrl": "jdbc:snowflake://<id>.snowflakecomputing.com/?db=SNOWFLAKE_SAMPLE_DATA&schema=TPCH_SF1&warehouse=COMPUTE_WH&role=accountadmin&user=<user>&password=<password>",
+      "jdbcSchema": "TPCH_SF1",
+      "jdbcCatalog": "SNOWFLAKE_SAMPLE_DATA",
+      "jdbcUser": "<user>",
+      "jdbcPassword": "<password>"
+    }
+  ]
+}

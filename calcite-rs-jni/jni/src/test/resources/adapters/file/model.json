@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "defaultSchema": "SALES",
+  "schemas": [
+    {
+      "type": "custom",
+      "name": "SALES",
+      "factory": "org.apache.calcite.adapter.file.FileSchemaFactory",
+      "operand": {
+        "directory": "./data"
+      }
+    }
+  ]
+}

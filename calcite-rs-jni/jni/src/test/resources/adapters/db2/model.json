@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "defaultSchema": "db2",
+  "schemas": [
+    {
+      "type": "jdbc",
+      "name": "db2",
+      "jdbcUser": "db2inst1",
+      "jdbcPassword": "mypassword",
+      "jdbcUrl": "jdbc:db2://192.168.86.233:50000/testdb"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "defaultSchema": "TEST",
+  "schemas": [
+    {
+      "name": "TEST",
+      "type": "jdbc",
+      "jdbcDriver": "io.trino.jdbc.TrinoDriver",
+      "jdbcUrl": "jdbc:trino://kenstott-free-cluster.trino.galaxy.starburst.io:443",
+      "jdbcSchema": "demo",
+      "jdbcCatalog": "sample",
+      "jdbcUser": "ken@hasura.io/accountadmin",
+      "jdbcPassword": "HasuraR0cks!"
+    }
+  ]
+}

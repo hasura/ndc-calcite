@@ -1,0 +1,1 @@
+[Arrow Adapter](https://calcite.apache.org/docs/arrow_adapter.html)

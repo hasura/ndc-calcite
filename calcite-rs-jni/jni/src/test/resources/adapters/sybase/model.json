@@ -1,0 +1,15 @@
+{
+  "version": "1.0",
+  "defaultSchema": "sample",
+  "schemas": [
+    {
+      "name": "sample",
+      "type": "jdbc",
+      "jdbcUrl": "jdbc:sybase:Tds:192.168.86.233:5000",
+      "jdbcUser": "sa",
+      "jdbcPassword": "zzzzz",
+      "jdbcCatalog": "sample",
+      "jdbcSchema": "dbo"
+      }
+  ]
+}

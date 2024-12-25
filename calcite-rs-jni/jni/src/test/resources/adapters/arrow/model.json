@@ -7,7 +7,7 @@
       "type": "custom",
       "factory": "org.apache.calcite.adapter.arrow.ArrowSchemaFactory",
       "operand": {
-        "directory": "/Volumes/T9/Users/kennethstott/calcite-connector/adapters/arrow/resources/arrow"
+        "directory": "./resources/arrow"
       }
     }
   ]
