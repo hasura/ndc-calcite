@@ -11,6 +11,7 @@ use async_trait::async_trait;
 use dotenv;
 use http::status::StatusCode;
 use jni::objects::GlobalRef;
+use ndc_calcite_values::values::CONFIGURATION_FILENAME;
 use ndc_models as models;
 use ndc_models::{ArgumentName, Capabilities, CollectionName, Relationship, RelationshipName, VariableName};
 use ndc_sdk::connector::{Connector, ConnectorSetup, ErrorResponse};
@@ -25,8 +26,6 @@ use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
 use ndc_calcite_schema::calcite::Model;
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
 use ndc_calcite_schema::version5::ParsedConfiguration;
-use ndc_calcite_values::is_running_in_container::is_running_in_container;
-use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DEV_CONFIG_FILE_NAME};
 use crate::{calcite, query};
 use crate::calcite::CalciteError;
 use crate::query::QueryParams;
@@ -77,18 +76,10 @@ impl ConnectorSetup for Calcite {
         dotenv::dotenv().ok();
 
         fn get_config_file_path(configuration_dir: impl AsRef<Path> + Send) -> PathBuf {
-            if is_running_in_container() {
                 configuration_dir.as_ref().join(CONFIGURATION_FILENAME)
-            } else {
-                configuration_dir.as_ref().join(DEV_CONFIG_FILE_NAME)
-            }
         }
 
         fn configure_path(span: Span, configuration_dir: &(impl AsRef<Path> + Send)) {
-            println!(
-                "Configuration file path: {:?}",
-                configuration_dir.as_ref().display()
-            );
             span.record("configuration_dir", format!("{:?}", configuration_dir.as_ref().display()));
         }
 

@@ -6,11 +6,9 @@
       "name": "TEST",
       "type": "jdbc",
       "jdbcDriver": "com.databricks.client.jdbc.Driver",
-      "jdbcUrl": "jdbc:databricks://dbc-35019fa9-14d3.cloud.databricks.com:443/;HttpPath=/sql/1.0/warehouses/fd7249aff7e8684c;PWD=<PAT>;ConnCatalog=samples;ConnSchema=tpch",
-      "jdbcSchema": "tpch",
-      "jdbcCatalog": "samples",
-      "jdbcUser": null,
-      "jdbcPassword": null
+      "jdbcUrl": "${DATABRICKS_JDBC_URL}",
+      "jdbcSchema": "workspace",
+      "jdbcCatalog": "chinook"
     }
   ]
 }

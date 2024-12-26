@@ -1,6 +1,418 @@
 {
   "version": "5",
   "$schema": "schema.json",
-  "model_file_path": "/Users/kennethstott/test/calcite-connector/adapters/databricks/model.json",
-  "fixes": true
+  "model": {
+    "version": "1.0",
+    "defaultSchema": "TEST",
+    "schemas": [
+      {
+        "type": "jdbc",
+        "name": "TEST",
+        "sqlDialectFactory": null,
+        "jdbcUser": null,
+        "jdbcPassword": null,
+        "jdbcUrl": "jdbc:databricks://dbc-35019fa9-14d3.cloud.databricks.com:443/;HttpPath=/sql/1.0/warehouses/fd7249aff7e8684c;PWD=dapice663dc29531c32040053109eabdd24f;ConnCatalog=samples;ConnSchema=tpch",
+        "jdbcCatalog": "samples",
+        "jdbcSchema": "tpch",
+        "factory": null
+      }
+    ]
+  },
+  "model_file_path": "./model.json",
+  "fixes": true,
+  "metadata": {
+    "region": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "region",
+      "columns": {
+        "r_name": {
+          "name": "r_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "r_comment": {
+          "name": "r_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "r_regionkey": {
+          "name": "r_regionkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "lineitem": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "lineitem",
+      "columns": {
+        "l_orderkey": {
+          "name": "l_orderkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "l_tax": {
+          "name": "l_tax",
+          "scalarType": "FLOAT",
+          "nullable": true
+        },
+        "l_linestatus": {
+          "name": "l_linestatus",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "l_suppkey": {
+          "name": "l_suppkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "l_extendedprice": {
+          "name": "l_extendedprice",
+          "scalarType": "FLOAT",
+          "nullable": true
+        },
+        "l_discount": {
+          "name": "l_discount",
+          "scalarType": "FLOAT",
+          "nullable": true
+        },
+        "l_quantity": {
+          "name": "l_quantity",
+          "scalarType": "FLOAT",
+          "nullable": true
+        },
+        "l_partkey": {
+          "name": "l_partkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "l_receiptdate": {
+          "name": "l_receiptdate",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "l_shipmode": {
+          "name": "l_shipmode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "l_returnflag": {
+          "name": "l_returnflag",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "l_commitdate": {
+          "name": "l_commitdate",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "l_shipdate": {
+          "name": "l_shipdate",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "l_linenumber": {
+          "name": "l_linenumber",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "l_comment": {
+          "name": "l_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "l_shipinstruct": {
+          "name": "l_shipinstruct",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "part": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "part",
+      "columns": {
+        "p_type": {
+          "name": "p_type",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "p_mfgr": {
+          "name": "p_mfgr",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "p_partkey": {
+          "name": "p_partkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "p_comment": {
+          "name": "p_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "p_retailprice": {
+          "name": "p_retailprice",
+          "scalarType": "FLOAT",
+          "nullable": true
+        },
+        "p_container": {
+          "name": "p_container",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "p_name": {
+          "name": "p_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "p_size": {
+          "name": "p_size",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "p_brand": {
+          "name": "p_brand",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "nation": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "nation",
+      "columns": {
+        "n_name": {
+          "name": "n_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "n_regionkey": {
+          "name": "n_regionkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "n_comment": {
+          "name": "n_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "n_nationkey": {
+          "name": "n_nationkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "customer": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "customer",
+      "columns": {
+        "c_acctbal": {
+          "name": "c_acctbal",
+          "scalarType": "FLOAT",
+          "nullable": true
+        },
+        "c_comment": {
+          "name": "c_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c_phone": {
+          "name": "c_phone",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c_custkey": {
+          "name": "c_custkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "c_address": {
+          "name": "c_address",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c_name": {
+          "name": "c_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "c_nationkey": {
+          "name": "c_nationkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "c_mktsegment": {
+          "name": "c_mktsegment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "supplier": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "supplier",
+      "columns": {
+        "s_nationkey": {
+          "name": "s_nationkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "s_name": {
+          "name": "s_name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "s_phone": {
+          "name": "s_phone",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "s_suppkey": {
+          "name": "s_suppkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "s_address": {
+          "name": "s_address",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "s_comment": {
+          "name": "s_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "s_acctbal": {
+          "name": "s_acctbal",
+          "scalarType": "FLOAT",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "orders": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "orders",
+      "columns": {
+        "o_orderdate": {
+          "name": "o_orderdate",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "o_shippriority": {
+          "name": "o_shippriority",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "o_orderstatus": {
+          "name": "o_orderstatus",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "o_custkey": {
+          "name": "o_custkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "o_clerk": {
+          "name": "o_clerk",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "o_orderkey": {
+          "name": "o_orderkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "o_comment": {
+          "name": "o_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "o_orderpriority": {
+          "name": "o_orderpriority",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "o_totalprice": {
+          "name": "o_totalprice",
+          "scalarType": "FLOAT",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "partsupp": {
+      "physicalCatalog": "samples",
+      "physicalSchema": "tpch",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "partsupp",
+      "columns": {
+        "ps_availqty": {
+          "name": "ps_availqty",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "ps_partkey": {
+          "name": "ps_partkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "ps_comment": {
+          "name": "ps_comment",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "ps_suppkey": {
+          "name": "ps_suppkey",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "ps_supplycost": {
+          "name": "ps_supplycost",
+          "scalarType": "FLOAT",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
 }

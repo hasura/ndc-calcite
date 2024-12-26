@@ -15,10 +15,9 @@ TAG=$(echo "$release_info" | grep 'tag_name' | awk -F':' '{print $2}' | tr -d ' 
 
 # build arm & amd versions
 # docker build . --no-cache --platform linux/arm64,linux/amd64 -t ghcr.io/hasura/ndc-calcite:latest
-docker build . --no-cache -t ghcr.io/hasura/ndc-calcite:latest
+docker build . --no-cache -t ghcr.io/hasura/ndc-calcite:"$TAG"
 #docker buildx build --platform linux/arm64 --output type=oci,dest=./image.tar .
 docker tag ghcr.io/hasura/ndc-calcite:"$TAG"
 
 # push to docker hub
-docker push ghcr.io/hasura/ndc-calcite:latest
 docker push ghcr.io/hasura/ndc-calcite:"$TAG"

@@ -170,12 +170,7 @@ async fn update(
     context: Context<impl Environment>,
     calcite_ref_singleton: &CalciteRefSingleton,
 ) -> anyhow::Result<()> {
-    let docker_config_path = &PathBuf::from(DOCKER_CONNECTOR_DIR);
-    let config_path = if is_running_in_container() {
-        docker_config_path
-    } else {
-        &context.context_path
-    };
+    let config_path =  &context.context_path;
 
     // Read the `connector-metadata.yaml` file and create a map of supported environment variables
     let metadata_yaml_file = config_path.join(".hasura-connector/connector-metadata.yaml");
@@ -185,7 +180,7 @@ async fn update(
             metadata::ConnectorMetadataDefinition,
         >(&metadata_yaml)?))
     } else {
-        Err(anyhow::Error::msg("Metadata file does not exist"))
+        Err(anyhow::Error::msg("Metadata file does not exist at {config_path}.hasura-connector/connector-metadata.yaml"))
     }?;
     let supported_env_vars = metadata
         .as_ref()
