@@ -20,7 +20,7 @@ use ndc_calcite_schema::configuration::{
 use ndc_calcite_schema::environment::{Environment, Variable};
 use ndc_calcite_schema::jvm::init_jvm;
 use ndc_calcite_schema::version5::CalciteRefSingleton;
-use ndc_calcite_values::is_running_in_container::is_running_in_container;
+
 use ndc_calcite_values::values::{
     DOCKER_CONNECTOR_DIR, DOCKER_CONNECTOR_RW, DOCKER_IMAGE_NAME, UNABLE_TO_WRITE_TO_FILE,
 };
@@ -94,12 +94,7 @@ async fn initialize(
     with_metadata: bool,
     context: &Context<impl Environment>,
 ) -> anyhow::Result<()> {
-    let docker_config_path = &PathBuf::from(DOCKER_CONNECTOR_RW);
-    let config_path = if is_running_in_container() {
-        docker_config_path
-    } else {
-        &context.context_path
-    };
+    let config_path = &context.context_path;
     if has_configuration(config_path) {
         Err(Error::DirectoryIsNotEmpty)?;
     }
