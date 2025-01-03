@@ -10,8 +10,7 @@ use ndc_models as models;
 use ndc_models::SchemaResponse;
 use ndc_sdk::connector::{ErrorResponse, Result};
 use tracing::{debug, event, Level};
-use ndc_calcite_values::is_running_in_container::is_running_in_container;
-use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DEV_CONFIG_FILE_NAME, DOCKER_CONNECTOR_RW};
+use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DOCKER_CONNECTOR_RW};
 use crate::{collections, scalars};
 use crate::models::get_models;
 use crate::version5::ParsedConfiguration;
@@ -49,10 +48,7 @@ pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -
         data_models = get_models(&calcite_ref);
     }
     let scalar_types = scalars::scalars();
-    let (object_types, collections) = match collections::collections(&data_models, &scalar_types) {
-        Ok(value) => value,
-        Err(value) => return Err(value),
-    };
+    let (object_types, collections) = collections::collections(&data_models, &scalar_types)?;
     let procedures = vec![];
     let functions: Vec<models::FunctionInfo> = vec![];
     let schema = SchemaResponse {
@@ -62,11 +58,7 @@ pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -
         functions,
         procedures,
     };
-    let file_path = if is_running_in_container() {
-        Path::new(DOCKER_CONNECTOR_RW).join(CONFIGURATION_FILENAME)
-    } else {
-        Path::new(".").join(DEV_CONFIG_FILE_NAME)
-    };
+    let file_path =  Path::new(DOCKER_CONNECTOR_RW).join(CONFIGURATION_FILENAME);
     event!(Level::INFO, config_path = format!("Configuration file path: {}", file_path.display()));
     let mut new_configuration = configuration.clone();
     new_configuration.metadata = Some(data_models.clone());

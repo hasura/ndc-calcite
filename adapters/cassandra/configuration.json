@@ -1,6 +1,330 @@
 {
-    "version": "5",
-    "$schema": "schema.json",
-    "model_file_path": "/etc/connector/model.json",
-    "fixes": true
+  "version": "5",
+  "$schema": "schema.json",
+  "model": {
+    "version": "1.0",
+    "defaultSchema": "twissandra",
+    "schemas": [
+      {
+        "type": "custom",
+        "name": "twissandra",
+        "sqlDialectFactory": null,
+        "jdbcUser": null,
+        "jdbcPassword": null,
+        "jdbcUrl": null,
+        "jdbcCatalog": null,
+        "jdbcSchema": null,
+        "factory": "org.apache.calcite.adapter.cassandra.CassandraSchemaFactory",
+        "operand": {
+          "host": "cassandra.us-west-1.amazonaws.com",
+          "port": 9142,
+          "password": "thfXHbP4KMRH8Je//SsoISZyOq/SNE3ltg40WIreGhcfGNVKsLqFwZwSQfc=",
+          "username": "athenauser-at-528956693660",
+          "keyspace": "content_data",
+          "ssl": true,
+          "dc": "us-west-1",
+          "pathToRootCert": "/Users/kennethstott/Documents/GitHub/calcite-connector/adapters/cassandra/root.crt"
+        }
+      }
+    ]
+  },
+  "model_file_path": "/Users/kennethstott/Documents/GitHub/calcite-connector/adapters/cassandra/model.json",
+  "fixes": true,
+  "metadata": {
+    "news_articles_by_source": {
+      "physicalSchema": "twissandra",
+      "catalog": "",
+      "schema": "twissandra",
+      "name": "news_articles_by_source",
+      "columns": {
+        "metadata": {
+          "name": "metadata",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "publish_date": {
+          "name": "publish_date",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "title": {
+          "name": "title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "content": {
+          "name": "content",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "tags": {
+          "name": "tags",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "article_id": {
+          "name": "article_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "comments": {
+          "name": "comments",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "alias": {
+          "name": "alias",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "all_data_types_example": {
+      "physicalSchema": "twissandra",
+      "catalog": "",
+      "schema": "twissandra",
+      "name": "all_data_types_example",
+      "columns": {
+        "is_active": {
+          "name": "is_active",
+          "scalarType": "BOOLEAN",
+          "nullable": true
+        },
+        "coordinates": {
+          "name": "coordinates",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "scalarType": "VARBINARY",
+          "nullable": true
+        },
+        "tags": {
+          "name": "tags",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "serial_no": {
+          "name": "serial_no",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "rank": {
+          "name": "rank",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "birth_date": {
+          "name": "birth_date",
+          "scalarType": "DATE",
+          "nullable": true
+        },
+        "large_number": {
+          "name": "large_number",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "properties": {
+          "name": "properties",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "height": {
+          "name": "height",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "weight": {
+          "name": "weight",
+          "scalarType": "DOUBLE",
+          "nullable": true
+        },
+        "random_bytes": {
+          "name": "random_bytes",
+          "scalarType": "VARBINARY",
+          "nullable": true
+        },
+        "name": {
+          "name": "name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "event_timeuuid": {
+          "name": "event_timeuuid",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "indicator": {
+          "name": "indicator",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "id": {
+          "name": "id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "frozen_list": {
+          "name": "frozen_list",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "preferences": {
+          "name": "preferences",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "registration_timestamp": {
+          "name": "registration_timestamp",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "birth_time": {
+          "name": "birth_time",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "score": {
+          "name": "score",
+          "scalarType": "DOUBLE",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "news_articles_by_id": {
+      "physicalSchema": "twissandra",
+      "catalog": "",
+      "schema": "twissandra",
+      "name": "news_articles_by_id",
+      "columns": {
+        "metadata": {
+          "name": "metadata",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "comments": {
+          "name": "comments",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "content": {
+          "name": "content",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "tags": {
+          "name": "tags",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "article_id": {
+          "name": "article_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "alias": {
+          "name": "alias",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "title": {
+          "name": "title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "publish_date": {
+          "name": "publish_date",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "news_articles": {
+      "physicalSchema": "twissandra",
+      "catalog": "",
+      "schema": "twissandra",
+      "name": "news_articles",
+      "columns": {
+        "article_id": {
+          "name": "article_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "comments": {
+          "name": "comments",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "author_id": {
+          "name": "author_id",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "metadata": {
+          "name": "metadata",
+          "scalarType": "MAP",
+          "nullable": true
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "title": {
+          "name": "title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "publish_date": {
+          "name": "publish_date",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "content": {
+          "name": "content",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "tags": {
+          "name": "tags",
+          "scalarType": "LIST",
+          "nullable": true
+        },
+        "alias": {
+          "name": "alias",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    }
+  }
 }
