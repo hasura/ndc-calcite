@@ -1,0 +1,9 @@
+{
+  "databricks": {
+    "host": "your-workspace.cloud.databricks.com",
+    "port": "443",
+    "catalog": "hive_metastore",
+    "httpPath": "/sql/1.0/warehouses/your-warehouse-id",
+    "token": "your-personal-access-token"
+  }
+}

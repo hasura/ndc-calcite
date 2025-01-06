@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "defaultSchema": "default",
+  "schemas": [
+    {
+      "name": "default",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.jdbc.JdbcSchema$Factory",
+      "operand": {
+        "jdbcDriver": "com.databricks.client.jdbc.Driver",
+        "jdbcUrl": "jdbc:databricks://dbc-5a4405fd-546b.cloud.databricks.com:443/default;transportMode=http;ssl=1;AuthMech=3;httpPath=/sql/1.0/warehouses/1d14672364e50b38;UID=token;",
+        "jdbcPassword": "${DATABRICKS_ACCESS_TOKEN}"
+      }
+    }
+  ]
+}
