@@ -27,8 +27,13 @@ RUN java -version && mvn --version
 COPY calcite-rs-jni/ /calcite-rs-jni/
 RUN mkdir -p /root/.m2 /root/.gradle
 VOLUME /root/.m2 /root/.gradle
+
 WORKDIR /calcite-rs-jni
-RUN sh build.sh
+RUN apt-get update && apt-get install -y gradle
+RUN chmod +x build.sh
+
+# Run build.sh with detailed logging
+RUN sh -x build.sh 2>&1 | tee build.log || (echo "=== Build failed. Last 50 lines of build.log: ===" && tail -n 50 build.log && exit 1)
 
 # Put all the jars into target/dependency folder
 RUN mvn dependency:copy-dependencies
