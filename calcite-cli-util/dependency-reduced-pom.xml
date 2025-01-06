@@ -81,7 +81,7 @@
             --add-opens=java.base/java.util=ALL-UNNAMED
             --add-opens=java.base/java.lang.reflect=ALL-UNNAMED</java.module.args>
     <maven.compiler.target>17</maven.compiler.target>
-    <calcite.version>1.35.0</calcite.version>
+    <calcite.version>1.38.0</calcite.version>
     <maven.compiler.source>17</maven.compiler.source>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>

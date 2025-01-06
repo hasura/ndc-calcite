@@ -11,7 +11,7 @@
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <calcite.version>1.35.0</calcite.version>
+        <calcite.version>1.38.0</calcite.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.module.args>
             --add-opens=java.base/java.nio=ALL-UNNAMED

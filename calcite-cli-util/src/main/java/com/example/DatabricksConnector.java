@@ -42,15 +42,6 @@ public class DatabricksConnector {
 
             // Debug output
             System.out.println("Executing SQLLine with arguments:");
-            for (String arg : sqllineArgs) {
-                // Mask the password in the output
-                if (arg.startsWith("--password=")) {
-                    System.out.println("\t" + "--password=********");
-                } else {
-                    System.out.println("\t" + arg);
-                }
-            }
-
             // Launch SQLLine
             sqlline.SqlLine.main(sqllineArgs);
 
