@@ -1,124 +1,72 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ParsedConfiguration",
+  "description": "Initial configuration, just enough to connect to a database and elaborate a full 'Configuration'.",
   "type": "object",
   "required": [
     "version"
   ],
   "properties": {
     "version": {
-      "$ref": "#/definitions/Version"
+      "description": "Hasura NDC version",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Version"
+        }
+      ]
     },
     "$schema": {
-      "type": "string"
+      "description": "JSON Schema file that defines a valid configuration",
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "model": {
-      "type": "object",
-      "properties": {
-        "version": {
-          "type": "string"
+      "description": "The Calcite Model - somewhat dependent on type of calcite adapter being used. Better documentation can be found [here](https://calcite.apache.org/docs/model.html).",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Model"
         },
-        "defaultSchema": {
-          "type": "string"
-        },
-        "schemas": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "type": {
-                "type": "string"
-              },
-              "name": {
-                "type": "string"
-              },
-              "jdbcUser": {
-                "type": "string"
-              },
-              "jdbcPassword": {
-                "type": "string"
-              },
-              "jdbcUrl": {
-                "type": "string"
-              },
-              "sqlDialectFactory": {
-                "type": "string"
-              },
-              "jdbcCatalog": {
-                "type": "string"
-              },
-              "jdbcSchema": {},
-              "factory": {
-                "type": "string"
-              },
-              "operand": {
-                "type": "object",
-                "properties": {
-                  "directory": {
-                    "type": "string"
-                  },
-                  "host": {
-                    "type": "string"
-                  },
-                  "port": {
-                    "type": "number"
-                  },
-                  "database": {
-                    "type": "string"
-                  },
-                  "password": {
-                    "type": "string"
-                  }
-                }
-              },
-              "tables": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string"
-                    },
-                    "factory": {
-                      "type": "string"
-                    },
-                    "operand": {
-                      "type": "object",
-                      "properties": {
-                        "dataFormat": {
-                          "type": "string"
-                        },
-                        "fields": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "name": {
-                                "type": "string"
-                              },
-                              "type": {
-                                "type": "string"
-                              },
-                              "mapping": {}
-                            },
-                            "required": [
-                              "name",
-                              "type",
-                              "mapping"
-                            ]
-                          }
-                        },
-                        "keyDelimiter": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+        {
+          "type": "null"
         }
+      ]
+    },
+    "model_file_path": {
+      "description": "Used internally",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "fixes": {
+      "description": "Certain fixes that will solve for missing field values, for non-existing fields. It's expensive and probably not necessary, but required to pass the NDC tests. You can set the value to false in order to improve performance.",
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "supportJsonObject": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "jars": {
+      "description": "Many common JDBC jars are included by default. Some are not you can create a directory with additional required JARS and point to that directory here.",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "metadata": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": {
+        "$ref": "#/definitions/TableMetadata"
       }
     }
   },
@@ -128,6 +76,780 @@
       "enum": [
         "5"
       ]
+    },
+    "Model": {
+      "description": "Represents a model. This is explained in greater detail in the Apache Calcite docs.",
+      "type": "object",
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "version": {
+          "description": "Calcite version",
+          "type": "string"
+        },
+        "defaultSchema": {
+          "description": "You can define multiple schemas - this will be the default one",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schemas": {
+          "description": "An array of Schemas. Schemas represent a connection/configuration of a data source.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Schema"
+          }
+        },
+        "functions": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Function"
+          }
+        },
+        "types": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Type"
+          }
+        }
+      }
+    },
+    "Schema": {
+      "description": "The type of the schema.",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "cache": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": true
+        },
+        "sqlDialectFactory": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jdbcUser": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jdbcPassword": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jdbcUrl": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jdbcCatalog": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "jdbcSchema": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "factory": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operand": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Operand"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "types": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Type"
+          }
+        },
+        "materializations": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Materialization"
+          }
+        },
+        "lattices": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Lattice"
+          }
+        },
+        "tables": {
+          "description": "If the schema cannot infer table structures (think NoSQL) define them here.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Table"
+          }
+        }
+      }
+    },
+    "Operand": {
+      "description": "Represents the operand used in the schema.",
+      "type": "object",
+      "properties": {
+        "directory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "host": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "port": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
+        "database": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
+        "password": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "username": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keyspace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dataFormat": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ssl": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "dc": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pathToCert": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pathToPrivateKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "keyPassword": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pathToRootCert": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Type": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "attributes": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Type"
+          }
+        }
+      }
+    },
+    "Materialization": {
+      "type": "object",
+      "properties": {
+        "view": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "table": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sql": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Lattice": {
+      "description": "Represents a lattice in the schema. A lattice (in Calcite) refers to aggregates.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sql": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "auto": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "algorithm": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "algorithmMaxMillis": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int64"
+        },
+        "rowCountEstimate": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int64"
+        },
+        "defaultMeasures": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Measure"
+          }
+        },
+        "tiles": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Tile"
+          }
+        }
+      }
+    },
+    "Measure": {
+      "type": "object",
+      "properties": {
+        "agg": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "args": true
+      }
+    },
+    "Tile": {
+      "type": "object",
+      "properties": {
+        "dimensions": true,
+        "measures": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Measure"
+          }
+        }
+      }
+    },
+    "Table": {
+      "description": "Represents a table.\n\n## Fields\n\n- `name` - The name of the table. It is an optional field. - `factory` - The factory of the table. It is an optional field. - `operand` - The operand of the table. It is an optional field.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "factory": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "index": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "tableName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "operand": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Operand"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "columns": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Column"
+          }
+        },
+        "fieldDefs": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/FieldDef"
+          }
+        },
+        "sql": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "modifiable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "stream": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "history": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "Column": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "FieldDef": {
+      "type": "object",
+      "properties": {
+        "th": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "selector": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "skip": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pattern": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "matchGroup": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "selectedElement": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 0.0
+        },
+        "type": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "Function": {
+      "description": "Represents a function.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "className": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "methodName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "path": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "TableMetadata": {
+      "description": "Represents metadata for a database table.\n\n# Fields\n\n- `catalog` - The catalog of the table. - `schema` - The schema of the table. - `name` - The name of the table. - `description` - The description of the table. - `columns` - A `HashMap` containing the columns of the table. - `primary_keys` - An optional `Vec` of primary key column names. - `exported_keys` - An optional `Vec` of exported keys to other tables.",
+      "type": "object",
+      "required": [
+        "columns",
+        "name"
+      ],
+      "properties": {
+        "physicalCatalog": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "physicalSchema": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "catalog": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "schema": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "columns": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ColumnMetadata"
+          }
+        },
+        "primaryKeys": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "exportedKeys": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/ExportedKey"
+          }
+        }
+      }
+    },
+    "ColumnMetadata": {
+      "description": "Represents the metadata of a column in a database table.",
+      "type": "object",
+      "required": [
+        "name",
+        "nullable",
+        "scalarType"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scalarType": {
+          "type": "string"
+        },
+        "nullable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ExportedKey": {
+      "description": "Represents an exported key between two tables in a database.",
+      "type": "object",
+      "required": [
+        "fkColumnName",
+        "fkTableName",
+        "pkColumnName",
+        "pkTableName"
+      ],
+      "properties": {
+        "pkTableCatalog": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pkTableSchema": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pkTableName": {
+          "type": "string"
+        },
+        "pkColumnName": {
+          "type": "string"
+        },
+        "pkName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fkTableCatalog": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fkTableSchema": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fkTableName": {
+          "type": "string"
+        },
+        "fkColumnName": {
+          "type": "string"
+        },
+        "fkName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
     }
   }
 }

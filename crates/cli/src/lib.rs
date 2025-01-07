@@ -5,7 +5,6 @@
 
 use regex::Regex;
 use std::path::PathBuf;
-
 use anyhow::Ok;
 use clap::Subcommand;
 use include_dir::Dir;
@@ -125,7 +124,8 @@ async fn initialize(
             DOCKER_IMAGE_NAME,
             context.release_version.unwrap_or("latest")
         );
-        let update_command = format!("docker run --entry-point ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:{} -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:{}:ro {} update", DOCKER_CONNECTOR_DIR, DOCKER_CONNECTOR_RW, docker_image);
+        let update_command =
+            format!("docker run --entry-point ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:{} {} update", DOCKER_CONNECTOR_DIR, docker_image);
         let metadata = metadata::ConnectorMetadataDefinition {
             packaging_definition: metadata::PackagingDefinition::PrebuiltDockerImage(
                 metadata::PrebuiltDockerImagePackaging { docker_image },
@@ -152,7 +152,7 @@ async fn initialize(
         };
 
         fs::write(metadata_file, serde_yaml::to_string(&metadata)?).await?;
-    }
+    };
 
     Ok(())
 }
@@ -175,7 +175,7 @@ async fn update(
             metadata::ConnectorMetadataDefinition,
         >(&metadata_yaml)?))
     } else {
-        Err(anyhow::Error::msg("Metadata file does not exist at {config_path}.hasura-connector/connector-metadata.yaml"))
+        Err(anyhow::Error::msg(format!("Metadata file does not exist at {config_path:?}/.hasura-connector/connector-metadata.yaml")))
     }?;
     let supported_env_vars = metadata
         .as_ref()

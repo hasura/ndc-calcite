@@ -2,8 +2,6 @@
 //!
 //! This is intended to be automatically downloaded and invoked via the Hasura CLI, as a plugin.
 //! It is unlikely that end-users will use it directly.
-
-use std::env;
 use std::path::PathBuf;
 use std::process::ExitCode;
 use clap::Parser;
@@ -24,8 +22,8 @@ const RELEASE_VERSION: Option<&str> = option_env!("RELEASE_VERSION");
 )]
 pub struct Args {
     /// The path to the configuration. Defaults to the current directory.
-    #[arg(long = "context", env = "HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH")]
-    pub context_path: Option<PathBuf>,
+    #[arg(long = "context", env = "CONNECTOR_CONTEXT_PATH")]
+    pub context_path: PathBuf,
     /// The command to invoke.
     #[command(subcommand)]
     pub subcommand: Command,
@@ -53,10 +51,7 @@ pub async fn main() -> ExitCode {
 async fn try_main(calcite_ref_singleton: CalciteRefSingleton) -> anyhow::Result<()> {
     let args = Args::parse();
     // Default the context path to the current directory.
-    let context_path = match args.context_path {
-        Some(path) => path,
-        None => env::current_dir()?,
-    };
+    let context_path = args.context_path;
     let context = Context {
         context_path,
         environment: configuration::environment::ProcessEnvironment,

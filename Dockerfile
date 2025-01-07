@@ -58,6 +58,7 @@ COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin
 COPY --from=java-build /calcite-rs-jni/jni/target/ /calcite-rs-jni/jni/target/
 
 ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
+ENV CONNECTOR_CONTEXT_PATH=/etc/connector
 ENV RUST_BACKTRACE=full
 
 WORKDIR /app
