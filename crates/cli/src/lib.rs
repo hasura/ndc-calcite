@@ -152,7 +152,7 @@ async fn initialize(
         };
 
         fs::write(metadata_file, serde_yaml::to_string(&metadata)?).await?;
-    }
+    };
 
     Ok(())
 }

@@ -7,8 +7,8 @@
       "type": "jdbc",
       "jdbcDriver": "com.databricks.client.jdbc.Driver",
       "jdbcUrl": "${DATABRICKS_JDBC_URL}",
-      "jdbcSchema": "workspace",
-      "jdbcCatalog": "chinook"
+      "jdbcSchema": "${DATABRICKS_SCHEMA}",
+      "jdbcCatalog": "${DATABRICKS_CATALOG}"
     }
   ]
 }
