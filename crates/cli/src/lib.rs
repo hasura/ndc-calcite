@@ -5,7 +5,6 @@
 
 use regex::Regex;
 use std::path::PathBuf;
-
 use anyhow::Ok;
 use clap::Subcommand;
 use include_dir::Dir;
@@ -175,7 +174,7 @@ async fn update(
             metadata::ConnectorMetadataDefinition,
         >(&metadata_yaml)?))
     } else {
-        Err(anyhow::Error::msg("Metadata file does not exist at {config_path}.hasura-connector/connector-metadata.yaml"))
+        Err(anyhow::Error::msg(format!("Metadata file does not exist at {config_path:?}/.hasura-connector/connector-metadata.yaml")))
     }?;
     let supported_env_vars = metadata
         .as_ref()
