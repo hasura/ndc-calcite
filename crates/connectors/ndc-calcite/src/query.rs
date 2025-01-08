@@ -19,7 +19,7 @@ use ndc_calcite_schema::version5::ParsedConfiguration;
 
 use crate::calcite::{connector_query, Row};
 use crate::connector::calcite::CalciteState;
-use crate::sql;
+use crate::sql::{self, VariablesCTE};
 
 /// A struct representing the parameters of a query.
 ///
@@ -48,7 +48,7 @@ pub struct QueryParams<'a> {
 /// These components include the argument values, the SELECT clause, the ORDER BY clause,
 /// the pagination settings, the aggregates, the predicates, the final aggregates, and the join clause.
 pub struct QueryComponents {
-    pub with: Option<String>,
+    pub variables_cte: Option<VariablesCTE>,
     pub select: Option<String>,
     pub order_by: Option<String>,
     pub pagination: Option<String>,
@@ -378,7 +378,7 @@ fn execute_query_collection(
     let q = sql::query_collection(
         params.config,
         params.coll,
-        query_components.with.clone(),
+        query_components.variables_cte.as_ref().map(|cte| cte.query.clone()),
         Some(phrase.unwrap().to_string()),
         query_components.order_by.clone(),
         query_components.pagination.clone(),
@@ -386,13 +386,10 @@ fn execute_query_collection(
         query_components.join.clone(),
     );
 
-    match connector_query(
+    connector_query(
         params.config,
         params.state.clone().calcite_ref,
         &q,
         params.query,
-        params.explain) {
-        Ok(v) => Ok(Some(v)),
-        Err(e) => Err(e)
-    }
+        params.explain).map(Some)
 }

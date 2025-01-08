@@ -54,9 +54,9 @@ fn value_to_sql(variable_name: &VariableName, value: &Value) -> Result<String, E
 }
 
 #[derive(Debug)]
-struct VariablesCTE {
-    query: String,
-    columns: Vec<String>,
+pub(crate) struct VariablesCTE {
+    pub query: String,
+    pub columns: Vec<String>,
 }
 
 fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option<VariablesCTE>, Error> {
@@ -628,5 +628,5 @@ pub fn parse_query<'a>(
 
 
     let final_aggregates = aggregates.clone().unwrap_or_default();
-    Ok(QueryComponents { select, order_by, pagination, aggregates, predicates: Some(predicates), final_aggregates, with: vars_cte.map(|vars| vars.query), join: join_clause })
+    Ok(QueryComponents { select, order_by, pagination, aggregates, predicates: Some(predicates), final_aggregates, variables_cte: vars_cte, join: join_clause })
 }
