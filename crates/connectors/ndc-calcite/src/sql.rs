@@ -2,7 +2,7 @@
 //!
 //! Creates the Calcite query statement for a single query.
 //!
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, BTreeSet};
 use crate::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -42,9 +42,61 @@ fn get_field_statement(supports_json_object: bool, key: &FieldName, item: &Field
     }
 }
 
+fn value_to_sql(variable_name: &VariableName, value: &Value) -> Result<String, Error> {
+    match value {
+        Value::Null => Ok("NULL".to_string()),
+        Value::Bool(b) => Ok(if *b { "TRUE" } else { "FALSE" }.to_string()),
+        Value::Number(n) => Ok(format!("{}", n)), // Uses Display trait directly to format number
+        Value::String(s) => Ok(format!("'{}'", s.replace('\'', "''"))),
+        Value::Array(_) => Err(Error::UnsupportedVariableArrayValue(variable_name.clone())),
+        Value::Object(_) => Err(Error::UnsupportedVariableObjectValue(variable_name.clone())),
+    }
+}
+
+#[derive(Debug)]
+struct VariablesCTE {
+    query: String,
+    columns: Vec<String>,
+}
+
+fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option<VariablesCTE>, Error> {
+
+    if vars.is_empty() {
+        return Ok(None);
+    }
+
+    // Collect all unique column names while preserving order
+    let mut columns: BTreeSet<String> = BTreeSet::new();
+    for row in vars {
+        for name in row.keys() {
+            columns.insert(name.to_string());
+        }
+    }
+    let columns: Vec<String> = columns.into_iter().collect();
+
+    let mut cte = String::from("WITH \"hasura_cte_vars\" AS (\n");
+
+    let mut selects = Vec::new();
+
+    for row in vars {
+        let mut pairs = Vec::new();
+        for (name, value) in row {
+            let sql_value = value_to_sql(name, value)?;
+            pairs.push(format!("{} AS \"{}\"", sql_value, name));
+        }
+        selects.push(format!("    SELECT {}", pairs.join(", ")));
+    }
+
+    cte.push_str(&selects.join("\n    UNION ALL\n"));
+    cte.push_str("\n)");
+
+    Ok(Some(VariablesCTE { query: cte, columns }))
+}
+
+
 #[tracing::instrument(skip(
     configuration,
-    _variables,
+    variables,
     collection,
     query,
     collection_relationships,
@@ -52,14 +104,13 @@ fn get_field_statement(supports_json_object: bool, key: &FieldName, item: &Field
 ), level=Level::DEBUG)]
 fn select(
     configuration: &ParsedConfiguration,
-    _variables: &Vec<BTreeMap<VariableName, Value>>,
+    variables: &Vec<BTreeMap<VariableName, Value>>,
     collection: &CollectionName,
     query: &Query,
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     _prepend: Option<String>,
-) -> Result<(Vec<String>, Vec<String>), Error> {
+) -> Result<(Vec<String>, Option<VariablesCTE>), Error> {
     let mut field_statements: Vec<String> = vec![];
-    let join_statements: Vec<String> = vec![];
 
     let fields = query.fields.clone().unwrap_or_default();
     let metadata_map = configuration.clone().metadata.unwrap_or_default();
@@ -68,6 +119,15 @@ fn select(
     );
 
     let supports_json_object = configuration.supports_json_object.unwrap_or_else(|| false);
+
+    let variables_cte = generate_cte_vars(variables)?;
+
+    if let Some(variable_cols) = variables_cte.as_ref() {
+        for col in &variable_cols.columns {
+            field_statements.push(format!("\"{}\" AS \"__phantom_vars__{}\" ", col, col));
+
+        }
+    }
 
     for (key, field) in fields {
         match field {
@@ -104,8 +164,11 @@ fn select(
             }
         }
     }
-    Ok((field_statements,join_statements))
+
+
+    Ok((field_statements,variables_cte))
 }
+
 #[tracing::instrument(skip(query), level=Level::DEBUG)]
 fn order_by(query: &Query) -> Vec<String> {
     let mut order_statements: Vec<String> = Vec::new();
@@ -173,11 +236,11 @@ fn generate_aggregate_statement(name: &FieldName, aggregate_expr: String, config
 #[tracing::instrument(skip(configuration, column, field_path), level=Level::DEBUG)]
 fn aggregate_column_name(configuration: &ParsedConfiguration, column: &FieldName, field_path: &Option<Vec<FieldName>>) -> String {
     let column_name = create_column_name(configuration, column, field_path);
-    // if configuration.supports_json_object.unwrap_or_else(|| false) {
+     if configuration.supports_json_object.unwrap_or_else(|| false) {
         format!("\"{}\"", column_name)
-    // } else {
-    //     column_name
-    // }
+     } else {
+         column_name
+     }
 }
 
 #[tracing::instrument(skip(configuration, query), level=Level::DEBUG)]
@@ -203,16 +266,15 @@ fn aggregates(configuration: &ParsedConfiguration, query: &Query) -> Vec<String>
     aggregates
 }
 
-#[tracing::instrument(skip(configuration, collection, collection_relationships, variables, query), level=Level::DEBUG)]
+#[tracing::instrument(skip(configuration, collection, variables, query), level=Level::DEBUG)]
 fn predicates(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
-    collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     variables: &Vec<BTreeMap<VariableName, Value>>,
     query: &Query,
 ) -> Result<String, Error> {
     if let Some(predicate) = &query.predicate {
-        process_expression(configuration, collection, collection_relationships, variables, predicate)
+        process_expression(configuration, collection, variables, predicate)
     } else {
         Ok("".into())
     }
@@ -222,18 +284,16 @@ fn predicates(
 #[tracing::instrument(skip(
     configuration,
     collection,
-    collection_relationships,
     variables,
     predicate
 ), level=Level::DEBUG)]
 fn process_expression(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
-    collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     variables: &Vec<BTreeMap<VariableName, Value>>,
     predicate: &Expression,
 ) -> Result<String, Error> {
-    process_sql_expression(configuration, collection, collection_relationships, variables, predicate)
+    process_sql_expression(configuration, collection, variables, predicate)
 }
 
 #[tracing::instrument(skip(input), level=Level::DEBUG)]
@@ -257,23 +317,16 @@ fn sql_quotes(input: &str) -> String {
 #[tracing::instrument(skip(
     configuration,
     collection,
-    collection_relationships,
     variables,
     expr
 ), level=Level::DEBUG)]
 fn process_sql_expression(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
-    collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     variables: &Vec<BTreeMap<VariableName, Value>>,
     expr: &Expression,
 ) -> Result<String, crate::error::Error> {
 
-    let metadata_map = configuration.clone().metadata.unwrap_or_default();
-    let collection_metadata = metadata_map.get(collection).ok_or(crate::error::Error::CollectionNotFound(collection.clone()))?;
-    let table = create_qualified_table_name(
-        &collection_metadata
-    );
     let operation_tuples: Vec<(ComparisonOperatorName, String)> = vec![
         ("_gt".into(), ">".into()),
         ("_lt".into(), "<".into()),
@@ -289,7 +342,7 @@ fn process_sql_expression(
             let processed_expressions: Vec<String> = expressions
                 .iter()
                 .filter_map(|expression| {
-                    process_sql_expression(configuration, collection, collection_relationships, variables, expression).ok()
+                    process_sql_expression(configuration, collection, variables, expression).ok()
                 })
                 .collect();
             Ok(format!("({})", processed_expressions.join(" AND ")))
@@ -298,13 +351,13 @@ fn process_sql_expression(
             let processed_expressions: Vec<String> = expressions
                 .iter()
                 .filter_map(|expression| {
-                    process_sql_expression(configuration, collection, collection_relationships, variables, expression).ok()
+                    process_sql_expression(configuration, collection, variables, expression).ok()
                 })
                 .collect();
             Ok(format!("({})", processed_expressions.join(" OR ")))
         }
         Expression::Not { expression } => {
-            let embed_expression = process_sql_expression(configuration, collection, collection_relationships, variables, expression)?;
+            let embed_expression = process_sql_expression(configuration, collection, variables, expression)?;
             Ok(format!("(NOT {})", embed_expression))
         },
         Expression::UnaryComparisonOperator { operator, column } => match operator {
@@ -356,7 +409,8 @@ fn process_sql_expression(
 
                     }
                 }
-                ComparisonValue::Variable { name } => format!("vars.__phantom__var__{}", name),
+                ComparisonValue::Variable { name } => format!("\"hasura_cte_vars\".\"{}\"", name),
+
             };
             Ok(format!("{} {} {}", left_side, sql_operation, right_side))
         }
@@ -448,12 +502,25 @@ fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
 pub fn query_collection(
     configuration: &ParsedConfiguration,
     collection_name: &CollectionName,
+    with: Option<String>,
     select: Option<String>,
     order_by: Option<String>,
     pagination: Option<String>,
     where_clause: Option<String>,
     join_clause: Option<String>,
 ) -> String {
+    let with_clause = match with {
+        None => "".into(),
+        Some(with) => {
+            if with.is_empty() {
+                "".into()
+            } else {
+                with
+            }
+        }
+    };
+
+
     let select_clause: String = match select {
         None => "".into(),
         Some(select) => {
@@ -520,8 +587,8 @@ pub fn query_collection(
         query
     } else {
         let query = format!(
-            "SELECT {} FROM {}{}{}{}{}",
-            select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
+            "{} SELECT {} FROM {}{}{}{}{}",
+            with_clause, select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
         );
         event!(Level::INFO, message = format!("Generated query {}", query));
         query
@@ -542,14 +609,24 @@ pub fn parse_query<'a>(
     query: &'a Query,
     variables: &'a Vec<BTreeMap<VariableName, Value>>
 ) -> Result<QueryComponents, Error> {
-    let (select_clause, join_clause) = select(configuration, variables, collection, query, collection_relationships, None)?;
+    let metadata_map = configuration.clone().metadata.unwrap_or_default();
+    let current_table = metadata_map.get(collection).ok_or(Error::CollectionNotFound(collection.clone()))?;
+    let predicates = predicates(&configuration, collection, variables, query)?;
+    let (select_clause, vars_cte) = select(configuration, variables, collection, query, collection_relationships, None)?;
+    let join_clause = if vars_cte.is_some() {
+        Some(format!("CROSS JOIN \"hasura_cte_vars\""))
+    } else {
+        None
+    };
+
+
     let select = Some(select_clause.join(","));
-    let join = Some(join_clause.join(" "));
+
     let order_by = Some(order_by(query).join(", "));
     let pagination = Some(pagination(query).unwrap().join(" "));
     let aggregates = Some(aggregates(configuration, query).join(", "));
-    let predicates = predicates(&configuration, collection, collection_relationships, variables, query)?;
+
 
     let final_aggregates = aggregates.clone().unwrap_or_default();
-    Ok(QueryComponents { select, order_by, pagination, aggregates, predicates: Some(predicates), final_aggregates, join })
+    Ok(QueryComponents { select, order_by, pagination, aggregates, predicates: Some(predicates), final_aggregates, with: vars_cte.map(|vars| vars.query), join: join_clause })
 }

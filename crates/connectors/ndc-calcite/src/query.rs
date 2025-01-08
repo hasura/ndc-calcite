@@ -48,6 +48,7 @@ pub struct QueryParams<'a> {
 /// These components include the argument values, the SELECT clause, the ORDER BY clause,
 /// the pagination settings, the aggregates, the predicates, the final aggregates, and the join clause.
 pub struct QueryComponents {
+    pub with: Option<String>,
     pub select: Option<String>,
     pub order_by: Option<String>,
     pub pagination: Option<String>,
@@ -131,6 +132,7 @@ pub fn orchestrate_query(
     //         }
     //     }
     // }
+
 
     return Ok(vec![models::RowSet { aggregates: parsed_aggregates, rows: rows_data }]); // FIXME: This is the whole point of this PR.
 }
@@ -376,6 +378,7 @@ fn execute_query_collection(
     let q = sql::query_collection(
         params.config,
         params.coll,
+        query_components.with.clone(),
         Some(phrase.unwrap().to_string()),
         query_components.order_by.clone(),
         query_components.pagination.clone(),

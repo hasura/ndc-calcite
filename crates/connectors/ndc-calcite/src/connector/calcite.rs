@@ -253,7 +253,7 @@ impl Connector for Calcite {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::QueryResponse>> {
-        let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
+        let variable_sets = request.variables.unwrap_or(vec![]);
 
         let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
         let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =

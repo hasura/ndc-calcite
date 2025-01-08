@@ -136,7 +136,7 @@ pub fn connector_query(
     let span_id = otel_context.span().span_context().span_id();
     let trace_id = otel_context.span().span_context().trace_id();
 
-    let jvm = get_jvm(true).lock().unwrap();
+    let jvm = get_jvm(true).lock().map_err(|e| ErrorResponse::from_error(CalciteError { message: format!("Failed to get JVM: {}", e) }))?;
     let mut java_env = jvm.attach_current_thread().map_err(ErrorResponse::from_error)?;
     let calcite_query = java_env.new_local_ref(calcite_reference).map_err(ErrorResponse::from_error)?;
 
@@ -152,9 +152,10 @@ pub fn connector_query(
         calcite_query,
         if *explain { "queryPlanModels" } else { "queryModels" },
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
-        query_args);
+        query_args).map_err(|e| ErrorResponse::from_error(CalciteError { message: format!("Failed to execute query: {}", e) }))?;
 
-    match result.unwrap() {
+
+    match result {
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
             let mut rows: Vec<Row> = match serde_json::from_str::<Vec<String>>(&json_string) {
@@ -164,7 +165,7 @@ pub fn connector_query(
                 Err(_) => match serde_json::from_str::<Vec<Row>>(&json_string) {
                     Ok(vec) => vec,
                     Err(error) => {
-                        let err = CalciteError { message: format!("Failed to deserialize JSON: {}", error) };
+                        let err = CalciteError { message: format!("Failed to deserialize JSON {} with error: {error}", json_string) };
                         return Err(ErrorResponse::from_error(err));
                     }
                 }
@@ -175,7 +176,11 @@ pub fn connector_query(
             event!(Level::DEBUG, result = format!("Completed Query. Retrieved {} rows. Result: {:?}", rows.len().to_string(), serde_json::to_string_pretty(&rows)));
             Ok(rows)
         }
-        _ => Err(ErrorResponse::from_error(CalciteError { message: String::from("Invalid response from Calcite. Expected object.") }))
+        x => {
+            let err = CalciteError { message: format!("Invalid response from Calcite. Expected an object, but got: {:?}", x) };
+            Err(ErrorResponse::from_error(err))
+        }
+
     }
 }
 
