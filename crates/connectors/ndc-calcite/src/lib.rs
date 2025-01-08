@@ -88,8 +88,8 @@ pub mod calcite;
 pub mod capabilities;
 pub mod sql;
 pub mod query;
+pub mod error;
 
 pub mod connector {
     pub mod calcite;
 }
-

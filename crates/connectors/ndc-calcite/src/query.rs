@@ -37,7 +37,7 @@ pub struct QueryParams<'a> {
     pub coll_rel: &'a BTreeMap<RelationshipName, Relationship>,
     pub args: &'a BTreeMap<ArgumentName, RelationshipArgument>,
     pub query: &'a Query,
-    pub vars: &'a BTreeMap<VariableName, Value>,
+    pub vars: &'a Vec<BTreeMap<VariableName, Value>>,
     pub state: &'a CalciteState,
     pub explain: &'a bool,
 }
@@ -48,7 +48,6 @@ pub struct QueryParams<'a> {
 /// These components include the argument values, the SELECT clause, the ORDER BY clause,
 /// the pagination settings, the aggregates, the predicates, the final aggregates, and the join clause.
 pub struct QueryComponents {
-    pub argument_values: BTreeMap<ArgumentName, Value>,
     pub select: Option<String>,
     pub order_by: Option<String>,
     pub pagination: Option<String>,
@@ -101,38 +100,39 @@ pub struct QueryComponents {
 #[tracing::instrument(skip(query_params), level = Level::INFO)]
 pub fn orchestrate_query(
     query_params: QueryParams
-) -> Result<models::RowSet> {
-    let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.coll_rel, query_params.args, query_params.query, query_params.vars)?;
+) -> Result<Vec<models::RowSet>> {
+    let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.coll_rel, query_params.query, query_params.vars).map_err(ErrorResponse::from_error)?;
     let mut rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
     let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
     let query_fields = query_params.query.clone().fields.unwrap_or_default();
-    for (field_name, field_data) in &query_fields {
-        match &rows_data {
-            None => {}
-            Some(rows) => {
-                match field_data {
-                    Field::Column { .. } => {}
-                    Field::Relationship { query, relationship, arguments } => {
-                        let sub_relationship = query_params.coll_rel.get(relationship).unwrap();
-                        let (primary_keys, foreign_keys, relationship_type) = parse_relationship(sub_relationship)?;
-                        let relationship_value = generate_value_from_rows(rows, &sub_relationship)?;
-                        event!(Level::DEBUG, "Primary Keys: {:?}, Values: {:?}", primary_keys, relationship_value);
-                        let predicate_expression = generate_predicate(&primary_keys, relationship_value)?;
-                        event!(Level::DEBUG, "Predicate expression: {:?}", predicate_expression);
-                        let revised_query = revise_query(query.clone(), predicate_expression, &primary_keys)?;
-                        let res_relationship_rows = execute_query(query_params.clone(), arguments, &sub_relationship, &revised_query)?;
-                        if RelationshipType::Object == relationship_type {
-                            rows_data = process_object_relationship(rows_data.unwrap(), &field_name, &res_relationship_rows, &primary_keys, &foreign_keys)?
-                        } else {
-                            rows_data = process_array_relationship(rows_data, &field_name, &res_relationship_rows, &primary_keys, &foreign_keys, &query)?
-                        }
-                        event!(Level::DEBUG, "Result of relationship: {:?}", serde_json::to_string_pretty(&rows_data))
-                    }
-                }
-            }
-        }
-    }
-    return Ok(models::RowSet { aggregates: parsed_aggregates, rows: rows_data });
+    // for (field_name, field_data) in &query_fields {
+    //     match &rows_data {
+    //         None => {}
+    //         Some(rows) => {
+    //             match field_data {
+    //                 Field::Column { .. } => {}
+    //                 Field::Relationship { query, relationship, arguments } => {
+    //                     let sub_relationship = query_params.coll_rel.get(relationship).unwrap();
+    //                     let (primary_keys, foreign_keys, relationship_type) = parse_relationship(sub_relationship)?;
+    //                     let relationship_value = generate_value_from_rows(rows, &sub_relationship)?;
+    //                     event!(Level::DEBUG, "Primary Keys: {:?}, Values: {:?}", primary_keys, relationship_value);
+    //                     let predicate_expression = generate_predicate(&primary_keys, relationship_value)?;
+    //                     event!(Level::DEBUG, "Predicate expression: {:?}", predicate_expression);
+    //                     let revised_query = revise_query(query.clone(), predicate_expression, &primary_keys)?;
+    //                     let res_relationship_rows = execute_query(query_params.clone(), arguments, &sub_relationship, &revised_query)?;
+    //                     if RelationshipType::Object == relationship_type {
+    //                         rows_data = process_object_relationship(rows_data.unwrap(), &field_name, &res_relationship_rows, &primary_keys, &foreign_keys)?
+    //                     } else {
+    //                         rows_data = process_array_relationship(rows_data, &field_name, &res_relationship_rows, &primary_keys, &foreign_keys, &query)?
+    //                     }
+    //                     event!(Level::DEBUG, "Result of relationship: {:?}", serde_json::to_string_pretty(&rows_data))
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    return Ok(vec![models::RowSet { aggregates: parsed_aggregates, rows: rows_data }]); // FIXME: This is the whole point of this PR.
 }
 
 #[tracing::instrument(skip(rows_data, sub_relationship), level = Level::DEBUG)]
@@ -240,22 +240,22 @@ fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, 
     Ok(revised_query)
 }
 
-#[tracing::instrument(
-    skip(params, arguments, sub_relationship, revised_query), level = Level::INFO
-)]
-fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>> {
-    let fk_rows = orchestrate_query(QueryParams {
-        config: params.config,
-        coll: &sub_relationship.target_collection,
-        coll_rel: params.coll_rel,
-        args: arguments,
-        query: revised_query,
-        vars: params.vars,
-        state: params.state,
-        explain: params.explain,
-    })?;
-    Ok(fk_rows.rows.unwrap())
-}
+// #[tracing::instrument(
+//     skip(params, arguments, sub_relationship, revised_query), level = Level::INFO
+// )]
+// fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>> {
+//     let fk_rows = orchestrate_query(QueryParams {
+//         config: params.config,
+//         coll: &sub_relationship.target_collection,
+//         coll_rel: params.coll_rel,
+//         args: arguments,
+//         query: revised_query,
+//         vars: params.vars,
+//         state: params.state,
+//         explain: params.explain,
+//     })?;
+//     Ok(fk_rows.rows.unwrap())
+// }
 
 #[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks), level = Level::INFO)]
 fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>) -> Result<Option<Vec<Row>>> {
@@ -376,7 +376,6 @@ fn execute_query_collection(
     let q = sql::query_collection(
         params.config,
         params.coll,
-        &query_components.argument_values,
         Some(phrase.unwrap().to_string()),
         query_components.order_by.clone(),
         query_components.pagination.clone(),

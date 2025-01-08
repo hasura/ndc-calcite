@@ -3,44 +3,35 @@
 //! Creates the Calcite query statement for a single query.
 //!
 use std::collections::{BTreeMap, HashMap};
-use std::error::Error;
+use crate::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use ndc_models::{OrderByTarget, Aggregate, ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ExistsInCollection, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, UnaryComparisonOperator, VariableName};
 use ndc_sdk::connector::ErrorResponse;
 use serde_json::Value;
 use tracing::{event, Level};
-use ndc_sdk::connector::error::Result;
+
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_schema::calcite::TableMetadata;
 use crate::query::QueryComponents;
 
 const NOT_FOUND_MSG: &str = "Variable not found";
 
-#[derive(Debug)]
-struct VariableNotFoundError;
-impl Display for VariableNotFoundError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", NOT_FOUND_MSG)
-    }
-}
 
-impl Error for VariableNotFoundError {}
-
-#[tracing::instrument(skip(variables, argument), level=Level::DEBUG)]
-fn eval_argument(
-    variables: &BTreeMap<VariableName, Value>,
-    argument: &RelationshipArgument,
-) -> Result<Value> {
-    match argument {
-        RelationshipArgument::Variable { name } => variables
-            .get(name.as_str())
-            .ok_or(ErrorResponse::from_error(VariableNotFoundError))
-            .map(|val| val.clone()),
-        RelationshipArgument::Literal { value } => Ok(value.clone()),
-        RelationshipArgument::Column { .. } => { todo!() }
-    }
-}
+// #[tracing::instrument(skip(variables, argument), level=Level::DEBUG)]
+// fn eval_argument(
+//     variables: &BTreeMap<VariableName, Value>,
+//     argument: &RelationshipArgument,
+// ) -> Result<Value, Error> {
+//     match argument {
+//         RelationshipArgument::Variable { name } => variables
+//             .get(name.as_str())
+//             .ok_or(ErrorResponse::from_error(Error::VariableNotFound))
+//             .map(|val| val.clone()),
+//         RelationshipArgument::Literal { value } => Ok(value.clone()),
+//         RelationshipArgument::Column { .. } => { todo!() }
+//     }
+// }
 
 #[tracing::instrument(skip(supports_json_object, key, item, table), level=Level::DEBUG)]
 fn get_field_statement(supports_json_object: bool, key: &FieldName, item: &FieldName, table: &str) -> String {
@@ -61,18 +52,19 @@ fn get_field_statement(supports_json_object: bool, key: &FieldName, item: &Field
 ), level=Level::DEBUG)]
 fn select(
     configuration: &ParsedConfiguration,
-    _variables: &BTreeMap<VariableName, Value>,
+    _variables: &Vec<BTreeMap<VariableName, Value>>,
     collection: &CollectionName,
     query: &Query,
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
     _prepend: Option<String>,
-) -> (Vec<String>, Vec<String>) {
+) -> Result<(Vec<String>, Vec<String>), Error> {
     let mut field_statements: Vec<String> = vec![];
     let join_statements: Vec<String> = vec![];
 
     let fields = query.fields.clone().unwrap_or_default();
+    let metadata_map = configuration.clone().metadata.unwrap_or_default();
     let table = create_qualified_table_name(
-        configuration.clone().metadata.unwrap().get(collection).unwrap()
+        metadata_map.get(collection).ok_or(Error::CollectionNotFound(collection.clone()))?
     );
 
     let supports_json_object = configuration.supports_json_object.unwrap_or_else(|| false);
@@ -112,7 +104,7 @@ fn select(
             }
         }
     }
-    (field_statements, join_statements)
+    Ok((field_statements,join_statements))
 }
 #[tracing::instrument(skip(query), level=Level::DEBUG)]
 fn order_by(query: &Query) -> Vec<String> {
@@ -145,7 +137,7 @@ fn order_by(query: &Query) -> Vec<String> {
 }
 
 #[tracing::instrument(skip(query), level=Level::DEBUG)]
-fn pagination(query: &Query) -> Result<Vec<String>> {
+fn pagination(query: &Query) -> Result<Vec<String>, Error> {
     let mut pagination_statements: Vec<String> = Vec::new();
     if query.limit.is_some() {
         pagination_statements.push(format!(" LIMIT {}", query.limit.unwrap()));
@@ -216,10 +208,15 @@ fn predicates(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
-    variables: &BTreeMap<VariableName, Value>,
+    variables: &Vec<BTreeMap<VariableName, Value>>,
     query: &Query,
-) -> Result<String> {
-    process_expression_option(configuration, collection, collection_relationships, variables, query.clone().predicate)
+) -> Result<String, Error> {
+    if let Some(predicate) = &query.predicate {
+        process_expression(configuration, collection, collection_relationships, variables, predicate)
+    } else {
+        Ok("".into())
+    }
+
 }
 
 #[tracing::instrument(skip(
@@ -229,17 +226,14 @@ fn predicates(
     variables,
     predicate
 ), level=Level::DEBUG)]
-fn process_expression_option(
+fn process_expression(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
-    variables: &BTreeMap<VariableName, Value>,
-    predicate: Option<Expression>,
-) -> Result<String> {
-    match predicate {
-        None => Ok("".into()),
-        Some(expr) => process_sql_expression(configuration, collection, collection_relationships, variables, &expr),
-    }
+    variables: &Vec<BTreeMap<VariableName, Value>>,
+    predicate: &Expression,
+) -> Result<String, Error> {
+    process_sql_expression(configuration, collection, collection_relationships, variables, predicate)
 }
 
 #[tracing::instrument(skip(input), level=Level::DEBUG)]
@@ -258,6 +252,8 @@ fn sql_quotes(input: &str) -> String {
     input.replace("'", "\\'").replace("\"", "__UTF8__")
 }
 
+
+
 #[tracing::instrument(skip(
     configuration,
     collection,
@@ -269,11 +265,14 @@ fn process_sql_expression(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
     collection_relationships: &BTreeMap<RelationshipName, Relationship>,
-    variables: &BTreeMap<VariableName, Value>,
+    variables: &Vec<BTreeMap<VariableName, Value>>,
     expr: &Expression,
-) -> Result<String> {
+) -> Result<String, crate::error::Error> {
+
+    let metadata_map = configuration.clone().metadata.unwrap_or_default();
+    let collection_metadata = metadata_map.get(collection).ok_or(crate::error::Error::CollectionNotFound(collection.clone()))?;
     let table = create_qualified_table_name(
-        configuration.clone().metadata.unwrap().get(collection).unwrap()
+        &collection_metadata
     );
     let operation_tuples: Vec<(ComparisonOperatorName, String)> = vec![
         ("_gt".into(), ">".into()),
@@ -353,70 +352,61 @@ fn process_sql_expression(
                         );
                         format!("(SELECT {} FROM {} WHERE FALSE)", left_side, table)
                     } else {
-                        // left this here - just in case we want to differentiate at some point
-                        if value.is_string() {
-                            sql_value
-                        } else if value.is_number() {
-                            sql_value
-                        } else if value.is_object() {
-                            sql_value
-                        } else if value.is_array() {
-                            sql_value
-                        } else {
-                            sql_value
-                        }
+                        sql_value
+
                     }
                 }
-                ComparisonValue::Variable { name } => variables.get(name).unwrap().to_string(),
+                ComparisonValue::Variable { name } => format!("vars.__phantom__var__{}", name),
             };
             Ok(format!("{} {} {}", left_side, sql_operation, right_side))
         }
         Expression::Exists { in_collection, predicate } => {
-            match in_collection {
-                ExistsInCollection::Related { arguments, relationship } => {
-                    let argument_parts = create_arguments(variables, arguments);
-                    let root_relationship = collection_relationships.get(relationship).unwrap();
-                    let foreign_table = create_qualified_table_name(
-                        configuration.clone().metadata.unwrap().get(&root_relationship.target_collection).unwrap()
-                    );
-                    if let Some(pred_expression) = predicate {
-                        let sub_query_clause: Vec<String> = root_relationship
-                            .column_mapping
-                            .iter()
-                            .map(|(source_column, target_column)| format!("{}.\"{}\" = \"{}\"", table, source_column, target_column))
-                            .collect();
-                        let expression = process_sql_expression(
-                            configuration,
-                            collection,
-                            collection_relationships,
-                            variables,
-                            pred_expression,
-                        ).unwrap();
-                        Ok(format!(
-                            "EXISTS (SELECT 1 FROM {} WHERE ({} AND {}) {})",
-                            foreign_table, sub_query_clause.join(" AND "),
-                            expression, argument_parts.join(" ")
-                        ))
-                    } else {
-                        Ok("".into())
-                    }
-                }
-                ExistsInCollection::Unrelated { collection, arguments } => {
-                    if let Some(pred_expression) = predicate {
-                        let argument_parts = create_arguments(variables, arguments);
-                        let expression = process_sql_expression(configuration, collection, collection_relationships, variables, pred_expression).unwrap();
-                        let foreign_table = create_qualified_table_name(
-                            configuration.clone().metadata.unwrap().get(collection).unwrap()
-                        );
-                        Ok(format!("EXISTS (SELECT 1 FROM {} WHERE {} {})", foreign_table, expression, argument_parts.join(" ")))
-                    } else {
-                        Ok("".into())
-                    }
-                }
-                ExistsInCollection::NestedCollection { .. } => {
-                    Ok("".into())
-                }
-            }
+            // match in_collection {
+            //     ExistsInCollection::Related { arguments, relationship } => {
+            //         let argument_parts = create_arguments(variables, arguments);
+            //         let root_relationship = collection_relationships.get(relationship).unwrap();
+            //         let foreign_table = create_qualified_table_name(
+            //             configuration.clone().metadata.unwrap().get(&root_relationship.target_collection).unwrap()
+            //         );
+            //         if let Some(pred_expression) = predicate {
+            //             let sub_query_clause: Vec<String> = root_relationship
+            //                 .column_mapping
+            //                 .iter()
+            //                 .map(|(source_column, target_column)| format!("{}.\"{}\" = \"{}\"", table, source_column, target_column))
+            //                 .collect();
+            //             let expression = process_sql_expression(
+            //                 configuration,
+            //                 collection,
+            //                 collection_relationships,
+            //                 variables,
+            //                 pred_expression,
+            //             ).unwrap();
+            //             Ok(format!(
+            //                 "EXISTS (SELECT 1 FROM {} WHERE ({} AND {}) {})",
+            //                 foreign_table, sub_query_clause.join(" AND "),
+            //                 expression, argument_parts.join(" ")
+            //             ))
+            //         } else {
+            //             Ok("".into())
+            //         }
+            //     }
+            //     ExistsInCollection::Unrelated { collection, arguments } => {
+            //         if let Some(pred_expression) = predicate {
+            //             let argument_parts = create_arguments(variables, arguments);
+            //             let expression = process_sql_expression(configuration, collection, collection_relationships, variables, pred_expression).unwrap();
+            //             let foreign_table = create_qualified_table_name(
+            //                 configuration.clone().metadata.unwrap().get(collection).unwrap()
+            //             );
+            //             Ok(format!("EXISTS (SELECT 1 FROM {} WHERE {} {})", foreign_table, expression, argument_parts.join(" ")))
+            //         } else {
+            //             Ok("".into())
+            //         }
+            //     }
+            //     ExistsInCollection::NestedCollection { .. } => {
+            //         Ok("".into())
+            //     }
+            // }
+            todo!()
         }
     }
 }
@@ -454,11 +444,10 @@ fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
     path.join(".")
 }
 
-#[tracing::instrument(skip(configuration,_arguments),level=Level::INFO)]
+#[tracing::instrument(skip(configuration),level=Level::INFO)]
 pub fn query_collection(
     configuration: &ParsedConfiguration,
     collection_name: &CollectionName,
-    _arguments: &BTreeMap<ArgumentName, Value>,
     select: Option<String>,
     order_by: Option<String>,
     pagination: Option<String>,
@@ -543,40 +532,24 @@ pub fn query_collection(
     configuration,
     collection,
     collection_relationships,
-    arguments,
     query,
     variables
 ), level=Level::DEBUG)]
-pub fn parse_query<'a>(configuration: &'a ParsedConfiguration, collection: &'a CollectionName, collection_relationships: &'a BTreeMap<RelationshipName, Relationship>, arguments: &'a BTreeMap<ArgumentName, RelationshipArgument>, query: &'a Query, variables: &'a BTreeMap<VariableName, Value>) -> Result<QueryComponents> {
-    let mut argument_values = BTreeMap::new();
-    for (argument_name, argument_value) in arguments {
-        if argument_values
-            .insert(
-                argument_name.clone(),
-                eval_argument(variables, argument_value)?,
-            )
-            .is_some()
-        {
-            return Err(ErrorResponse::new(http::StatusCode::from_u16(500).unwrap(), format!(
-                    "Duplicate argument: {}",
-                    argument_name
-                ),
-                Value::String(argument_name.to_string())));
-        }
-    }
-    let (select_clause, join_clause) = select(configuration, variables, collection, query, collection_relationships, None);
+pub fn parse_query<'a>(
+    configuration: &'a ParsedConfiguration,
+    collection: &'a CollectionName,
+    collection_relationships: &'a BTreeMap<RelationshipName, Relationship>,
+    query: &'a Query,
+    variables: &'a Vec<BTreeMap<VariableName, Value>>
+) -> Result<QueryComponents, Error> {
+    let (select_clause, join_clause) = select(configuration, variables, collection, query, collection_relationships, None)?;
     let select = Some(select_clause.join(","));
     let join = Some(join_clause.join(" "));
     let order_by = Some(order_by(query).join(", "));
     let pagination = Some(pagination(query).unwrap().join(" "));
     let aggregates = Some(aggregates(configuration, query).join(", "));
-    let predicates = predicates(&configuration, collection, collection_relationships, variables, query);
-    let predicates: Option<String> = match predicates {
-        Ok(p) => Some(p),
-        Err(e) => {
-            return Err(ErrorResponse::from_error(e));
-        }
-    };
+    let predicates = predicates(&configuration, collection, collection_relationships, variables, query)?;
+
     let final_aggregates = aggregates.clone().unwrap_or_default();
-    Ok(QueryComponents { argument_values, select, order_by, pagination, aggregates, predicates, final_aggregates, join })
+    Ok(QueryComponents { select, order_by, pagination, aggregates, predicates: Some(predicates), final_aggregates, join })
 }

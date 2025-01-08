@@ -45,10 +45,10 @@ fn execute_query_with_variables(
     args: &BTreeMap<ArgumentName, models::RelationshipArgument>,
     coll_rel: &BTreeMap<RelationshipName, Relationship>,
     query: &models::Query,
-    vars: &BTreeMap<VariableName, Value>,
+    vars: &Vec<BTreeMap<VariableName, Value>>,
     state: &CalciteState,
     explain: &bool
-) -> Result<models::RowSet> {
+) -> Result<Vec<models::RowSet>> {
     query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state, explain})
 }
 
@@ -186,7 +186,7 @@ impl Connector for Calcite {
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::ExplainResponse>> {
         let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
-        let mut map: BTreeMap<String, String> = BTreeMap::new();
+        let mut details: BTreeMap<String, String> = BTreeMap::new();
         let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
         let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
             input_map.iter()
@@ -194,40 +194,40 @@ impl Connector for Calcite {
                 (key.clone(), convert_to_relationship_argument(value))
                 )
                 .collect();
-        for variables in &variable_sets {
-            let row_set = execute_query_with_variables(
-                configuration,
-                &request.collection,
-                &relationship_arguments,
-                &request.collection_relationships,
-                &request.query,
-                variables,
-                &state,
-                &true
-            ).map_err(|error| ErrorResponse::from_error(error))?;
-            match row_set.aggregates {
-                None => {}
-                Some(map_index) => {
-                    let map_btree: BTreeMap<String, String> = map_index.iter()
-                        .map(|(key, value)| (key.clone().to_string(), value.to_string()))
-                        .collect();
-                    map.extend(map_btree);
-                }
-            };
-            match row_set.rows {
-                None => {}
-                Some(r) => {
-                    for map_index in r {
-                        let map_btree: BTreeMap<String, String> = map_index.iter()
-                            .map(|(key, value)| (key.clone().to_string(), value.0.to_string()))
-                            .collect();
-                        map.extend(map_btree);
-                    }
-                }
-            }
-        }
+        // for variables in &variable_sets {
+        //     let row_set = execute_query_with_variables(
+        //         configuration,
+        //         &request.collection,
+        //         &relationship_arguments,
+        //         &request.collection_relationships,
+        //         &request.query,
+        //         variables,
+        //         &state,
+        //         &true
+        //     ).map_err(|error| ErrorResponse::from_error(error))?;
+        //     match row_set.aggregates {
+        //         None => {}
+        //         Some(map_index) => {
+        //             let map_btree: BTreeMap<String, String> = map_index.iter()
+        //                 .map(|(key, value)| (key.clone().to_string(), value.to_string()))
+        //                 .collect();
+        //             details.extend(map_btree);
+        //         }
+        //     };
+        //     match row_set.rows {
+        //         None => {}
+        //         Some(r) => {
+        //             for map_index in r {
+        //                 let map_btree: BTreeMap<String, String> = map_index.iter()
+        //                     .map(|(key, value)| (key.clone().to_string(), value.0.to_string()))
+        //                     .collect();
+        //                 details.extend(map_btree);
+        //             }
+        //         }
+        //     }
+        // }
         let explain_response = models::ExplainResponse {
-            details: map,
+            details,
         };
         Ok(JsonResponse::from(explain_response))
     }
@@ -254,7 +254,7 @@ impl Connector for Calcite {
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::QueryResponse>> {
         let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
-        let mut row_sets = vec![];
+
         let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
         let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
             input_map.iter()
@@ -264,32 +264,29 @@ impl Connector for Calcite {
                 (key.clone(), convert_to_relationship_argument(value))
                 )
                 .collect();
-        for variables in &variable_sets {
-            let row_set = match execute_query_with_variables(
-                configuration,
-                &request.collection,
-                &relationship_arguments,
-                &request.collection_relationships,
-                &request.query,
-                variables,
-                &state,
-                &false
-            ) {
-                Ok(row_set) => {
-                    event!(Level::INFO, result = "execute_query_with_variables was successful");
-                    row_set
-                },
-                Err(e) => {
-                    event!(Level::ERROR, "Error executing query: {:?}", e);
-                    return Err(e.into());
-                },
-            };
-            // println!("Get row set");
-            // println!("{:?}", serde_json::to_string_pretty(&row_set));
-            row_sets.push(row_set);
-            // println!("Pushed row set");
-        }
-        // println!("Returning row sets");
+
+        let row_sets = match execute_query_with_variables(
+            configuration,
+            &request.collection,
+            &relationship_arguments,
+            &request.collection_relationships,
+            &request.query,
+            &variable_sets,
+            &state,
+            &false
+        ) {
+            Ok(row_set) => {
+                event!(Level::INFO, result = "execute_query_with_variables was successful");
+                row_set
+            },
+            Err(e) => {
+                event!(Level::ERROR, "Error executing query: {:?}", e);
+                return Err(e.into());
+            },
+        };
+
+
+
         Ok(models::QueryResponse(row_sets).into())
     }
 }
