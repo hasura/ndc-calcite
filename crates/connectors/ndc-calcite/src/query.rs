@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use http::StatusCode;
 use indexmap::IndexMap;
+use models::RowSet;
 use ndc_models::{ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, RelationshipType, RowFieldValue, VariableName};
 use ndc_sdk::connector::error::Result;
 use ndc_models as models;
@@ -133,9 +134,46 @@ pub fn orchestrate_query(
     //     }
     // }
 
+    if !query_params.vars.is_empty() {
+        return Ok(group_rows_by_variables(rows_data.unwrap(), query_params.vars));
+    }
 
-    return Ok(vec![models::RowSet { aggregates: parsed_aggregates, rows: rows_data }]); // FIXME: This is the whole point of this PR.
+    return Ok(vec![models::RowSet { aggregates: parsed_aggregates, rows: rows_data }]);
 }
+
+fn group_rows_by_variables(
+    rows: Vec<IndexMap<FieldName, RowFieldValue>>,
+    variables: &Vec<BTreeMap<VariableName, Value>>
+) -> Vec<RowSet> {
+    // Pre-create result vector with empty RowSets for each variable
+    let mut result = Vec::new();
+
+    // Create one RowSet for each variable with empty rows
+    for _ in variables {
+        result.push(RowSet {
+            aggregates: None,
+            rows: Some(Vec::new()),
+        });
+    }
+
+    // Group rows by var_set_index
+    for row in rows {
+        if let Some(&RowFieldValue(Value::Number(ref index))) = row.get("__var_set_index") {
+            if let Some(index) = index.as_i64() {
+                if let Some(rowset) = result.get_mut(index as usize) {
+                    if let Some(ref mut group_rows) = rowset.rows {
+                        let mut clean_row = row.clone();
+                        clean_row.swap_remove("__var_set_index");
+                        group_rows.push(clean_row);
+                    }
+                }
+            }
+        }
+    }
+
+    result
+}
+
 
 #[tracing::instrument(skip(rows_data, sub_relationship), level = Level::DEBUG)]
 fn generate_value_from_rows(rows_data: &Vec<Row>, sub_relationship: &Relationship) -> Result<Value> {

@@ -60,7 +60,6 @@ pub(crate) struct VariablesCTE {
 }
 
 fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option<VariablesCTE>, Error> {
-
     if vars.is_empty() {
         return Ok(None);
     }
@@ -72,14 +71,20 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option
             columns.insert(name.to_string());
         }
     }
+    // Add the index column name
+    columns.insert("__var_set_index".to_string());
     let columns: Vec<String> = columns.into_iter().collect();
 
     let mut cte = String::from("WITH \"hasura_cte_vars\" AS (\n");
 
     let mut selects = Vec::new();
 
-    for row in vars {
+    // Iterate with enumeration to get the index
+    for (idx, row) in vars.iter().enumerate() {
         let mut pairs = Vec::new();
+        // Add the index column
+        pairs.push(format!("{} AS \"__var_set_index\"", idx));
+
         for (name, value) in row {
             let sql_value = value_to_sql(name, value)?;
             pairs.push(format!("{} AS \"{}\"", sql_value, name));
@@ -122,11 +127,8 @@ fn select(
 
     let variables_cte = generate_cte_vars(variables)?;
 
-    if let Some(variable_cols) = variables_cte.as_ref() {
-        for col in &variable_cols.columns {
-            field_statements.push(format!("\"{}\" AS \"__phantom_vars__{}\" ", col, col));
-
-        }
+    if variables_cte.is_some() {
+        field_statements.push("hasura_cte_vars.__var_set_index".to_string());
     }
 
     for (key, field) in fields {
