@@ -25,7 +25,8 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
-
+import java.io.StringWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.sql.*;
@@ -551,12 +552,34 @@ public class CalciteQuery {
                 return result;
             }
         } catch (Throwable e) {
-            span.setStatus(StatusCode.ERROR);
-            span.setAttribute("Error", e.toString());
-            return "{\"error\":\"" + e + "\"}";
-        } finally {
-            span.end();
-        }
+             span.setStatus(StatusCode.ERROR);
+
+             // Create a more structured error response
+             String errorMessage = e.getMessage();
+             String errorType = e.getClass().getSimpleName();
+
+             // Add detailed error information to span attributes
+             span.setAttribute("error.type", errorType);
+             span.setAttribute("error.message", errorMessage);
+
+             // Create a JSON error response
+             Map<String, String> errorResponse = new LinkedHashMap<>();
+             errorResponse.put("error_type", errorType);
+             errorResponse.put("error_message", errorMessage);
+
+             // If there's a cause, include it
+             if (e.getCause() != null) {
+                 String causeMessage = e.getCause().getMessage();
+                 errorResponse.put("cause", causeMessage);
+                 span.setAttribute("error.cause", causeMessage);
+             }
+
+             Gson gson = new GsonBuilder().setPrettyPrinting().create();
+             return gson.toJson(errorResponse);
+    } finally {
+        span.end();
+    }
+
     }
 
     public String queryPlanModels(String query, String parentTraceId, String parentSpanId) {

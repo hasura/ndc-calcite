@@ -17,6 +17,7 @@ use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 use ndc_sdk::connector::error::Result;
+use serde::Deserialize;
 
 use ndc_calcite_schema::jvm::get_jvm;
 use ndc_calcite_schema::version5::create_jvm_connection;
@@ -72,6 +73,21 @@ fn parse_to_row(data: Vec<String>) -> Result<Vec<Row>> {
         rows.push(row);
     }
     Ok(rows)
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CalciteErrorResponse {
+    pub error_type: String,
+    pub error_message: String,
+    #[serde(default)]  // Makes cause optional
+    pub cause: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+enum CalciteResponse {
+    CRSuccess(Vec<Row>),
+    CRError(CalciteErrorResponse),
 }
 
 /// Executes a query using the Calcite Java library.
@@ -162,8 +178,19 @@ pub fn connector_query(
                 Ok(json_rows) => {
                     parse_to_row(json_rows)?
                 },
-                Err(_) => match serde_json::from_str::<Vec<Row>>(&json_string) {
-                    Ok(vec) => vec,
+                Err(_) => match serde_json::from_str::<CalciteResponse>(&json_string) {
+                    Ok(vec) => match vec {
+                        CalciteResponse::CRSuccess(rows) => rows,
+                        CalciteResponse::CRError(err) => {
+                            let err_msg = if let Some(cause) = err.cause {
+                                format!("{} {}", err.error_message, cause)
+                            } else {
+                                err.error_message
+                            };
+                            let err = CalciteError { message: format!("Failed to execute query in calcite: {}", err_msg) };
+                            return Err(ErrorResponse::from_error(err));
+                        }
+                    }
                     Err(error) => {
                         let err = CalciteError { message: format!("Failed to deserialize JSON {} with error: {error}", json_string) };
                         return Err(ErrorResponse::from_error(err));
