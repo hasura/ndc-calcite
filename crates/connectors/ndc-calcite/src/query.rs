@@ -107,6 +107,7 @@ pub fn orchestrate_query(
     let rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
     let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
 
+    // TODO: Remove this if block once we support aggregates with variables
     if !query_params.vars.is_empty() {
         return Ok(group_rows_by_variables(rows_data.unwrap(), query_params.vars));
     }

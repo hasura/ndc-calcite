@@ -102,14 +102,12 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option
 #[tracing::instrument(skip(
      variables,
     query,
-     _prepend
 ), level=Level::DEBUG)]
 fn select(
      variables: &Vec<BTreeMap<VariableName, Value>>,
     table: &QualifiedTable,
     query: &Query,
      does_supports_json_object: bool,
-    _prepend: Option<String>,
 ) -> Result<(Vec<String>, Option<VariablesCTE>), Error> {
     let mut field_statements: Vec<String> = vec![];
 
@@ -594,7 +592,7 @@ pub fn parse_query<'a>(
     let current_table = metadata_map.get(collection).ok_or(Error::CollectionNotFound(collection.clone()))?;
     let qualified_table = create_qualified_table_name(current_table);
     let predicates = predicates(&configuration, collection, variables, query)?;
-    let (select_clause, vars_cte) = select(variables, &qualified_table, query, configuration.supports_json_object.unwrap_or_default(), None)?;
+    let (select_clause, vars_cte) = select(variables, &qualified_table, query, configuration.supports_json_object.unwrap_or_default())?;
     let join_clause = if vars_cte.is_some() {
         Some(format!("CROSS JOIN \"hasura_cte_vars\""))
     } else {
