@@ -194,7 +194,7 @@ fn create_column_name(_calcite_configuration: &ParsedConfiguration, name: &Field
 
 #[tracing::instrument(skip(name, aggregate_expr, configuration), level=Level::DEBUG)]
 fn generate_aggregate_statement(name: &FieldName, aggregate_expr: String, configuration: &ParsedConfiguration) -> String {
-    if configuration.supports_json_object.unwrap_or_else(|| false) {
+    if configuration.supports_json_object {
         format!("'{}', {}", name, aggregate_expr)
     } else {
         format!("{} AS \"{}\"", aggregate_expr, name)
@@ -204,7 +204,7 @@ fn generate_aggregate_statement(name: &FieldName, aggregate_expr: String, config
 #[tracing::instrument(skip(configuration, column, field_path), level=Level::DEBUG)]
 fn aggregate_column_name(configuration: &ParsedConfiguration, column: &FieldName, field_path: &Option<Vec<FieldName>>) -> String {
     let column_name = create_column_name(configuration, column, field_path);
-     if configuration.supports_json_object.unwrap_or_else(|| false) {
+     if configuration.supports_json_object {
         format!("\"{}\"", column_name)
      } else {
          column_name
@@ -506,7 +506,7 @@ pub fn generate_fields_query(
         None => "".into(),
         Some(select) => {
             if select.is_empty() {
-                if configuration.supports_json_object.unwrap_or_else(|| false) {
+                if configuration.supports_json_object {
                     "'CONSTANT', 1".into()
                 } else {
                     "1 AS \"CONSTANT\"".into()
@@ -559,7 +559,7 @@ pub fn generate_fields_query(
         configuration.clone().metadata.unwrap().get(collection_name).unwrap()
     );
 
-    if configuration.supports_json_object.unwrap_or_else(|| false) {
+    if configuration.supports_json_object {
         let query = format!(
             "SELECT JSON_OBJECT({}) FROM {}{}{}{}{}",
             select_clause, table, join, expanded_where_clause, order_by_clause, pagination_clause
@@ -592,7 +592,7 @@ pub fn parse_query<'a>(
     let current_table = metadata_map.get(collection).ok_or(Error::CollectionNotFound(collection.clone()))?;
     let qualified_table = create_qualified_table_name(current_table);
     let predicates = predicates(&configuration, collection, variables, query)?;
-    let (select_clause, vars_cte) = select(variables, &qualified_table, query, configuration.supports_json_object.unwrap_or_default())?;
+    let (select_clause, vars_cte) = select(variables, &qualified_table, query, configuration.supports_json_object)?;
     let join_clause = if vars_cte.is_some() {
         Some(format!("CROSS JOIN \"hasura_cte_vars\""))
     } else {
