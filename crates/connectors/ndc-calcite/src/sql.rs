@@ -501,7 +501,7 @@ fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
 }
 
 #[tracing::instrument(skip(configuration),level=Level::INFO)]
-pub fn query_collection(
+pub fn generate_fields_query(
     configuration: &ParsedConfiguration,
     collection_name: &CollectionName,
     with: Option<String>,

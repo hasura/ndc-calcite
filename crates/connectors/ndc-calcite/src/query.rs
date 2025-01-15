@@ -104,7 +104,7 @@ pub fn orchestrate_query(
     query_params: QueryParams
 ) -> Result<Vec<models::RowSet>> {
     let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.coll_rel, query_params.query, query_params.vars).map_err(ErrorResponse::from_error)?;
-    let mut rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
+    let rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
     let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
     let query_fields = query_params.query.clone().fields.unwrap_or_default();
     // for (field_name, field_data) in &query_fields {
@@ -413,7 +413,7 @@ fn execute_query_collection(
         }
     }
 
-    let q = sql::query_collection(
+    let q = sql::generate_fields_query(
         params.config,
         params.coll,
         query_components.variables_cte.as_ref().map(|cte| cte.query.clone()),

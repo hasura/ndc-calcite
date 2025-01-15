@@ -32,7 +32,7 @@ public class DatabricksConnector {
 
             // Prepare SQLLine arguments
             String[] sqllineArgs = new String[] {
-                "-u", "jdbc:calcite:model=" + tempModelFile.getAbsolutePath(),
+                "-u", "jdbc:calcite:model=" + tempModelFile.getAbsolutePath() + ";conformance=LENIENT",
                 "-n", "token",
                 "-p", accessToken,
                 "-d", "com.databricks.client.jdbc.Driver",
