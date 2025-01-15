@@ -103,36 +103,9 @@ pub struct QueryComponents {
 pub fn orchestrate_query(
     query_params: QueryParams
 ) -> Result<Vec<models::RowSet>> {
-    let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.coll_rel, query_params.query, query_params.vars).map_err(ErrorResponse::from_error)?;
+    let query_components = sql::parse_query(&query_params.config, query_params.coll, query_params.query, query_params.vars).map_err(ErrorResponse::from_error)?;
     let rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
     let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
-    let query_fields = query_params.query.clone().fields.unwrap_or_default();
-    // for (field_name, field_data) in &query_fields {
-    //     match &rows_data {
-    //         None => {}
-    //         Some(rows) => {
-    //             match field_data {
-    //                 Field::Column { .. } => {}
-    //                 Field::Relationship { query, relationship, arguments } => {
-    //                     let sub_relationship = query_params.coll_rel.get(relationship).unwrap();
-    //                     let (primary_keys, foreign_keys, relationship_type) = parse_relationship(sub_relationship)?;
-    //                     let relationship_value = generate_value_from_rows(rows, &sub_relationship)?;
-    //                     event!(Level::DEBUG, "Primary Keys: {:?}, Values: {:?}", primary_keys, relationship_value);
-    //                     let predicate_expression = generate_predicate(&primary_keys, relationship_value)?;
-    //                     event!(Level::DEBUG, "Predicate expression: {:?}", predicate_expression);
-    //                     let revised_query = revise_query(query.clone(), predicate_expression, &primary_keys)?;
-    //                     let res_relationship_rows = execute_query(query_params.clone(), arguments, &sub_relationship, &revised_query)?;
-    //                     if RelationshipType::Object == relationship_type {
-    //                         rows_data = process_object_relationship(rows_data.unwrap(), &field_name, &res_relationship_rows, &primary_keys, &foreign_keys)?
-    //                     } else {
-    //                         rows_data = process_array_relationship(rows_data, &field_name, &res_relationship_rows, &primary_keys, &foreign_keys, &query)?
-    //                     }
-    //                     event!(Level::DEBUG, "Result of relationship: {:?}", serde_json::to_string_pretty(&rows_data))
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
 
     if !query_params.vars.is_empty() {
         return Ok(group_rows_by_variables(rows_data.unwrap(), query_params.vars));

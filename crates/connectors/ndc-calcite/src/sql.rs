@@ -100,30 +100,20 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option
 
 
 #[tracing::instrument(skip(
-    configuration,
-    variables,
-    collection,
+     variables,
     query,
-    collection_relationships,
-    _prepend
+     _prepend
 ), level=Level::DEBUG)]
 fn select(
-    configuration: &ParsedConfiguration,
-    variables: &Vec<BTreeMap<VariableName, Value>>,
-    collection: &CollectionName,
+     variables: &Vec<BTreeMap<VariableName, Value>>,
+    table: &QualifiedTable,
     query: &Query,
-    collection_relationships: &BTreeMap<RelationshipName, Relationship>,
+     does_supports_json_object: bool,
     _prepend: Option<String>,
 ) -> Result<(Vec<String>, Option<VariablesCTE>), Error> {
     let mut field_statements: Vec<String> = vec![];
 
     let fields = query.fields.clone().unwrap_or_default();
-    let metadata_map = configuration.clone().metadata.unwrap_or_default();
-    let table = create_qualified_table_name(
-        metadata_map.get(collection).ok_or(Error::CollectionNotFound(collection.clone()))?
-    );
-
-    let supports_json_object = configuration.supports_json_object.unwrap_or_else(|| false);
 
     let variables_cte = generate_cte_vars(variables)?;
 
@@ -134,35 +124,13 @@ fn select(
     for (key, field) in fields {
         match field {
             Field::Column { column, .. } => {
-                let field_statement = get_field_statement(supports_json_object, &key, &column, &table.to_string());
+                let field_statement = get_field_statement(does_supports_json_object, &key, &column, &table.to_string());
                 if !field_statements.contains(&field_statement) {
                     field_statements.push(field_statement);
                 }
             }
-            Field::Relationship { relationship,  .. } => {
-                if supports_json_object {
-                    field_statements.push( format!("'{}', 1", key));
-                } else {
-                    field_statements.push( format!("1 AS \"{}\"", key));
-                }
-                match collection_relationships.get(&relationship) {
-                    None => {}
-                    Some(r) => {
-                        for (pk, _) in &r.column_mapping {
-                            if configuration.supports_json_object.unwrap_or_else(|| false) {
-                                let field_statement = format!("'{}', {}.\"{}\"", pk, table, pk, );
-                                if !field_statements.contains(&field_statement) {
-                                    field_statements.push(field_statement);
-                                }
-                            } else {
-                                let field_statement = format!("{}.\"{}\"", table, pk, );
-                                if !field_statements.contains(&field_statement) {
-                                    field_statements.push(field_statement);
-                                }
-                            }
-                        }
-                    }
-                }
+            Field::Relationship { .. } => {
+                return Err(Error::RelationshipsAreNotSupported);
             }
         }
     }
@@ -484,6 +452,7 @@ fn create_arguments(variables: &BTreeMap<VariableName, Value>, arguments: &BTree
     arguments
 }
 
+#[derive(Debug)]
 pub struct QualifiedTable(String);
 
 impl Display for QualifiedTable {
@@ -612,21 +581,20 @@ pub fn generate_fields_query(
 #[tracing::instrument(skip(
     configuration,
     collection,
-    collection_relationships,
     query,
     variables
 ), level=Level::DEBUG)]
 pub fn parse_query<'a>(
     configuration: &'a ParsedConfiguration,
     collection: &'a CollectionName,
-    collection_relationships: &'a BTreeMap<RelationshipName, Relationship>,
     query: &'a Query,
     variables: &'a Vec<BTreeMap<VariableName, Value>>
 ) -> Result<QueryComponents, Error> {
     let metadata_map = configuration.clone().metadata.unwrap_or_default();
     let current_table = metadata_map.get(collection).ok_or(Error::CollectionNotFound(collection.clone()))?;
+    let qualified_table = create_qualified_table_name(current_table);
     let predicates = predicates(&configuration, collection, variables, query)?;
-    let (select_clause, vars_cte) = select(configuration, variables, collection, query, collection_relationships, None)?;
+    let (select_clause, vars_cte) = select(variables, &qualified_table, query, configuration.supports_json_object.unwrap_or_default(), None)?;
     let join_clause = if vars_cte.is_some() {
         Some(format!("CROSS JOIN \"hasura_cte_vars\""))
     } else {

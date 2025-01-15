@@ -10,4 +10,6 @@ pub(crate) enum Error {
     UnsupportedVariableObjectValue(VariableName),
     #[error("Variable {0} is an array and only scalar values are supported as variable values")]
     UnsupportedVariableArrayValue(VariableName),
+    #[error("Local relationships are not yet supported")]
+    RelationshipsAreNotSupported,
 }
