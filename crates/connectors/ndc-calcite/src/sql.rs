@@ -134,7 +134,7 @@ fn select(
     for (key, field) in fields {
         match field {
             Field::Column { column, .. } => {
-                let field_statement = get_field_statement(supports_json_object, &key, &column, &table);
+                let field_statement = get_field_statement(supports_json_object, &key, &column, &table.to_string());
                 if !field_statements.contains(&field_statement) {
                     field_statements.push(field_statement);
                 }
@@ -484,20 +484,32 @@ fn create_arguments(variables: &BTreeMap<VariableName, Value>, arguments: &BTree
     arguments
 }
 
+pub struct QualifiedTable(String);
+
+impl Display for QualifiedTable {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[tracing::instrument(skip(table_metadata), level=Level::DEBUG)]
-fn create_qualified_table_name(table_metadata: &TableMetadata) -> String {
+fn create_qualified_table_name(table_metadata: &TableMetadata) -> QualifiedTable {
     let mut path: Vec<String> = Vec::new();
-    let catalog = table_metadata.clone().catalog.unwrap_or_default();
-    let schema = table_metadata.clone().schema.unwrap_or_default();
-    let name = table_metadata.clone().name;
-    if !catalog.is_empty() {
-        path.push(format!("\"{}\"", catalog));
+
+    if let Some(catalog) = &table_metadata.catalog {
+        if !catalog.is_empty() {
+            path.push(format!("\"{}\"", catalog));
+        }
     }
-    if !schema.is_empty() {
-        path.push(format!("\"{}\"", schema));
+
+    if let Some(schema) = &table_metadata.schema {
+        if !schema.is_empty() {
+            path.push(format!("\"{}\"", schema));
+        }
     }
-    path.push(format!("\"{}\"", name));
-    path.join(".")
+
+    path.push(format!("\"{}\"", &table_metadata.name));
+    QualifiedTable( path.join("."))
 }
 
 #[tracing::instrument(skip(configuration),level=Level::INFO)]
