@@ -99,7 +99,12 @@ impl ConnectorSetup for Calcite {
                 .or_else(|| env::var("MODEL_FILE").ok())
                 .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), Value::String(String::new())))?;
 
-            let models = fs::read_to_string(model_file_path.clone()).unwrap();
+            let mut models = fs::read_to_string(model_file_path.clone()).unwrap();
+
+            for (key, value) in std::env::vars() {
+                let env_var_identifier = format!("${{{}}}", key);
+                models = models.replace(&env_var_identifier, &value);
+            }
 
             if has_yaml_extension(&model_file_path.clone()) {
                 let model_object: Model = serde_yaml::from_str(&models)
