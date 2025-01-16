@@ -1,4 +1,4 @@
-use ndc_models::{CollectionName, VariableName};
+use ndc_models::{CollectionName, ComparisonOperatorName, VariableName};
 use thiserror::Error;
 #[derive(Error, Debug)]
 pub(crate) enum Error {
@@ -12,4 +12,6 @@ pub(crate) enum Error {
     UnsupportedVariableArrayValue(VariableName),
     #[error("Local relationships are not yet supported")]
     RelationshipsAreNotSupported,
+    #[error("Operator {0} is not supported")]
+    OperatorNotSupported(ComparisonOperatorName),
 }

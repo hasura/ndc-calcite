@@ -3,6 +3,7 @@
 //! Creates the Calcite query statement for a single query.
 //!
 use std::collections::{BTreeMap, HashMap, BTreeSet};
+use once_cell::sync::Lazy;
 use crate::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
@@ -32,6 +33,18 @@ const NOT_FOUND_MSG: &str = "Variable not found";
 //         RelationshipArgument::Column { .. } => { todo!() }
 //     }
 // }
+
+static SQL_OPERATIONS: Lazy<HashMap<ComparisonOperatorName, String>> = Lazy::new(|| {
+    vec![
+    ("_gt".into(), ">".into()),
+    ("_lt".into(), "<".into()),
+    ("_gte".into(), ">=".into()),
+    ("_lte".into(), "<=".into()),
+    ("_eq".into(), "=".into()),
+    ("_in".into(), "IN".into()),
+    ("_like".into(), "LIKE".into()),
+    ].into_iter().collect()
+});
 
 #[tracing::instrument(skip(supports_json_object, key, item, table), level=Level::DEBUG)]
 fn get_field_statement(supports_json_object: bool, key: &FieldName, item: &FieldName, table: &str) -> String {
@@ -238,30 +251,15 @@ fn aggregates(configuration: &ParsedConfiguration, query: &Query) -> Vec<String>
 fn predicates(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
+    table: &QualifiedTable,
     variables: &Vec<BTreeMap<VariableName, Value>>,
     query: &Query,
 ) -> Result<String, Error> {
     if let Some(predicate) = &query.predicate {
-        process_expression(configuration, collection, variables, predicate)
+        process_sql_expression(configuration, collection, table, variables, predicate)
     } else {
         Ok("".into())
     }
-
-}
-
-#[tracing::instrument(skip(
-    configuration,
-    collection,
-    variables,
-    predicate
-), level=Level::DEBUG)]
-fn process_expression(
-    configuration: &ParsedConfiguration,
-    collection: &CollectionName,
-    variables: &Vec<BTreeMap<VariableName, Value>>,
-    predicate: &Expression,
-) -> Result<String, Error> {
-    process_sql_expression(configuration, collection, variables, predicate)
 }
 
 #[tracing::instrument(skip(input), level=Level::DEBUG)]
@@ -291,26 +289,17 @@ fn sql_quotes(input: &str) -> String {
 fn process_sql_expression(
     configuration: &ParsedConfiguration,
     collection: &CollectionName,
+    table: &QualifiedTable,
     variables: &Vec<BTreeMap<VariableName, Value>>,
     expr: &Expression,
 ) -> Result<String, crate::error::Error> {
 
-    let operation_tuples: Vec<(ComparisonOperatorName, String)> = vec![
-        ("_gt".into(), ">".into()),
-        ("_lt".into(), "<".into()),
-        ("_gte".into(), ">=".into()),
-        ("_lte".into(), "<=".into()),
-        ("_eq".into(), "=".into()),
-        ("_in".into(), "IN".into()),
-        ("_like".into(), "LIKE".into()),
-    ];
-    let sql_operations: HashMap<_, _> = operation_tuples.into_iter().collect();
     match expr {
         Expression::And { expressions } => {
             let processed_expressions: Vec<String> = expressions
                 .iter()
                 .filter_map(|expression| {
-                    process_sql_expression(configuration, collection, variables, expression).ok()
+                    process_sql_expression(configuration, collection, table, variables, expression).ok()
                 })
                 .collect();
             Ok(format!("({})", processed_expressions.join(" AND ")))
@@ -319,13 +308,13 @@ fn process_sql_expression(
             let processed_expressions: Vec<String> = expressions
                 .iter()
                 .filter_map(|expression| {
-                    process_sql_expression(configuration, collection, variables, expression).ok()
+                    process_sql_expression(configuration, collection, table, variables, expression).ok()
                 })
                 .collect();
             Ok(format!("({})", processed_expressions.join(" OR ")))
         }
         Expression::Not { expression } => {
-            let embed_expression = process_sql_expression(configuration, collection, variables, expression)?;
+            let embed_expression = process_sql_expression(configuration, collection, table, variables, expression)?;
             Ok(format!("(NOT {})", embed_expression))
         },
         Expression::UnaryComparisonOperator { operator, column } => match operator {
@@ -345,7 +334,10 @@ fn process_sql_expression(
             operator,
             value,
         } => {
-            let sql_operation: &String = sql_operations.get(operator).unwrap();
+            let sql_operation: &String =
+                SQL_OPERATIONS
+                .get(operator)
+                .ok_or(crate::error::Error::OperatorNotSupported(operator.clone()))?;
             let left_side = match column {
                 ComparisonTarget::Column {
                     name, field_path, ..
@@ -368,13 +360,9 @@ fn process_sql_expression(
                 ComparisonValue::Scalar { value } => {
                     let sql_value = sql_quotes(&sql_brackets(&value.to_string()));
                     if sql_value == "()" {
-                        let table = create_qualified_table_name(
-                            configuration.clone().metadata.unwrap().get(collection).unwrap()
-                        );
                         format!("(SELECT {} FROM {} WHERE FALSE)", left_side, table)
                     } else {
                         sql_value
-
                     }
                 }
                 ComparisonValue::Variable { name } => format!("\"hasura_cte_vars\".\"{}\"", name),
@@ -591,7 +579,7 @@ pub fn parse_query<'a>(
     let metadata_map = configuration.clone().metadata.unwrap_or_default();
     let current_table = metadata_map.get(collection).ok_or(Error::CollectionNotFound(collection.clone()))?;
     let qualified_table = create_qualified_table_name(current_table);
-    let predicates = predicates(&configuration, collection, variables, query)?;
+    let predicates = predicates(&configuration, collection, &qualified_table, variables, query)?;
     let (select_clause, vars_cte) = select(variables, &qualified_table, query, configuration.supports_json_object)?;
     let join_clause = if vars_cte.is_some() {
         Some(format!("CROSS JOIN \"hasura_cte_vars\""))
