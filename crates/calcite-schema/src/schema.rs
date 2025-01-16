@@ -8,9 +8,10 @@ use std::path::Path;
 use jni::objects::GlobalRef;
 use ndc_models as models;
 use ndc_models::SchemaResponse;
-use ndc_sdk::connector::{ErrorResponse, Result};
+
 use tracing::{debug, event, Level};
 use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DOCKER_CONNECTOR_RW};
+use ndc_sdk::connector::{Result, ErrorResponse};
 use crate::{collections, scalars};
 use crate::models::get_models;
 use crate::version5::ParsedConfiguration;

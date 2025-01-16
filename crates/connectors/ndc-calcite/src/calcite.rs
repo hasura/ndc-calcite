@@ -16,7 +16,8 @@ use opentelemetry::trace::TraceContextExt;
 use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-use ndc_sdk::connector::error::Result;
+use ndc_sdk::connector::Result;
+
 use serde::Deserialize;
 
 use ndc_calcite_schema::jvm::get_jvm;
@@ -86,7 +87,6 @@ pub struct CalciteErrorResponse {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum CalciteResponse {
-    CRSuccess(Vec<Row>),
     CRError(CalciteErrorResponse),
 }
 
@@ -138,13 +138,13 @@ enum CalciteResponse {
 #[tracing::instrument(
     fields(internal.visibility = "user"), skip(config, calcite_reference, query_metadata), level = Level::INFO
 )]
-pub fn connector_query(
+pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
     config: &ParsedConfiguration,
     calcite_reference: GlobalRef,
     sql_query: &str,
     query_metadata: &models::Query,
     explain: &bool,
-) -> Result<Vec<Row>> {
+) -> Result<T> {
 
     // This method of retrieving current span context is not working!!!
     let span = tracing::Span::current();
@@ -174,13 +174,12 @@ pub fn connector_query(
     match result {
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
-            let mut rows: Vec<Row> = match serde_json::from_str::<Vec<String>>(&json_string) {
+            let rows: T = match serde_json::from_str::<T>(&json_string) {
                 Ok(json_rows) => {
-                    parse_to_row(json_rows)?
+                    json_rows
                 },
                 Err(_) => match serde_json::from_str::<CalciteResponse>(&json_string) {
                     Ok(vec) => match vec {
-                        CalciteResponse::CRSuccess(rows) => rows,
                         CalciteResponse::CRError(err) => {
                             let err_msg = if let Some(cause) = err.cause {
                                 format!("{} {}", err.error_message, cause)
@@ -197,17 +196,17 @@ pub fn connector_query(
                     }
                 }
             };
-            if config.fixes.unwrap_or_default() {
-                rows = fix_rows(rows, query_metadata);
-            }
-            event!(Level::DEBUG, result = format!("Completed Query. Retrieved {} rows. Result: {:?}", rows.len().to_string(), serde_json::to_string_pretty(&rows)));
+            // TODO(KC): What's this for?
+            // if config.fixes.unwrap_or_default() {
+            //     rows = fix_rows(rows, query_metadata);
+            // }
+            // event!(Level::DEBUG, result = format!("Completed Query. Retrieved {} rows. Result: {:?}", rows.len().to_string(), serde_json::to_string_pretty(&rows)));
             Ok(rows)
         }
         x => {
             let err = CalciteError { message: format!("Invalid response from Calcite. Expected an object, but got: {:?}", x) };
             Err(ErrorResponse::from_error(err))
         }
-
     }
 }
 

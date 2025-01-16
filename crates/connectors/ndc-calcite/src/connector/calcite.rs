@@ -14,10 +14,10 @@ use jni::objects::GlobalRef;
 use ndc_calcite_values::values::CONFIGURATION_FILENAME;
 use ndc_models as models;
 use ndc_models::{ArgumentName, Capabilities, CollectionName, Relationship, RelationshipName, VariableName};
-use ndc_sdk::connector::{Connector, ConnectorSetup, ErrorResponse};
-use ndc_sdk::connector::error::Result;
+use ndc_sdk::connector::{Connector, ConnectorSetup, ErrorResponse, Result};
 use ndc_sdk::json_response::JsonResponse;
 use serde_json::Value;
+
 use tracing::{event, info_span, Level, span, Span};
 use tracing::Instrument;
 
@@ -26,6 +26,8 @@ use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
 use ndc_calcite_schema::calcite::Model;
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
 use ndc_calcite_schema::version5::ParsedConfiguration;
+use std::collections::HashMap;
+
 use crate::{calcite, query};
 use crate::calcite::CalciteError;
 use crate::query::QueryParams;
@@ -49,7 +51,11 @@ fn execute_query_with_variables(
     state: &CalciteState,
     explain: &bool
 ) -> Result<Vec<models::RowSet>> {
-    query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state, explain})
+    let empty_map = HashMap::new();
+    let metadata_map = config.metadata.as_ref().unwrap_or(&empty_map);
+    let table_metadata = metadata_map.get(coll).ok_or( ndc_sdk::connector::ErrorResponse::from_error(crate::error::Error::CollectionNotFound(coll.clone())) )?; // TODO(KC): FIx this!
+
+    query::orchestrate_query(QueryParams { config, table_metadata, coll, coll_rel, args, query, vars, state, explain})
 }
 
 const CONFIG_ERROR_MSG: &str = "Could not find model file.";

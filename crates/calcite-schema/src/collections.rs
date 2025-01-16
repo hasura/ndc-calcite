@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, HashMap};
 use http::StatusCode;
 use ndc_models::Type::{Named, Nullable};
 use ndc_models::{CollectionInfo, CollectionName, FieldName, ForeignKeyConstraint, ObjectField, ObjectType, ObjectTypeName, ScalarType, ScalarTypeName, Type, TypeName, UniquenessConstraint};
-use ndc_sdk::connector::{ErrorResponse, Result};
+use ndc_sdk::connector::{Result, ErrorResponse};
 use serde_json::Value;
 use tracing::Level;
 
