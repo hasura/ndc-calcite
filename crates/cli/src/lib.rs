@@ -165,26 +165,22 @@ async fn update(
 ) -> anyhow::Result<()> {
     let config_path =  &context.context_path;
 
-    // Read the `connector-metadata.yaml` file
+    // Check if `connector-metadata.yaml` file is present
     let metadata_yaml_file = config_path.join(".hasura-connector/connector-metadata.yaml");
-    let _metadata = if metadata_yaml_file.exists() {
-        let metadata_yaml = fs::read_to_string(metadata_yaml_file).await?;
-        Ok(Some(serde_yaml::from_str::<
-            metadata::ConnectorMetadataDefinition,
-        >(&metadata_yaml)?))
-    } else {
-        Err(anyhow::Error::msg(format!("Metadata file does not exist at {config_path:?}/.hasura-connector/connector-metadata.yaml")))
-    }?;
+
+    if !metadata_yaml_file.exists() {
+        return Err(anyhow::Error::msg(format!(
+            "Metadata file does not exist at {config_path:?}/.hasura-connector/connector-metadata.yaml"
+        )));
+    }
 
     // Check if the model file is present
 
     let model_file = config_path.join("model.json");
-    let _model_file_value = if model_file.exists() {
-        let model_json_stringified = fs::read_to_string(model_file.clone()).await?;
-        Ok(model_json_stringified)
-    } else {
-        Err(anyhow::Error::msg("Model file does not exist"))
-    }?;
+
+    if !model_file.exists() {
+        return Err(anyhow::Error::msg("Model file does not exist"));
+    }
 
     // if !has_configuration(config_path) {
     //     initialize(true, &context).await?
