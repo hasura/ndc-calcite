@@ -168,22 +168,8 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
                 Ok(json_rows) => {
                     json_rows
                 },
-                Err(_) => match serde_json::from_str::<CalciteResponse>(&json_string) {
-                    Ok(vec) => match vec {
-                        CalciteResponse::CRError(err) => {
-                            let err_msg = if let Some(cause) = err.cause {
-                                format!("{} {}", err.error_message, cause)
-                            } else {
-                                err.error_message
-                            };
-                            let err = CalciteError { message: format!("Failed to execute query in calcite: {}", err_msg) };
-                            return Err(ErrorResponse::from_error(err));
-                        }
-                    }
-                    Err(error) => {
-                        let err = CalciteError { message: format!("Failed to deserialize JSON {} with error: {error}", json_string) };
-                        return Err(ErrorResponse::from_error(err));
-                    }
+                Err(e) => {
+                    return Err(ErrorResponse::from_error(CalciteError { message: format!("Failed to parse response from Calcite: {} ", e) }));
                 }
             };
             // TODO(KC): What's this for?

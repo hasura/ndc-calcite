@@ -5,17 +5,20 @@
 //!
 //! Aggregate are generated as additional queries, and stitched into the
 //! RowSet aggregates response.
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use indexmap::IndexMap;
+use ndc_sdk::connector::ErrorResponse;
 use ndc_sdk::models::{self, RowSet};
 use ndc_models::{CollectionName, FieldName, Query, RowFieldValue, VariableName};
 use ndc_sdk::connector::error::Result as Result;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use ndc_calcite_schema::version5::ParsedConfiguration;
 
 use crate::calcite::{connector_query, Row};
 use crate::connector::calcite::CalciteState;
+use crate::error::Error;
 use crate::sql::{self, generate_aggregate_query, Alias, QualifiedTable, SqlQueryComponents, VariablesCTE};
 
 /// A struct representing the parameters of a query.
@@ -208,6 +211,14 @@ pub fn execute_query_plan(
     }
 }
 
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ExplainQueryPlan {
+    // Will deserialize the single key-value pair from the JSON object
+    #[serde(flatten)]
+    plan: HashMap<String, String>
+}
+
 #[derive(Debug)]
 pub struct ExplainResponse {
     pub aggregates_explain: Option<String>,
@@ -223,21 +234,38 @@ pub fn explain_query_plan(
 
     // Execute explain row query if present
     if let Some(row_query) = plan.row_query {
-        rows_explain = connector_query::<Vec<serde_json::Value>>(
+        let first_row = connector_query::<Vec<String>>(
             &calcite_reference,
             &row_query,
             plan.is_explain
-        )?.first().map(|x| serde_json::to_string_pretty(x).unwrap());
+        )?.first().unwrap().clone();
+        let first_row = serde_json::from_str::<ExplainQueryPlan>(&first_row).map_err(|e| {
+            ndc_sdk::connector::ErrorResponse::from_error(
+                crate::error::Error::CouldNotParseCalciteExplainResponse(e)
+            )
+        })?;
+
+        rows_explain = Some(first_row.plan.values().next().ok_or(Error::FoundNoRowsInCalciteExplainResponse).map_err(|e| ErrorResponse::from_error(e))?.clone());
     }
 
     // Execute explain aggregate query if present
     if let Some(aggregate_query) = plan.aggregate_query {
-        aggregates_explain = connector_query::<Vec<serde_json::Value>>(
+        let first_row = connector_query::<Vec<String>>(
             &calcite_reference,
             &aggregate_query,
             plan.is_explain
-        )?.first().map(|x| serde_json::to_string_pretty(x).unwrap());
+        )?.first().unwrap().clone();
+        let first_row = serde_json::from_str::<ExplainQueryPlan>(&first_row).map_err(|e| {
+            ndc_sdk::connector::ErrorResponse::from_error(
+                crate::error::Error::CouldNotParseCalciteExplainResponse(e)
+            )
+        })?;
+
+        aggregates_explain = Some(first_row.plan.values().next().ok_or(Error::FoundNoRowsInCalciteExplainResponse).map_err(|e| ErrorResponse::from_error(e))?.clone());
     }
+
+
+
 
     Ok(ExplainResponse {
         aggregates_explain,

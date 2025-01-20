@@ -14,4 +14,8 @@ pub(crate) enum Error {
     RelationshipsAreNotSupported,
     #[error("Operator {0} is not supported")]
     OperatorNotSupported(ComparisonOperatorName),
+    #[error("Could not parse Calcite explain response: {0}")]
+    CouldNotParseCalciteExplainResponse(serde_json::Error),
+    #[error("No rows found in Calcite explain response")]
+    FoundNoRowsInCalciteExplainResponse,
 }
