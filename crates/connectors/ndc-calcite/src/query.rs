@@ -39,7 +39,7 @@ pub struct QueryParams<'a> {
     pub coll_rel: &'a BTreeMap<RelationshipName, Relationship>,
     pub args: &'a BTreeMap<ArgumentName, RelationshipArgument>,
     pub query: &'a Query,
-    pub vars: &'a Vec<BTreeMap<VariableName, Value>>,
+    pub vars: &'a Option<Vec<BTreeMap<VariableName, Value>>>,
     pub state: &'a CalciteState,
     pub explain: &'a bool,
 }
@@ -161,12 +161,14 @@ pub fn orchestrate_query(
     let rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
     // let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
 
-    // TODO: Remove this if block once we support aggregates with variables
-    if !query_params.vars.is_empty() {
-        return Ok(group_rows_by_variables(rows_data.unwrap(), aggregates_response, query_params.vars.len()));
+
+    if let Some(vars) = query_params.vars {
+            return Ok(group_rows_by_variables(rows_data.unwrap(), aggregates_response, vars.len()));
+    } else {
+        let aggregate_response_in_rowset = aggregates_response.map(|r| r.first().map(|x| x.clone())).flatten();
+        return Ok(vec![models::RowSet { aggregates: aggregate_response_in_rowset, rows: rows_data }]);
     }
 
-    return Ok(vec![models::RowSet { aggregates: None, rows: rows_data }]);
 }
 
 fn group_rows_by_variables(

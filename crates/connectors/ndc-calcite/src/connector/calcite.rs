@@ -47,7 +47,7 @@ fn execute_query_with_variables(
     args: &BTreeMap<ArgumentName, models::RelationshipArgument>,
     coll_rel: &BTreeMap<RelationshipName, Relationship>,
     query: &models::Query,
-    vars: &Vec<BTreeMap<VariableName, Value>>,
+    vars: &Option<Vec<BTreeMap<VariableName, Value>>>,
     state: &CalciteState,
     explain: &bool
 ) -> Result<Vec<models::RowSet>> {
@@ -259,7 +259,7 @@ impl Connector for Calcite {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::QueryResponse>> {
-        let variable_sets = request.variables.unwrap_or(vec![]);
+        let variable_sets = request.variables;
 
         let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
         let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =

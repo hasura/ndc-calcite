@@ -75,23 +75,20 @@ fn value_to_sql(variable_name: &VariableName, value: &Value) -> Result<String, E
 #[derive(Debug)]
 pub struct VariablesCTE {
     pub query: String,
-    pub columns: Vec<String>,
+    pub columns: Vec<VariableName>,
 }
 
-fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option<VariablesCTE>, Error> {
-    if vars.is_empty() {
-        return Ok(None);
-    }
+fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<VariablesCTE, Error> {
 
     // Collect all unique column names while preserving order
-    let mut columns: BTreeSet<String> = BTreeSet::new();
+    let mut columns: BTreeSet<VariableName> = BTreeSet::new();
     for row in vars {
         for name in row.keys() {
-            columns.insert(name.to_string());
+            columns.insert(name.clone());
         }
     }
 
-    let columns: Vec<String> = columns.into_iter().collect();
+    let columns: Vec<VariableName> = columns.into_iter().collect();
 
     let mut cte = format!("WITH \"{HASURA_CTE_VARS}\" AS (\n");
 
@@ -113,7 +110,7 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Option
     cte.push_str(&selects.join("\n    UNION ALL\n"));
     cte.push_str("\n)");
 
-    Ok(Some(VariablesCTE { query: cte, columns }))
+    Ok(VariablesCTE { query: cte, columns })
 }
 
 
@@ -276,18 +273,12 @@ impl From<FieldName> for Alias {
     }
 }
 
-struct AggregateQueryBuilder {
-    predicate: String,
-    columns_to_select_in_subquery: HashSet<FieldName>,
-
-
-}
 
 #[tracing::instrument(skip(configuration, variables, query), level=Level::DEBUG)]
 fn predicates(
     configuration: &ParsedConfiguration,
     table: &QualifiedTable,
-    variables: &Vec<BTreeMap<VariableName, Value>>,
+    variables: &Option<VariablesCTE>,
     query: &Query,
 ) -> Result<String, Error> {
     if let Some(predicate) = &query.predicate {
@@ -323,7 +314,7 @@ fn sql_quotes(input: &str) -> String {
 fn process_sql_expression(
     configuration: &ParsedConfiguration,
     table: &QualifiedTable,
-    variables: &Vec<BTreeMap<VariableName, Value>>,
+    variables: &Option<VariablesCTE>,
     expr: &Expression,
 ) -> Result<String, crate::error::Error> {
 
@@ -398,7 +389,16 @@ fn process_sql_expression(
                         sql_value
                     }
                 }
-                ComparisonValue::Variable { name } => format!("\"{HASURA_CTE_VARS}\".\"{}\"", name),
+                ComparisonValue::Variable { name } => {
+                    let variable = variables
+                        .as_ref()
+                        .ok_or(Error::VariableNotFound(name.to_string()))?
+                        .columns
+                        .iter()
+                        .find(|&var| var == name)
+                        .ok_or(Error::VariableNotFound(name.to_string()))?;
+                    format!("\"{HASURA_CTE_VARS}\".\"{}\"", variable)
+                },
 
             };
             Ok(format!("{} {} {}", left_side, sql_operation, right_side))
@@ -1021,11 +1021,17 @@ pub fn parse_query<'a>(
     configuration: &'a ParsedConfiguration,
     qualified_table: &'a QualifiedTable,
     query: &'a Query,
-    variables: &'a Vec<BTreeMap<VariableName, Value>>
+    variables: &'a Option<Vec<BTreeMap<VariableName, Value>>>,
 ) -> Result<QueryComponents, Error> {
 
-    let predicates = predicates(&configuration, &qualified_table, variables, query)?;
-    let variables_cte = generate_cte_vars(variables)?;
+
+    let variables_cte = match variables {
+        Some(v) => Some(generate_cte_vars(&v)?),
+        None => None,
+    };
+
+    let predicates = predicates(&configuration, &qualified_table, &variables_cte, query)?;
+
     let mut query_components = QueryComponents::default();
 
 
@@ -1048,10 +1054,6 @@ pub fn parse_query<'a>(
 
 
     }
-    // let aggregates_1 = query.aggregates.map(|query_aggregates|
-    //                                       aggregates(configuration.supports_json_object, &query_aggregates, "aggregates_subquery".to_string()).join(", "
-    // ));
 
-    // let final_aggregates = aggregates_1.as_ref().unwrap_or(&Vec::new()).join(", ");
     Ok(query_components)
 }
