@@ -79,7 +79,6 @@ pub struct VariablesCTE {
 }
 
 fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<VariablesCTE, Error> {
-
     // Collect all unique column names while preserving order
     let mut columns: BTreeSet<VariableName> = BTreeSet::new();
     for row in vars {
@@ -100,10 +99,15 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Variab
         // Add the index column
         pairs.push(format!("{} AS \"__var_set_index\"", idx));
 
-        for (name, value) in row {
-            let sql_value = value_to_sql(name, value)?;
-            pairs.push(format!("{} AS \"{}\"", sql_value, name));
+        // Include all columns, using NULL for missing ones
+        for column in &columns {
+            let sql_value = match row.get(column) {
+                Some(value) => value_to_sql(column, value)?,
+                None => "NULL".to_string()
+            };
+            pairs.push(format!("{} AS \"{}\"", sql_value, column));
         }
+
         selects.push(format!("    SELECT {}", pairs.join(", ")));
     }
 
@@ -112,7 +116,6 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Variab
 
     Ok(VariablesCTE { query: cte, columns })
 }
-
 
 #[tracing::instrument(skip(
    variables_cte,
