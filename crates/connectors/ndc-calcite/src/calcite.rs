@@ -163,6 +163,7 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
     match result {
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
+            println!("\n\n***Response from calcite: {}\n\n", json_string);
             let rows: T = match serde_json::from_str::<T>(&json_string) {
                 Ok(json_rows) => {
                     json_rows

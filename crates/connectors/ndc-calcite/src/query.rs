@@ -83,8 +83,8 @@ impl QueryComponents {
 #[derive(Debug)]
 pub struct QueryPlan {
     variables_count: Option<usize>,
-    aggregate_query: Option<String>,
-    row_query: Option<String>,
+    pub aggregate_query: Option<String>,
+    pub row_query: Option<String>,
     is_explain: bool,
 }
 
@@ -206,6 +206,43 @@ pub fn execute_query_plan(
             rows: rows_data,
         }])
     }
+}
+
+#[derive(Debug)]
+pub struct ExplainResponse {
+    pub aggregates_explain: Option<String>,
+    pub rows_explain: Option<String>,
+}
+
+pub fn explain_query_plan(
+    calcite_reference: jni::objects::GlobalRef,
+    plan: QueryPlan,
+) -> Result<ExplainResponse> {
+    let mut aggregates_explain = None;
+    let mut rows_explain = None;
+
+    // Execute explain row query if present
+    if let Some(row_query) = plan.row_query {
+        rows_explain = connector_query::<Vec<serde_json::Value>>(
+            &calcite_reference,
+            &row_query,
+            plan.is_explain
+        )?.first().map(|x| serde_json::to_string_pretty(x).unwrap());
+    }
+
+    // Execute explain aggregate query if present
+    if let Some(aggregate_query) = plan.aggregate_query {
+        aggregates_explain = connector_query::<Vec<serde_json::Value>>(
+            &calcite_reference,
+            &aggregate_query,
+            plan.is_explain
+        )?.first().map(|x| serde_json::to_string_pretty(x).unwrap());
+    }
+
+    Ok(ExplainResponse {
+        aggregates_explain,
+        rows_explain
+    })
 }
 
 fn response_processing_with_variables(

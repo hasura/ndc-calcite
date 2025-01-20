@@ -22,6 +22,7 @@ use tracing::{event, info_span, Level, span, Span};
 use tracing::Instrument;
 
 use crate::capabilities::calcite_capabilities;
+use crate::query::{ExplainResponse, QueryPlan};
 use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
 use ndc_calcite_schema::calcite::Model;
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
@@ -186,23 +187,33 @@ impl Connector for Calcite {
     ) -> Result<JsonResponse<models::ExplainResponse>> {
         let variable_sets = request.variables;
         let mut details: BTreeMap<String, String> = BTreeMap::new();
-        let explain_response = match handle_query(
-            configuration,
+        let plan = query::generate_query_plan(
+            &configuration,
             &request.collection,
             &request.query,
             &variable_sets,
-            &state,
-            true
-        ) {
-            Ok(row_set) => {
-                event!(Level::INFO, result = "execute_query_with_variables was successful");
-                row_set
-            },
-            Err(e) => {
-                event!(Level::ERROR, "Error executing query: {:?}", e);
-                return Err(e.into());
-            },
-        };
+            state,
+            true)?;
+        let QueryPlan { aggregate_query, row_query, .. } = &plan;
+
+        if let Some(aggregate) = aggregate_query {
+            details.insert("aggregate_query".to_string(), aggregate.to_string());
+        }
+
+        if let Some(row) = row_query.as_ref() {
+            details.insert("row_query".to_string(), row.clone());
+        }
+
+        let ExplainResponse { rows_explain, aggregates_explain } = query::explain_query_plan(state.calcite_ref.clone(), plan)?;
+
+        if let Some(aggregate) = aggregates_explain {
+            details.insert("aggregates_explain".to_string(), aggregate);
+        }
+
+        if let Some(row) = rows_explain {
+            details.insert("rows_explain".to_string(), row);
+        }
+
 
         let explain_response = models::ExplainResponse {
             details,
