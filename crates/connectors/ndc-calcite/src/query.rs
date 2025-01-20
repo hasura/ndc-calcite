@@ -6,21 +6,17 @@
 //! Aggregate are generated as additional queries, and stitched into the
 //! RowSet aggregates response.
 use std::collections::BTreeMap;
-use http::StatusCode;
 use indexmap::IndexMap;
-use models::RowSet;
-use ndc_models::{ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, RelationshipType, RowFieldValue, VariableName};
+use ndc_sdk::models::{self, RowSet};
+use ndc_models::{CollectionName, FieldName, Query, RowFieldValue, VariableName};
 use ndc_sdk::connector::error::Result as Result;
-use ndc_models as models;
-use ndc_sdk::connector::ErrorResponse;
-use serde_json::{Number, Value};
-use tracing::{event, Level, span};
+use serde_json::Value;
 
 use ndc_calcite_schema::version5::ParsedConfiguration;
 
 use crate::calcite::{connector_query, Row};
 use crate::connector::calcite::CalciteState;
-use crate::sql::{self, create_qualified_table_name, generate_aggregate_query, Alias, QualifiedTable, SqlQueryComponents, VariablesCTE};
+use crate::sql::{self, generate_aggregate_query, Alias, QualifiedTable, SqlQueryComponents, VariablesCTE};
 
 /// A struct representing the parameters of a query.
 ///
@@ -36,12 +32,10 @@ pub struct QueryParams<'a> {
     pub config: &'a ParsedConfiguration,
     pub table_metadata: &'a ndc_calcite_schema::calcite::TableMetadata,
     pub coll: &'a CollectionName,
-    pub coll_rel: &'a BTreeMap<RelationshipName, Relationship>,
-    pub args: &'a BTreeMap<ArgumentName, RelationshipArgument>,
     pub query: &'a Query,
     pub vars: &'a Option<Vec<BTreeMap<VariableName, Value>>>,
     pub state: &'a CalciteState,
-    pub explain: &'a bool,
+    pub explain: bool,
 }
 
 #[derive(Debug)]
@@ -85,57 +79,43 @@ impl QueryComponents {
 }
 
 
-/**
-Orchestrates a query by parsing query components, processing rows and aggregates,
-and generating modified rows based on relationships.
 
-# Arguments
-
-* `query_params` - The query parameters.
-
-# Returns
-
-Returns a `Result` containing a `RowSet` if the query is successful, or a `QueryError` if there's an error.
-
-# Example
-```
-
-use ndc_models::Query;
-use calcite::connector::calcite::CalciteState;
-use calcite::query::{orchestrate_query, QueryParams};
-use ndc_calcite_schema::version5::{ParsedConfiguration, Version};
-
-let params = QueryParams {
- config: &ParsedConfiguration { version: Version::This,_schema: None,model: None,model_file_path: None,fixes: None,supports_json_object: None,jars: None,metadata: None,},
- coll: &Default::default(),
- coll_rel: &Default::default(),
- args: &Default::default(),
- query: &Query { aggregates: None,fields: None,limit: None,offset: None,order_by: None,predicate: None,},
- vars: &Default::default(),
- state: &CalciteState { calcite_ref: ()},
- explain: &false,
-};
-
-let result = orchestrate_query(query_params);
-match result {
-    Ok(row_set) => {
-        // Process the row set
-    }
-    Err(query_error) => {
-        // Handle the query error
-    }
-}
-```
-*/
-
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug)]
 pub struct QueryPlan {
     variables_count: Option<usize>,
     aggregate_query: Option<String>,
     row_query: Option<String>,
+    is_explain: bool,
 }
 
-pub fn generate_query_plan(query_params: &QueryParams) -> Result<QueryPlan> {
+pub fn generate_query_plan(
+    config: &ParsedConfiguration,
+    coll: &CollectionName,
+    query: &Query,
+    vars: &Option<Vec<BTreeMap<VariableName, Value>>>,
+    state: &CalciteState,
+    explain: bool,
+) -> Result<QueryPlan> {
+    // Handle metadata lookup
+    let empty_map = std::collections::HashMap::new();
+    let metadata_map = config.metadata.as_ref().unwrap_or(&empty_map);
+    let table_metadata = metadata_map.get(coll).ok_or(
+        ndc_sdk::connector::ErrorResponse::from_error(
+            crate::error::Error::CollectionNotFound(coll.clone())
+        )
+    )?;
+
+    let query_params = QueryParams {
+        config,
+        table_metadata,
+        coll,
+        query: &query,
+        vars,
+        state,
+        explain,
+    };
+
+    // Rest of the query plan generation logic...
     let qualified_table = sql::create_qualified_table_name(query_params.table_metadata);
     let query_components = sql::parse_query(
         &query_params.config,
@@ -144,7 +124,7 @@ pub fn generate_query_plan(query_params: &QueryParams) -> Result<QueryPlan> {
         query_params.vars
     ).map_err(|e| ndc_sdk::connector::ErrorResponse::from_error(e))?;
 
-    // Generate aggregate query if needed
+    // Generate aggregate query if needed...
     let aggregate_query = if let Some(aggregate_fields) = query_params.query.aggregates.clone() {
         Some(generate_aggregate_query(
             query_params.config.supports_json_object,
@@ -159,7 +139,7 @@ pub fn generate_query_plan(query_params: &QueryParams) -> Result<QueryPlan> {
         None
     };
 
-    // Generate row query using SqlQueryComponents
+    // Generate row query...
     let row_query = if let Some(select) = query_components.select.clone() {
         if !select.is_empty() {
             let sql_query_components = SqlQueryComponents {
@@ -184,41 +164,39 @@ pub fn generate_query_plan(query_params: &QueryParams) -> Result<QueryPlan> {
         variables_count: query_params.vars.as_ref().map(|v| v.len()),
         aggregate_query,
         row_query,
+        is_explain: explain,
     })
 }
 
 pub fn execute_query_plan(
-    query_params: QueryParams,
+    calcite_reference: jni::objects::GlobalRef,
     plan: QueryPlan,
 ) -> Result<Vec<models::RowSet>> {
     let mut aggregates_response = None;
     let mut rows_data = None;
 
-    // Execute aggregate query if present
-    if let Some(aggregate_query) = plan.aggregate_query {
-        aggregates_response = Some(connector_query::<Vec<IndexMap<FieldName, serde_json::Value>>>(
-            query_params.config,
-            query_params.state.clone().calcite_ref,
-            &aggregate_query,
-            query_params.query,
-            query_params.explain
-        )?);
-    }
-
     // Execute row query if present
     if let Some(row_query) = plan.row_query {
         rows_data = Some(connector_query::<Vec<Row>>(
-            query_params.config,
-            query_params.state.clone().calcite_ref,
+            &calcite_reference,
             &row_query,
-            query_params.query,
-            query_params.explain
+            plan.is_explain
         )?);
     }
 
+    // Execute aggregate query if present
+    if let Some(aggregate_query) = plan.aggregate_query {
+        aggregates_response = Some(connector_query::<Vec<IndexMap<FieldName, serde_json::Value>>>(
+            &calcite_reference,
+            &aggregate_query,
+            plan.is_explain
+        )?);
+    }
+
+
     // Group results based on variables if present
     if let Some(vars_count) = plan.variables_count {
-        Ok(group_rows_by_variables(rows_data, aggregates_response, vars_count))
+        Ok(response_processing_with_variables(rows_data, aggregates_response, vars_count))
     } else {
         let aggregate_response_in_rowset = aggregates_response
             .map(|r| r.first().map(|x| x.clone()))
@@ -230,14 +208,7 @@ pub fn execute_query_plan(
     }
 }
 
-
-// Updated orchestrate_query to use the new functions
-pub fn orchestrate_query(query_params: QueryParams) -> Result<Vec<models::RowSet>> {
-    let plan = generate_query_plan(&query_params)?;
-    execute_query_plan(query_params, plan)
-}
-
-fn group_rows_by_variables(
+fn response_processing_with_variables(
     rows: Option<Vec<IndexMap<FieldName, RowFieldValue>>>,
     aggregates: Option<Vec<IndexMap<FieldName, Value>>>,
     variables_set_count: usize
@@ -318,7 +289,7 @@ mod tests {
 
     #[test]
     fn test_empty_inputs() {
-        let result = group_rows_by_variables(None, None, 2);
+        let result = response_processing_with_variables(None, None, 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
         assert_eq!(json_result, json!([
@@ -335,7 +306,7 @@ mod tests {
             create_test_row(0, "field3", json!("value3")),
         ];
 
-        let result = group_rows_by_variables(Some(rows), None, 2);
+        let result = response_processing_with_variables(Some(rows), None, 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
         assert_eq!(json_result, json!([
@@ -360,7 +331,7 @@ mod tests {
             create_test_aggregate(1, "sum", json!(50)),
         ];
 
-        let result = group_rows_by_variables(None, Some(aggregates), 2);
+        let result = response_processing_with_variables(None, Some(aggregates), 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
         assert_eq!(json_result, json!([
@@ -385,7 +356,7 @@ mod tests {
             create_test_aggregate(1, "avg", json!(50)),
         ];
 
-        let result = group_rows_by_variables(Some(rows), Some(aggregates), 2);
+        let result = response_processing_with_variables(Some(rows), Some(aggregates), 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
         assert_eq!(json_result, json!([
@@ -411,7 +382,7 @@ mod tests {
             create_test_row(0, "field2", json!("value2")),
         ];
 
-        let result = group_rows_by_variables(Some(rows), None, 2);
+        let result = response_processing_with_variables(Some(rows), None, 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
         assert_eq!(json_result, json!([
@@ -427,61 +398,4 @@ mod tests {
     }
 
 
-}
-
-#[tracing::instrument(skip(params, query_components), level = Level::INFO)]
-fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>> {
-    execute_query_collection(params, query_components)
-}
-
-#[tracing::instrument(
-    fields(internal.visibility = "user"), skip(params, query_components), level = Level::INFO
-)]
-fn execute_query_collection(
-    params: QueryParams,
-    query_components: &QueryComponents,
-) -> Result<Option<Vec<Row>>> {
-    let select = query_components.select.clone();
-    if select.is_none() || select.clone().unwrap().is_empty() {
-        return Ok(None);
-    }
-
-    let span = span!(tracing::Level::INFO, "query_collection_span", collection = params.coll.to_string(), explain = params.explain, internal_visibility="user");
-
-    // Parent span attach to the current context
-    let _enter = span.enter();
-    match params.query.clone().fields {
-        Some(fields) => {
-            // Create sub-span for each field attribute
-            for field in fields.keys() {
-                let sub_span = span!(tracing::Level::INFO, "field_span", field_attribute = format!("{}.{}", params.coll.to_string(), field));
-                let _enter_sub_span = sub_span.enter();
-            }
-        }
-        None => {
-            // Handle the 'None' case here
-        }
-    }
-
-    let qualified_table = create_qualified_table_name(params.table_metadata);
-
-    let sql_query_components = SqlQueryComponents {
-        with: query_components.variables_cte.as_ref().map(|cte| cte.query.clone()),
-        from: (Alias(qualified_table.to_string()), SqlFrom::Table(qualified_table)),
-        order_by: query_components.order_by.clone(),
-        pagination: query_components.pagination.clone(),
-        select: select.clone().unwrap().to_string(),
-        where_clause: query_components.predicates.clone(),
-        join: query_components.join.clone(),
-        group_by: None,
-    };
-
-    let sql_query = sql_query_components.to_sql(params.config.supports_json_object);
-
-    connector_query::<Vec<Row>>(
-        params.config,
-        params.state.clone().calcite_ref,
-        &sql_query,
-        params.query,
-        params.explain).map(Some)
 }

@@ -13,7 +13,7 @@ use http::status::StatusCode;
 use jni::objects::GlobalRef;
 use ndc_calcite_values::values::CONFIGURATION_FILENAME;
 use ndc_models as models;
-use ndc_models::{ArgumentName, Capabilities, CollectionName, Relationship, RelationshipName, VariableName};
+use ndc_models::{Capabilities, CollectionName,  VariableName};
 use ndc_sdk::connector::{Connector, ConnectorSetup, ErrorResponse, Result};
 use ndc_sdk::json_response::JsonResponse;
 use serde_json::Value;
@@ -26,11 +26,9 @@ use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
 use ndc_calcite_schema::calcite::Model;
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
 use ndc_calcite_schema::version5::ParsedConfiguration;
-use std::collections::HashMap;
 
 use crate::{calcite, query};
 use crate::calcite::CalciteError;
-use crate::query::QueryParams;
 
 #[derive(Clone, Default, Debug)]
 pub struct Calcite {}
@@ -40,35 +38,17 @@ pub struct CalciteState {
     pub calcite_ref: GlobalRef,
 }
 
-#[tracing::instrument(skip(config, coll, args, coll_rel, query, vars, state), level=Level::INFO)]
+#[tracing::instrument(skip(config, coll, query, vars, state), level=Level::INFO)]
 fn handle_query(
     config: &ParsedConfiguration,
     coll: &CollectionName,
-    args: &BTreeMap<ArgumentName, models::RelationshipArgument>,
-    coll_rel: &BTreeMap<RelationshipName, Relationship>,
     query: &models::Query,
     vars: &Option<Vec<BTreeMap<VariableName, Value>>>,
     state: &CalciteState,
-    explain: &bool
+    explain: bool
 ) -> Result<Vec<models::RowSet>> {
-    let empty_map = HashMap::new();
-    let metadata_map = config.metadata.as_ref().unwrap_or(&empty_map);
-    let table_metadata = metadata_map.get(coll).ok_or( ndc_sdk::connector::ErrorResponse::from_error(crate::error::Error::CollectionNotFound(coll.clone())) )?;
-
-    let query_params = QueryParams {
-        config,
-        table_metadata,
-        coll,
-        coll_rel,
-        args,
-        query,
-        vars,
-        state,
-        explain,
-    };
-    let plan = query::generate_query_plan(&query_params)?;
-    query::execute_query_plan(query_params, plan)
-
+    let plan = query::generate_query_plan(config, coll, query, vars, state, explain)?;
+    query::execute_query_plan(state.calcite_ref.clone(), plan)
 }
 
 const CONFIG_ERROR_MSG: &str = "Could not find model file.";
@@ -204,47 +184,26 @@ impl Connector for Calcite {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::ExplainResponse>> {
-        let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
+        let variable_sets = request.variables;
         let mut details: BTreeMap<String, String> = BTreeMap::new();
-        let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
-        let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
-            input_map.iter()
-                .map(|(key, value)|
-                (key.clone(), convert_to_relationship_argument(value))
-                )
-                .collect();
-        // for variables in &variable_sets {
-        //     let row_set = execute_query_with_variables(
-        //         configuration,
-        //         &request.collection,
-        //         &relationship_arguments,
-        //         &request.collection_relationships,
-        //         &request.query,
-        //         variables,
-        //         &state,
-        //         &true
-        //     ).map_err(|error| ErrorResponse::from_error(error))?;
-        //     match row_set.aggregates {
-        //         None => {}
-        //         Some(map_index) => {
-        //             let map_btree: BTreeMap<String, String> = map_index.iter()
-        //                 .map(|(key, value)| (key.clone().to_string(), value.to_string()))
-        //                 .collect();
-        //             details.extend(map_btree);
-        //         }
-        //     };
-        //     match row_set.rows {
-        //         None => {}
-        //         Some(r) => {
-        //             for map_index in r {
-        //                 let map_btree: BTreeMap<String, String> = map_index.iter()
-        //                     .map(|(key, value)| (key.clone().to_string(), value.0.to_string()))
-        //                     .collect();
-        //                 details.extend(map_btree);
-        //             }
-        //         }
-        //     }
-        // }
+        let explain_response = match handle_query(
+            configuration,
+            &request.collection,
+            &request.query,
+            &variable_sets,
+            &state,
+            true
+        ) {
+            Ok(row_set) => {
+                event!(Level::INFO, result = "execute_query_with_variables was successful");
+                row_set
+            },
+            Err(e) => {
+                event!(Level::ERROR, "Error executing query: {:?}", e);
+                return Err(e.into());
+            },
+        };
+
         let explain_response = models::ExplainResponse {
             details,
         };
@@ -274,28 +233,18 @@ impl Connector for Calcite {
     ) -> Result<JsonResponse<models::QueryResponse>> {
         let variable_sets = request.variables;
 
-        let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
-        let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
-            input_map.iter()
-                .map(|(key, value)|
-                // Assuming we have a function `convert_to_relationship_argument`
-                // that takes an argument and returns a relationship argument
-                (key.clone(), convert_to_relationship_argument(value))
-                )
-                .collect();
-
-        let row_sets = match handle_query(
-            configuration,
+        let plan = query::generate_query_plan(
+            &configuration,
             &request.collection,
-            &relationship_arguments,
-            &request.collection_relationships,
             &request.query,
             &variable_sets,
-            &state,
-            &false
-        ) {
+            state,
+            false)?;
+        let query_response = query::execute_query_plan(state.calcite_ref.clone(), plan);
+
+        let row_sets = match query_response {
             Ok(row_set) => {
-                event!(Level::INFO, result = "execute_query_with_variables was successful");
+                event!(Level::INFO, result = "execute_query_plan was successful");
                 row_set
             },
             Err(e) => {
@@ -304,16 +253,7 @@ impl Connector for Calcite {
             },
         };
 
-
-
         Ok(models::QueryResponse(row_sets).into())
-    }
-}
-
-fn convert_to_relationship_argument(p0: &models::Argument) -> models::RelationshipArgument {
-    match p0 {
-        models::Argument::Variable { name } => models::RelationshipArgument::Variable { name: name.clone() },
-        models::Argument::Literal { value } => models::RelationshipArgument::Literal { value: value.clone() }
     }
 }
 

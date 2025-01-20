@@ -67,15 +67,6 @@ pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a 
     Ok(instance)
 }
 
-fn parse_to_row(data: Vec<String>) -> Result<Vec<Row>> {
-    let mut rows: Vec<Row> = Vec::new();
-    for item in data {
-        let row: Row = serde_json::from_str(&item).map_err(ErrorResponse::from_error)?;
-        rows.push(row);
-    }
-    Ok(rows)
-}
-
 #[derive(Debug, Deserialize)]
 pub struct CalciteErrorResponse {
     pub error_type: String,
@@ -136,14 +127,12 @@ enum CalciteResponse {
 /// ```
 // ANCHOR: calcite_query
 #[tracing::instrument(
-    fields(internal.visibility = "user"), skip(config, calcite_reference, query_metadata), level = Level::INFO
+    fields(internal.visibility = "user"), skip(calcite_reference), level = Level::INFO
 )]
 pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
-    config: &ParsedConfiguration,
-    calcite_reference: GlobalRef,
+    calcite_reference: &GlobalRef,
     sql_query: &str,
-    query_metadata: &models::Query,
-    explain: &bool,
+    explain: bool,
 ) -> Result<T> {
 
     // This method of retrieving current span context is not working!!!
@@ -166,7 +155,7 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
     let query_args: &[JValueGen<&JObject<'_>>] = &[Object(&temp_obj), Object(&trace_id_obj), Object(&span_id_obj)];
     let result = java_env.call_method(
         calcite_query,
-        if *explain { "queryPlanModels" } else { "queryModels" },
+        if explain { "queryPlanModels" } else { "queryModels" },
         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
         query_args).map_err(|e| ErrorResponse::from_error(CalciteError { message: format!("Failed to execute query: {}", e) }))?;
 

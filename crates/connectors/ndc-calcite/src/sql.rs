@@ -8,16 +8,13 @@ use once_cell::sync::Lazy;
 use crate::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use ndc_models::{OrderByTarget, Aggregate, ArgumentName, CollectionName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ExistsInCollection, Expression, Field, FieldName, Query, Relationship, RelationshipArgument, RelationshipName, UnaryComparisonOperator, VariableName};
-use ndc_sdk::connector::ErrorResponse;
+use ndc_models::{OrderByTarget, Aggregate, ArgumentName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field, FieldName, Query, RelationshipArgument, UnaryComparisonOperator, VariableName};
 use serde_json::Value;
 use tracing::{event, Level};
 
 use ndc_calcite_schema::version5::ParsedConfiguration;
 use ndc_calcite_schema::calcite::TableMetadata;
 use crate::query::{QueryComponents, SqlFrom};
-
-const NOT_FOUND_MSG: &str = "Variable not found";
 
 const HASURA_CTE_VARS: &str = "hasura_cte_vars";
 
