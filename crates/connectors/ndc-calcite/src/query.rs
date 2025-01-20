@@ -163,7 +163,7 @@ pub fn orchestrate_query(
 
 
     if let Some(vars) = query_params.vars {
-            return Ok(group_rows_by_variables(rows_data.unwrap(), aggregates_response, vars.len()));
+            return Ok(group_rows_by_variables(rows_data, aggregates_response, vars.len()));
     } else {
         let aggregate_response_in_rowset = aggregates_response.map(|r| r.first().map(|x| x.clone())).flatten();
         return Ok(vec![models::RowSet { aggregates: aggregate_response_in_rowset, rows: rows_data }]);
@@ -172,7 +172,7 @@ pub fn orchestrate_query(
 }
 
 fn group_rows_by_variables(
-    rows: Vec<IndexMap<FieldName, RowFieldValue>>,
+    rows: Option<Vec<IndexMap<FieldName, RowFieldValue>>>,
     aggregates: Option<Vec<IndexMap<FieldName, Value>>>,
     variables_set_count: usize
 ) -> Vec<RowSet> {
@@ -183,19 +183,26 @@ fn group_rows_by_variables(
     for _ in 0..variables_set_count {
         result.push(RowSet {
             aggregates: None,
-            rows: Some(Vec::new()),
+            rows: None,
         });
     }
 
-    // Group rows by var_set_index
-    for row in rows {
-        if let Some(&RowFieldValue(Value::Number(ref index))) = row.get("__var_set_index") {
-            if let Some(index) = index.as_i64() {
-                if let Some(rowset) = result.get_mut(index as usize) {
-                    if let Some(ref mut group_rows) = rowset.rows {
-                        let mut clean_row = row.clone();
-                        clean_row.swap_remove("__var_set_index");
-                        group_rows.push(clean_row);
+    // Group rows by var_set_index if rows are provided
+    if let Some(rows) = rows {
+        // Initialize rows vectors for all RowSets
+        for rowset in result.iter_mut() {
+            rowset.rows = Some(Vec::new());
+        }
+
+        for row in rows {
+            if let Some(&RowFieldValue(Value::Number(ref index))) = row.get("__var_set_index") {
+                if let Some(index) = index.as_i64() {
+                    if let Some(rowset) = result.get_mut(index as usize) {
+                        if let Some(ref mut group_rows) = rowset.rows {
+                            let mut clean_row = row.clone();
+                            clean_row.swap_remove("__var_set_index");
+                            group_rows.push(clean_row);
+                        }
                     }
                 }
             }
@@ -218,6 +225,142 @@ fn group_rows_by_variables(
     }
 
     result
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{json, Value as JsonValue};
+
+
+    fn create_test_row(index: i64, field: &str, value: Value) -> IndexMap<FieldName, RowFieldValue> {
+        let mut row = IndexMap::new();
+        row.insert(
+            "__var_set_index".into(),
+            RowFieldValue(Value::Number(index.into()))
+        );
+        row.insert(field.into(), RowFieldValue(value));
+        row
+    }
+
+    fn create_test_aggregate(index: i64, field: &str, value: Value) -> IndexMap<FieldName, Value> {
+        let mut agg = IndexMap::new();
+        agg.insert("__var_set_index".into(), Value::Number(index.into()));
+        agg.insert(field.into(), value);
+        agg
+    }
+
+    #[test]
+    fn test_empty_inputs() {
+        let result = group_rows_by_variables(None, None, 2);
+        let json_result: JsonValue = serde_json::to_value(&result).unwrap();
+
+        assert_eq!(json_result, json!([
+            {},
+            {}
+        ]));
+    }
+
+    #[test]
+    fn test_only_rows() {
+        let rows = vec![
+            create_test_row(0, "field1", json!("value1")),
+            create_test_row(1, "field2", json!("value2")),
+            create_test_row(0, "field3", json!("value3")),
+        ];
+
+        let result = group_rows_by_variables(Some(rows), None, 2);
+        let json_result: JsonValue = serde_json::to_value(&result).unwrap();
+
+        assert_eq!(json_result, json!([
+            {
+                "rows": [
+                    { "field1": "value1" },
+                    { "field3": "value3" }
+                ]
+            },
+            {
+                "rows": [
+                    { "field2": "value2" }
+                ]
+            }
+        ]));
+    }
+
+    #[test]
+    fn test_only_aggregates() {
+        let aggregates = vec![
+            create_test_aggregate(0, "sum", json!(100)),
+            create_test_aggregate(1, "sum", json!(50)),
+        ];
+
+        let result = group_rows_by_variables(None, Some(aggregates), 2);
+        let json_result: JsonValue = serde_json::to_value(&result).unwrap();
+
+        assert_eq!(json_result, json!([
+            {
+                "aggregates": { "sum": 100 },
+            },
+            {
+                "aggregates": { "sum": 50 },
+            }
+        ]));
+    }
+
+    #[test]
+    fn test_both_rows_and_aggregates() {
+        let rows = vec![
+            create_test_row(0, "field1", json!("value1")),
+            create_test_row(1, "field2", json!("value2")),
+        ];
+
+        let aggregates = vec![
+            create_test_aggregate(0, "sum", json!(100)),
+            create_test_aggregate(1, "avg", json!(50)),
+        ];
+
+        let result = group_rows_by_variables(Some(rows), Some(aggregates), 2);
+        let json_result: JsonValue = serde_json::to_value(&result).unwrap();
+
+        assert_eq!(json_result, json!([
+            {
+                "aggregates": { "sum": 100 },
+                "rows": [
+                    { "field1": "value1" }
+                ]
+            },
+            {
+                "aggregates": { "avg": 50 },
+                "rows": [
+                    { "field2": "value2" }
+                ]
+            }
+        ]));
+    }
+
+    #[test]
+    fn test_invalid_index() {
+        let rows = vec![
+            create_test_row(5, "field1", json!("value1")), // Invalid index
+            create_test_row(0, "field2", json!("value2")),
+        ];
+
+        let result = group_rows_by_variables(Some(rows), None, 2);
+        let json_result: JsonValue = serde_json::to_value(&result).unwrap();
+
+        assert_eq!(json_result, json!([
+            {
+                "rows": [
+                    { "field2": "value2" }
+                ]
+            },
+            {
+                "rows": []
+            }
+        ]));
+    }
+
+
 }
 
 
