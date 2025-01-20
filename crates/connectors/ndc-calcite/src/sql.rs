@@ -810,17 +810,6 @@ mod tests {
         QualifiedTable("public.users".to_string())
     }
 
-    fn setup_basic_query() -> Query {
-        Query {
-            aggregates: None,
-            fields: None,
-            limit: None,
-            offset: None,
-            order_by: None,
-            predicate: None,
-        }
-    }
-
     fn normalize_sql(sql: &str) -> String {
         sql.split_whitespace().collect::<Vec<&str>>().join(" ")
     }
@@ -921,7 +910,6 @@ mod tests {
     #[test]
     fn test_with_variables_cte() {
         let table = setup_test_table();
-        let query = setup_basic_query();
         let mut aggregates = IndexMap::new();
         aggregates.insert(
             "total_count".into(),
