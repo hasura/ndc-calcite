@@ -127,24 +127,26 @@ match result {
 }
 ```
 */
-#[tracing::instrument(skip(query_params), level = Level::INFO)]
-// TODO: Break this function into two separate functions that will generate the
-// query plan and execution of the query plan
-pub fn orchestrate_query(
-    query_params: QueryParams
-) -> Result<Vec<models::RowSet>> {
 
-    let mut aggregates_response = None;
+#[derive(Debug, serde::Serialize)]
+pub struct QueryPlan {
+    variables_count: Option<usize>,
+    aggregate_query: Option<String>,
+    row_query: Option<String>,
+}
+
+pub fn generate_query_plan(query_params: &QueryParams) -> Result<QueryPlan> {
     let qualified_table = sql::create_qualified_table_name(query_params.table_metadata);
     let query_components = sql::parse_query(
         &query_params.config,
         &qualified_table,
         query_params.query,
-        query_params.vars)
-        .map_err(|e| ndc_sdk::connector::ErrorResponse::from_error(e))?;
+        query_params.vars
+    ).map_err(|e| ndc_sdk::connector::ErrorResponse::from_error(e))?;
 
-    if let Some(aggregate_fields) = query_params.query.aggregates.clone() {
-        let aggregate_query = generate_aggregate_query(
+    // Generate aggregate query if needed
+    let aggregate_query = if let Some(aggregate_fields) = query_params.query.aggregates.clone() {
+        Some(generate_aggregate_query(
             query_params.config.supports_json_object,
             &qualified_table,
             query_components.predicates.clone(),
@@ -152,23 +154,87 @@ pub fn orchestrate_query(
             query_components.order_by.clone(),
             &query_components.variables_cte,
             &aggregate_fields
-        );
-
-        aggregates_response = Some(connector_query:: <Vec<IndexMap<FieldName,serde_json::Value> > >(query_params.config,query_params.state.clone().calcite_ref, &aggregate_query,query_params.query,query_params.explain)? );
-
-    }
-
-    let rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
-    // let parsed_aggregates: Option<IndexMap<FieldName, Value>> = process_aggregates(query_params, &query_components)?;
-
-
-    if let Some(vars) = query_params.vars {
-            return Ok(group_rows_by_variables(rows_data, aggregates_response, vars.len()));
+        ))
     } else {
-        let aggregate_response_in_rowset = aggregates_response.map(|r| r.first().map(|x| x.clone())).flatten();
-        return Ok(vec![models::RowSet { aggregates: aggregate_response_in_rowset, rows: rows_data }]);
+        None
+    };
+
+    // Generate row query using SqlQueryComponents
+    let row_query = if let Some(select) = query_components.select.clone() {
+        if !select.is_empty() {
+            let sql_query_components = SqlQueryComponents {
+                with: query_components.variables_cte.as_ref().map(|cte| cte.query.clone()),
+                from: (Alias(qualified_table.to_string()), SqlFrom::Table(qualified_table)),
+                order_by: query_components.order_by.clone(),
+                pagination: query_components.pagination.clone(),
+                select: select.to_string(),
+                where_clause: query_components.predicates.clone(),
+                join: query_components.join.clone(),
+                group_by: None,
+            };
+            Some(sql_query_components.to_sql(query_params.config.supports_json_object))
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    Ok(QueryPlan {
+        variables_count: query_params.vars.as_ref().map(|v| v.len()),
+        aggregate_query,
+        row_query,
+    })
+}
+
+pub fn execute_query_plan(
+    query_params: QueryParams,
+    plan: QueryPlan,
+) -> Result<Vec<models::RowSet>> {
+    let mut aggregates_response = None;
+    let mut rows_data = None;
+
+    // Execute aggregate query if present
+    if let Some(aggregate_query) = plan.aggregate_query {
+        aggregates_response = Some(connector_query::<Vec<IndexMap<FieldName, serde_json::Value>>>(
+            query_params.config,
+            query_params.state.clone().calcite_ref,
+            &aggregate_query,
+            query_params.query,
+            query_params.explain
+        )?);
     }
 
+    // Execute row query if present
+    if let Some(row_query) = plan.row_query {
+        rows_data = Some(connector_query::<Vec<Row>>(
+            query_params.config,
+            query_params.state.clone().calcite_ref,
+            &row_query,
+            query_params.query,
+            query_params.explain
+        )?);
+    }
+
+    // Group results based on variables if present
+    if let Some(vars_count) = plan.variables_count {
+        Ok(group_rows_by_variables(rows_data, aggregates_response, vars_count))
+    } else {
+        let aggregate_response_in_rowset = aggregates_response
+            .map(|r| r.first().map(|x| x.clone()))
+            .flatten();
+        Ok(vec![models::RowSet {
+            aggregates: aggregate_response_in_rowset,
+            rows: rows_data,
+        }])
+    }
+}
+
+
+// Updated orchestrate_query to use the new functions
+pub fn orchestrate_query(query_params: QueryParams) -> Result<Vec<models::RowSet>> {
+    let plan = generate_query_plan(&query_params)?;
+    execute_query_plan(query_params, plan)
 }
 
 fn group_rows_by_variables(
@@ -366,146 +432,6 @@ mod tests {
 #[tracing::instrument(skip(params, query_components), level = Level::INFO)]
 fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>> {
     execute_query_collection(params, query_components)
-}
-
-
-#[tracing::instrument(skip(pks, value), level = Level::INFO)]
-fn generate_predicate(pks: &Vec<(FieldName, FieldName)>, value: Value) -> Result<Expression> {
-    let (_, name) = pks[0].clone();
-    Ok(Expression::BinaryComparisonOperator {
-        column: ComparisonTarget::Column {
-            name,
-            field_path: None,
-            path: vec![],
-        },
-        operator: ComparisonOperatorName::from("_in".to_string()),
-        value: ComparisonValue::Scalar { value },
-    })
-}
-
-#[tracing::instrument(skip(query, predicate, pks), level = Level::INFO)]
-fn revise_query(query: Box<Query>, predicate: Expression, pks: &Vec<(FieldName, FieldName)>) -> Result<Box<Query>> {
-    let mut revised_query = query.clone();
-    revised_query.predicate = Some(predicate);
-    revised_query.offset = None;
-    revised_query.limit = None;
-    let mut fields = query.fields.unwrap();
-    for pk in pks {
-        let (key, name) = pk;
-        if !fields.contains_key(name) {
-            fields.insert(FieldName::from(key.to_string()), Field::Column {
-                column: FieldName::from(name.to_string()),
-                fields: None,
-                arguments: Default::default(),
-            });
-        }
-    }
-    revised_query.fields = Some(fields);
-    Ok(revised_query)
-}
-
-// #[tracing::instrument(
-//     skip(params, arguments, sub_relationship, revised_query), level = Level::INFO
-// )]
-// fn execute_query(params: QueryParams, arguments: &BTreeMap<ArgumentName, RelationshipArgument>, sub_relationship: &Relationship, revised_query: &Query) -> Result<Vec<Row>> {
-//     let fk_rows = orchestrate_query(QueryParams {
-//         config: params.config,
-//         coll: &sub_relationship.target_collection,
-//         coll_rel: params.coll_rel,
-//         args: arguments,
-//         query: revised_query,
-//         vars: params.vars,
-//         state: params.state,
-//         explain: params.explain,
-//     })?;
-//     Ok(fk_rows.rows.unwrap())
-// }
-
-#[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks), level = Level::INFO)]
-fn process_object_relationship(rows: Vec<Row>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>) -> Result<Option<Vec<Row>>> {
-    let modified_rows: Vec<Row> = rows.clone().into_iter().map(|mut row| {
-        event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
-        let pk_value = row.get(fks[0]).unwrap().0.clone();
-        let rowset = serde_json::map::Map::new();
-        if let Some(value) = row.get_mut(field_name) {
-            event!(Level::DEBUG, "value: {:?}", value);
-            let (key, name) = pks[0].clone();
-            event!(Level::DEBUG, "key: {:?}, name: {:?}", key, name);
-            let mut child_rows = Vec::new();
-            for x in fk_rows {
-                if let Some(value) = x.get(&key) {
-                    event!(Level::DEBUG, "value: {:?}", value);
-                    if value.0 == pk_value {
-                        child_rows.push(x);
-                    }
-                } else {
-                    event!(Level::DEBUG, "value: {:?}", value);
-                }
-            }
-            if child_rows.len() > 1 {
-                child_rows = vec![child_rows[0]];
-            }
-            process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
-
-        }
-        row
-    }).collect();
-    Ok(Some(modified_rows))
-}
-
-#[tracing::instrument(skip(rows, field_name, fk_rows, pks, fks, query), level = Level::DEBUG)]
-fn process_array_relationship(rows: Option<Vec<Row>>, field_name: &FieldName, fk_rows: &Vec<Row>, pks: &Vec<(FieldName, FieldName)>, fks: &Vec<&FieldName>, query: &Query) -> Result<Option<Vec<Row>>> {
-    let modified_rows: Vec<Row> = rows.clone().unwrap().into_iter().map(|mut row| {
-        event!(Level::DEBUG, "fk_rows: {:?}, row: {:?}, field_name: {:?}", serde_json::to_string_pretty(&fk_rows), serde_json::to_string_pretty(&row), field_name);
-        let rowset = serde_json::map::Map::new();
-        let offset = query.offset.unwrap_or(0);
-        let limit = query.limit.unwrap_or(0);
-        let pk_value = row.get(fks[0]).unwrap().0.clone();
-        if let Some(value) = row.get_mut(field_name) {
-            event!(Level::DEBUG, "value: {:?}", value);
-
-                let (key, name) = pks[0].clone();
-                event!(Level::DEBUG, "key: {:?}, name: {:?}", key, name);
-                let mut child_rows = Vec::new();
-                for x in fk_rows {
-                    if let Some(sub_value) = x.get(&key) {
-                        if sub_value.0 == pk_value {
-                            child_rows.push(x);
-                        }
-                    }
-                }
-                if limit > 0 && !child_rows.is_empty() {
-                    let max_rows = (offset + limit).min(child_rows.len() as u32);
-                    child_rows = child_rows[offset as usize..max_rows as usize].to_vec();
-                }
-                event!(Level::DEBUG, "Key: {:?}, Name: {:?}, Child Rows: {:?}", key, name, child_rows);
-                process_child_rows(&child_rows, rowset, value).expect("TODO: panic message");
-
-        }
-        row
-    }).collect();
-    Ok(Some(modified_rows))
-}
-
-#[tracing::instrument(skip(child_rows, rowset, value), level = Level::DEBUG)]
-fn process_child_rows(child_rows: &Vec<&Row>, mut rowset: serde_json::map::Map<String, Value>, value: &mut RowFieldValue) -> Result<()> {
-    rowset.insert("aggregates".to_string(), Value::Null);
-    if !child_rows.is_empty() {
-        let mut result: Vec<serde_json::map::Map<String, Value>> = vec![];
-        for child in child_rows {
-            let mut map = serde_json::map::Map::new();
-            for (key, value) in *child {
-                map.insert(key.to_string(), value.0.clone());
-            }
-            result.push(map);
-        }
-        rowset.insert("rows".to_string(), Value::from(result));
-        *value = RowFieldValue(Value::from(rowset));
-    } else {
-        rowset.insert("rows".to_string(), Value::Null);
-        *value = RowFieldValue(Value::from(rowset));
-    }
-    Ok(())
 }
 
 #[tracing::instrument(

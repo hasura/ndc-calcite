@@ -41,7 +41,7 @@ pub struct CalciteState {
 }
 
 #[tracing::instrument(skip(config, coll, args, coll_rel, query, vars, state), level=Level::INFO)]
-fn execute_query_with_variables(
+fn handle_query(
     config: &ParsedConfiguration,
     coll: &CollectionName,
     args: &BTreeMap<ArgumentName, models::RelationshipArgument>,
@@ -53,9 +53,22 @@ fn execute_query_with_variables(
 ) -> Result<Vec<models::RowSet>> {
     let empty_map = HashMap::new();
     let metadata_map = config.metadata.as_ref().unwrap_or(&empty_map);
-    let table_metadata = metadata_map.get(coll).ok_or( ndc_sdk::connector::ErrorResponse::from_error(crate::error::Error::CollectionNotFound(coll.clone())) )?; // TODO(KC): FIx this!
+    let table_metadata = metadata_map.get(coll).ok_or( ndc_sdk::connector::ErrorResponse::from_error(crate::error::Error::CollectionNotFound(coll.clone())) )?;
 
-    query::orchestrate_query(QueryParams { config, table_metadata, coll, coll_rel, args, query, vars, state, explain})
+    let query_params = QueryParams {
+        config,
+        table_metadata,
+        coll,
+        coll_rel,
+        args,
+        query,
+        vars,
+        state,
+        explain,
+    };
+    let plan = query::generate_query_plan(&query_params)?;
+    query::execute_query_plan(query_params, plan)
+
 }
 
 const CONFIG_ERROR_MSG: &str = "Could not find model file.";
@@ -271,7 +284,7 @@ impl Connector for Calcite {
                 )
                 .collect();
 
-        let row_sets = match execute_query_with_variables(
+        let row_sets = match handle_query(
             configuration,
             &request.collection,
             &relationship_arguments,
