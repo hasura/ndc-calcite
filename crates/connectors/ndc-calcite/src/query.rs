@@ -363,41 +363,6 @@ mod tests {
 
 }
 
-
-#[tracing::instrument(skip(rows_data, sub_relationship), level = Level::DEBUG)]
-fn generate_value_from_rows(rows_data: &Vec<Row>, sub_relationship: &Relationship) -> Result<Value> {
-    let relationship_value: Value = rows_data.into_iter().map(|row| {
-        let mut row_values: Vec<Value> = Vec::new();
-        for (foreign_key, _) in sub_relationship.column_mapping.iter() {
-            let column_value = match row.get(foreign_key) {
-                Some(value) => value.0.clone(),
-                None => Value::Null,
-            };
-            row_values.push(column_value);
-        }
-        if row_values.len() == 1 {
-            row_values[0].clone()
-        } else {
-            Value::Array(row_values)
-        }
-    }).collect();
-    Ok(relationship_value)
-}
-
-#[tracing::instrument(skip(sub_relationship), level = Level::DEBUG)]
-fn parse_relationship(sub_relationship: &Relationship) -> Result<(Vec<(FieldName, FieldName)>, Vec<&FieldName>, RelationshipType)> {
-    let pks: Vec<(FieldName, FieldName)> = sub_relationship.column_mapping
-        .iter()
-        .map(|(k, v)| (k.clone(), v.clone()))
-        .collect();
-    if pks.len() > 1 {
-        return Err(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), "Cannot create a sub-query based on a composite key".to_string(), Value::Null));
-    }
-    let fks: Vec<&FieldName> = sub_relationship.column_mapping.keys().collect();
-    let relationship_type = sub_relationship.relationship_type.clone();
-    Ok((pks, fks, relationship_type))
-}
-
 #[tracing::instrument(skip(params, query_components), level = Level::INFO)]
 fn process_rows(params: QueryParams, query_components: &QueryComponents) -> Result<Option<Vec<Row>>> {
     execute_query_collection(params, query_components)
