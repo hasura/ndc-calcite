@@ -154,11 +154,8 @@ pub fn orchestrate_query(
             &aggregate_fields
         );
 
-        println!("Aggregate query: {:#?}", aggregate_query);
-
         aggregates_response = Some(connector_query:: <Vec<IndexMap<FieldName,serde_json::Value> > >(query_params.config,query_params.state.clone().calcite_ref, &aggregate_query,query_params.query,query_params.explain)? );
 
-        println!("Aggregates response {}", serde_json::to_string_pretty(&aggregates_response.clone().unwrap()).unwrap());
     }
 
     let rows_data: Option<Vec<Row>> = process_rows(query_params, &query_components)?;
