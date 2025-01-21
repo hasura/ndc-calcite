@@ -168,8 +168,8 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
                          ErrorResponse::from_error(
                              CalciteError {
                                  message: format!(
-                                     "Internal: failed to convert JString to Rust String : {}", e)
-                             }))?.into();
+                                     "Internal: failed to convert JString to Rust String : {}", e)}))?.into();
+
 
             let rows: T = match serde_json::from_str::<CalciteResponse<T>>(&json_string) {
                 Ok(json_rows) => {

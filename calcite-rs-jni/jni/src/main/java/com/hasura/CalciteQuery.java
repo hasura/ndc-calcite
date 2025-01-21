@@ -505,6 +505,7 @@ public class CalciteQuery {
                 List<Map<String, Object>> rows = new ArrayList<>();
 
                 try {
+
                     ResultSetMetaData metaData = resultSet.getMetaData();
                     int columnCount = metaData.getColumnCount();
                     Pattern timestampPattern = Pattern.compile("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$");
@@ -512,32 +513,35 @@ public class CalciteQuery {
                     while (resultSet.next()) {
                         Map<String, Object> columns = new LinkedHashMap<>();
                         for (int i = 1; i <= columnCount; i++) {
+                            String columnName = metaData.getColumnName(i);
                             Object value = resultSet.getObject(i);
+                            String columnLabel = metaData.getColumnLabel(i);
 
-                            // handling Dates and Timestamps
+                            // Determine the final value to put in the map
+                            Object finalValue;
                             if (value instanceof java.sql.Date) {
                                 java.sql.Date sqlDate = (java.sql.Date) value;
                                 java.util.Date utilDate = new java.util.Date(sqlDate.getTime());
-                                String rfcDateString = rfcDateFormat.format(utilDate.toInstant());
-                                columns.put(metaData.getColumnLabel(i), rfcDateString);
+                                finalValue = rfcDateFormat.format(utilDate.toInstant());
                             } else if (value instanceof java.sql.Timestamp) {
                                 java.sql.Timestamp sqlTimestamp = (java.sql.Timestamp) value;
                                 java.util.Date utilDate = new java.util.Date(sqlTimestamp.getTime());
-                                String rfcDateString = rfcFormat.format(utilDate.toInstant());
-                                columns.put(metaData.getColumnLabel(i), rfcDateString);
+                                finalValue = rfcFormat.format(utilDate.toInstant());
                             } else if (value instanceof ArrayImpl) {
-                                columns.put(metaData.getColumnLabel(i), ((ArrayImpl) value).getArray());
-                            } else if (sqliteFlag && value instanceof String && metaData.getColumnLabel(i).toLowerCase().contains("date") &&  timestampPattern.matcher((String) value).matches()) {
-                                String newDate = ((String) value).replace(" ", "T");
-                                columns.put(metaData.getColumnLabel(i), newDate);
+                                finalValue = ((ArrayImpl) value).getArray();
+                            } else if (sqliteFlag && value instanceof String &&
+                                      columnLabel.toLowerCase().contains("date") &&
+                                      timestampPattern.matcher((String) value).matches()) {
+                                finalValue = ((String) value).replace(" ", "T");
+                            } else {
+                                finalValue = value;
                             }
-                            // if it is not date - put the value directly
-                            else {
-                                columns.put(metaData.getColumnLabel(i), resultSet.getObject(i));
-                            }
+
+                            columns.put(columnLabel, finalValue);
                         }
                         rows.add(columns);
                     }
+
                 } catch(Throwable e) {
                     e.printStackTrace();
                 } finally {
@@ -545,8 +549,9 @@ public class CalciteQuery {
                 }
 
                 statement.close();
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
                 String result = gson.toJson(rows);
+
                 span.setAttribute("Rows returned", rows.size());
                 span.setStatus(StatusCode.OK);
                 return result;
