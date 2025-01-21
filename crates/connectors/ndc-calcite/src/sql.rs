@@ -8,7 +8,7 @@ use once_cell::sync::Lazy;
 use crate::error::Error;
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use ndc_models::{OrderByTarget, Aggregate, ArgumentName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field, FieldName, Query, RelationshipArgument, UnaryComparisonOperator, VariableName};
+use ndc_models::{Aggregate, ArgumentName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ExistsInCollection, Expression, Field, FieldName, OrderByTarget, Query, RelationshipArgument, UnaryComparisonOperator, VariableName};
 use serde_json::Value;
 use tracing::{event, Level};
 
@@ -404,52 +404,27 @@ fn process_sql_expression(
             Ok(format!("{} {} {}", left_side, sql_operation, right_side))
         }
         Expression::Exists { in_collection, predicate } => {
-            // match in_collection {
-            //     ExistsInCollection::Related { arguments, relationship } => {
-            //         let argument_parts = create_arguments(variables, arguments);
-            //         let root_relationship = collection_relationships.get(relationship).unwrap();
-            //         let foreign_table = create_qualified_table_name(
-            //             configuration.clone().metadata.unwrap().get(&root_relationship.target_collection).unwrap()
-            //         );
-            //         if let Some(pred_expression) = predicate {
-            //             let sub_query_clause: Vec<String> = root_relationship
-            //                 .column_mapping
-            //                 .iter()
-            //                 .map(|(source_column, target_column)| format!("{}.\"{}\" = \"{}\"", table, source_column, target_column))
-            //                 .collect();
-            //             let expression = process_sql_expression(
-            //                 configuration,
-            //                 collection,
-            //                 collection_relationships,
-            //                 variables,
-            //                 pred_expression,
-            //             ).unwrap();
-            //             Ok(format!(
-            //                 "EXISTS (SELECT 1 FROM {} WHERE ({} AND {}) {})",
-            //                 foreign_table, sub_query_clause.join(" AND "),
-            //                 expression, argument_parts.join(" ")
-            //             ))
-            //         } else {
-            //             Ok("".into())
-            //         }
-            //     }
-            //     ExistsInCollection::Unrelated { collection, arguments } => {
-            //         if let Some(pred_expression) = predicate {
-            //             let argument_parts = create_arguments(variables, arguments);
-            //             let expression = process_sql_expression(configuration, collection, collection_relationships, variables, pred_expression).unwrap();
-            //             let foreign_table = create_qualified_table_name(
-            //                 configuration.clone().metadata.unwrap().get(collection).unwrap()
-            //             );
-            //             Ok(format!("EXISTS (SELECT 1 FROM {} WHERE {} {})", foreign_table, expression, argument_parts.join(" ")))
-            //         } else {
-            //             Ok("".into())
-            //         }
-            //     }
-            //     ExistsInCollection::NestedCollection { .. } => {
-            //         Ok("".into())
-            //     }
-            // }
-            todo!()
+            match in_collection {
+                ExistsInCollection::Related { .. } => {
+                    return Err(Error::RelationshipsAreNotSupported);
+                }
+                ExistsInCollection::Unrelated { collection, .. } => {
+                    if let Some(pred_expression) = predicate {
+                        let foreign_table = create_qualified_table_name(
+                            configuration.clone().metadata.unwrap().get(collection).unwrap()
+                        );
+
+                        let expression = process_sql_expression(configuration, &foreign_table , variables, pred_expression).unwrap();
+                        Ok(format!("EXISTS (SELECT 1 FROM {} WHERE {})", foreign_table, expression))
+                    } else {
+                        Ok("".into())
+                    }
+                }
+                ExistsInCollection::NestedCollection { .. } => {
+                    Err(Error::NestedCollectionNotSupported)
+
+                }
+            }
         }
     }
 }

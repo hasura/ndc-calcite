@@ -77,7 +77,8 @@ pub struct CalciteErrorResponse {
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
-enum CalciteResponse {
+enum CalciteResponse<T> {
+    CRSuccess(T),
     CRError(CalciteErrorResponse),
 }
 
@@ -164,12 +165,25 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
         Object(obj) => {
             let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
             println!("\n\n***Response from calcite: {}\n\n", json_string);
-            let rows: T = match serde_json::from_str::<T>(&json_string) {
+            let rows: T = match serde_json::from_str::<CalciteResponse<T>>(&json_string) {
                 Ok(json_rows) => {
-                    json_rows
+                    match json_rows {
+                        CalciteResponse::CRSuccess(rows) => rows,
+                        CalciteResponse::CRError(err) => {
+                            let err_msg = if let Some(cause) = err.cause {
+                                format!("{} {}", err.error_message, cause)
+                            } else {
+                                err.error_message
+                            };
+                            let err = CalciteError {
+                                message: format!("Failed to execute query in calcite: {}", err_msg) };
+                            return Err(ErrorResponse::from_error(err));
+                        }
+                    }
                 },
                 Err(e) => {
-                    return Err(ErrorResponse::from_error(CalciteError { message: format!("Failed to parse response from Calcite: {} ", e) }));
+                    let err = CalciteError { message: format!("Failed to parse response from Calcite: {}", e) };
+                    return Err(ErrorResponse::from_error(err));
                 }
             };
             // TODO(KC): What's this for?

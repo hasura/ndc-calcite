@@ -18,4 +18,6 @@ pub(crate) enum Error {
     CouldNotParseCalciteExplainResponse(serde_json::Error),
     #[error("No rows found in Calcite explain response")]
     FoundNoRowsInCalciteExplainResponse,
+    #[error("Nested collections are not supported")]
+    NestedCollectionNotSupported,
 }
