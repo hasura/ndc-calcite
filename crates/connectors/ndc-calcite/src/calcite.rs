@@ -163,8 +163,14 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
 
     match result {
         Object(obj) => {
-            let json_string: String = java_env.get_string(&JString::from(obj)).unwrap().into();
-            println!("\n\n***Response from calcite: {}\n\n", json_string);
+            let json_string: String = java_env.get_string(&JString::from(obj))
+                .map_err(|e|
+                         ErrorResponse::from_error(
+                             CalciteError {
+                                 message: format!(
+                                     "Internal: failed to convert JString to Rust String : {}", e)
+                             }))?.into();
+
             let rows: T = match serde_json::from_str::<CalciteResponse<T>>(&json_string) {
                 Ok(json_rows) => {
                     match json_rows {
