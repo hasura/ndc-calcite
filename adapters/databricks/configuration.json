@@ -4,7 +4,7 @@
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "customer": {
+    "Customer": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -80,7 +80,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "invoiceline": {
+    "Invoiceline": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -116,7 +116,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "playlist": {
+    "Playlist": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -137,7 +137,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "artist": {
+    "Artist": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -347,7 +347,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "playlisttrack": {
+    "PlaylistTrack": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -368,7 +368,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "mediatype": {
+    "Mediatype": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -389,7 +389,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "track": {
+    "Track": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
