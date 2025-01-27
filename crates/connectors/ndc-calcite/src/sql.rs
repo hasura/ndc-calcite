@@ -5,13 +5,12 @@
 use crate::error::Error;
 use indexmap::IndexMap;
 use ndc_models::{
-    Aggregate, ArgumentName, ComparisonOperatorName, ComparisonTarget, ComparisonValue,
-    ExistsInCollection, Expression, Field, FieldName, OrderByTarget, Query, RelationshipArgument,
-    UnaryComparisonOperator, VariableName,
+    Aggregate, ComparisonOperatorName, ComparisonTarget, ComparisonValue, Expression, Field,
+    FieldName, OrderByTarget, Query, UnaryComparisonOperator, VariableName,
 };
 use once_cell::sync::Lazy;
 use serde_json::Value;
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use tracing::{event, Level};
@@ -101,11 +100,8 @@ fn generate_cte_vars(
         .collect::<Vec<String>>()
         .join(", ");
 
-    let mut cte = format!("WITH \"{HASURA_CTE_VARS}\" ({cte_columns}) AS (\n");
-
     if vars.is_empty() {
         // If there are no variables, we still need to generate a CTE that will return 0 rows
-        let cte_expression = format!("WITH \"{HASURA_CTE_VARS}\"({cte_columns}) AS ");
         let column_values_expression = columns
             .iter()
             .map(|_| "0".to_string())
@@ -301,7 +297,12 @@ fn aggregates(
                 columns_to_select.insert(column);
                 // TODO: We need to validate the function name here
 
-                format!("{}({})", function, qualify_column(&column_name))
+                // Should we do this for all functions?
+                if function.to_string() == "avg".to_string() {
+                    format!("CAST(avg({}) as DOUBLE) ", qualify_column(&column_name))
+                } else {
+                    format!("{}({})", function, qualify_column(&column_name))
+                }
             }
             Aggregate::StarCount {} => "COUNT(*)".to_string(),
         };

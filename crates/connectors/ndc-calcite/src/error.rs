@@ -4,8 +4,6 @@ use thiserror::Error;
 pub(crate) enum Error {
     #[error("Collection {0} not found")]
     CollectionNotFound(CollectionName),
-    #[error("Variable {0} not found")]
-    VariableNotFound(String),
     #[error("Exists operator is not supported")]
     ExistsOperatorNotSupported,
     #[error("Variable {0} is an object and only scalar values are supported as variable values")]
@@ -20,6 +18,4 @@ pub(crate) enum Error {
     CouldNotParseCalciteExplainResponse(serde_json::Error),
     #[error("No rows found in Calcite explain response")]
     FoundNoRowsInCalciteExplainResponse,
-    #[error("Nested collections are not supported")]
-    NestedCollectionNotSupported,
 }

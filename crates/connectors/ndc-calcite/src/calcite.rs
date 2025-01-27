@@ -9,12 +9,10 @@ use indexmap::IndexMap;
 use jni::objects::JValueGen::Object;
 use jni::objects::{GlobalRef, JObject, JString, JValueGen};
 use jni::JNIEnv;
-use ndc_models as models;
 use ndc_models::{FieldName, RowFieldValue};
 use ndc_sdk::connector::ErrorResponse;
 use ndc_sdk::connector::Result;
 use opentelemetry::trace::TraceContextExt;
-use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
 
@@ -257,41 +255,6 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize>(
             Err(ErrorResponse::from_error(err))
         }
     }
-}
-
-fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
-    let fields = query_metadata.clone().fields.unwrap_or_default();
-    let aggregates = query_metadata.clone().aggregates.unwrap_or_default();
-    let max_keys = fields.len() + aggregates.len();
-    let mut key_sample: Vec<FieldName> = vec![];
-
-    for (key, _) in fields {
-        key_sample.push(key);
-    }
-
-    for (key, _) in aggregates {
-        key_sample.push(key);
-    }
-
-    rows.into_iter()
-        .map(|mut row| {
-            if max_keys > row.len() {
-                for key in &key_sample {
-                    if !row.contains_key(key) {
-                        row.insert(key.clone(), RowFieldValue(Value::Null));
-                    }
-                }
-            }
-            for (_key, value) in &mut row {
-                let RowFieldValue(val) = value;
-                if val == "null" {
-                    *value = RowFieldValue(Value::Null);
-                }
-            }
-            row.swap_remove("CONSTANT");
-            row
-        })
-        .collect()
 }
 // ANCHOR_END: calcite_query
 
