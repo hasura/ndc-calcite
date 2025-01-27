@@ -459,7 +459,7 @@ fn process_sql_expression(
                             .metadata
                             .unwrap_or_default()
                             .get(collection)
-                            .ok_or(Error::TableNotFound(collection.clone()))?,
+                            .ok_or(Error::CollectionNotFound(collection.clone()))?,
                     );
 
                     let expression = process_sql_expression(
