@@ -111,7 +111,7 @@ pub fn generate_query_plan(
         config,
         table_metadata,
         coll,
-        query: &query,
+        query,
         vars,
         state,
         explain,
@@ -120,12 +120,12 @@ pub fn generate_query_plan(
     // Rest of the query plan generation logic...
     let qualified_table = sql::create_qualified_table_name(query_params.table_metadata);
     let query_components = sql::parse_query(
-        &query_params.config,
+        query_params.config,
         &qualified_table,
         query_params.query,
         query_params.vars,
     )
-    .map_err(|e| ndc_sdk::connector::ErrorResponse::from_error(e))?;
+    .map_err(ndc_sdk::connector::ErrorResponse::from_error)?;
 
     // Generate aggregate query if needed...
     let aggregate_query = if let Some(aggregate_fields) = query_params.query.aggregates.clone() {
@@ -170,7 +170,7 @@ pub fn generate_query_plan(
     };
 
     Ok(QueryPlan {
-        variables_count: query_params.vars.as_ref().map(|v| v.len()),
+        variables_count: query_params.vars.as_ref().map(std::vec::Vec::len),
         aggregate_query,
         row_query,
         is_explain: explain,
@@ -178,7 +178,7 @@ pub fn generate_query_plan(
 }
 
 pub fn execute_query_plan(
-    calcite_reference: jni::objects::GlobalRef,
+    calcite_reference: &jni::objects::GlobalRef,
     plan: QueryPlan,
 ) -> Result<Vec<models::RowSet>> {
     let mut aggregates_response = None;

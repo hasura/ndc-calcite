@@ -49,7 +49,7 @@ fn handle_query(
     explain: bool,
 ) -> Result<Vec<models::RowSet>> {
     let plan = query::generate_query_plan(config, coll, query, vars, state, explain)?;
-    query::execute_query_plan(state.calcite_ref.clone(), plan)
+    query::execute_query_plan(&state.calcite_ref, plan)
 }
 
 const CONFIG_ERROR_MSG: &str = "Could not find model file.";
@@ -269,7 +269,7 @@ impl Connector for Calcite {
             state,
             false,
         )?;
-        let query_response = query::execute_query_plan(state.calcite_ref.clone(), plan);
+        let query_response = query::execute_query_plan(&state.calcite_ref, plan);
 
         let row_sets = match query_response {
             Ok(row_set) => {
