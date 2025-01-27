@@ -5,21 +5,23 @@
 //!
 //! Aggregate are generated as additional queries, and stitched into the
 //! RowSet aggregates response.
-use std::collections::{BTreeMap, HashMap};
 use indexmap::IndexMap;
+use ndc_models::{CollectionName, FieldName, Query, RowFieldValue, VariableName};
+use ndc_sdk::connector::error::Result;
 use ndc_sdk::connector::ErrorResponse;
 use ndc_sdk::models::{self, RowSet};
-use ndc_models::{CollectionName, FieldName, Query, RowFieldValue, VariableName};
-use ndc_sdk::connector::error::Result as Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::{BTreeMap, HashMap};
 
 use ndc_calcite_schema::version5::ParsedConfiguration;
 
 use crate::calcite::{connector_query, Row};
 use crate::connector::calcite::CalciteState;
 use crate::error::Error;
-use crate::sql::{self, generate_aggregate_query, Alias, QualifiedTable, SqlQueryComponents, VariablesCTE};
+use crate::sql::{
+    self, generate_aggregate_query, Alias, QualifiedTable, SqlQueryComponents, VariablesCTE,
+};
 
 /// A struct representing the parameters of a query.
 ///
@@ -50,8 +52,6 @@ pub enum SqlFrom {
 #[derive(Debug, Clone)]
 pub struct ColumnName(pub String);
 
-
-
 /// A struct representing the components of a query.
 ///
 /// The `QueryComponents` struct is used to store various components of a query.
@@ -81,8 +81,6 @@ impl QueryComponents {
     }
 }
 
-
-
 #[derive(Debug)]
 pub struct QueryPlan {
     variables_count: Option<usize>,
@@ -102,11 +100,12 @@ pub fn generate_query_plan(
     // Handle metadata lookup
     let empty_map = std::collections::HashMap::new();
     let metadata_map = config.metadata.as_ref().unwrap_or(&empty_map);
-    let table_metadata = metadata_map.get(coll).ok_or(
-        ndc_sdk::connector::ErrorResponse::from_error(
-            crate::error::Error::CollectionNotFound(coll.clone())
-        )
-    )?;
+    let table_metadata =
+        metadata_map
+            .get(coll)
+            .ok_or(ndc_sdk::connector::ErrorResponse::from_error(
+                crate::error::Error::CollectionNotFound(coll.clone()),
+            ))?;
 
     let query_params = QueryParams {
         config,
@@ -124,8 +123,9 @@ pub fn generate_query_plan(
         &query_params.config,
         &qualified_table,
         query_params.query,
-        query_params.vars
-    ).map_err(|e| ndc_sdk::connector::ErrorResponse::from_error(e))?;
+        query_params.vars,
+    )
+    .map_err(|e| ndc_sdk::connector::ErrorResponse::from_error(e))?;
 
     // Generate aggregate query if needed...
     let aggregate_query = if let Some(aggregate_fields) = query_params.query.aggregates.clone() {
@@ -136,7 +136,7 @@ pub fn generate_query_plan(
             query_components.pagination.clone(),
             query_components.order_by.clone(),
             &query_components.variables_cte,
-            &aggregate_fields
+            &aggregate_fields,
         ))
     } else {
         None
@@ -146,8 +146,14 @@ pub fn generate_query_plan(
     let row_query = if let Some(select) = query_components.select.clone() {
         if !select.is_empty() {
             let sql_query_components = SqlQueryComponents {
-                with: query_components.variables_cte.as_ref().map(|cte| cte.query.clone()),
-                from: (Alias(qualified_table.to_string()), SqlFrom::Table(qualified_table)),
+                with: query_components
+                    .variables_cte
+                    .as_ref()
+                    .map(|cte| cte.query.clone()),
+                from: (
+                    Alias(qualified_table.to_string()),
+                    SqlFrom::Table(qualified_table),
+                ),
                 order_by: query_components.order_by.clone(),
                 pagination: query_components.pagination.clone(),
                 select: select.to_string(),
@@ -183,23 +189,26 @@ pub fn execute_query_plan(
         rows_data = Some(connector_query::<Vec<Row>>(
             &calcite_reference,
             &row_query,
-            plan.is_explain
+            plan.is_explain,
         )?);
     }
 
     // Execute aggregate query if present
     if let Some(aggregate_query) = plan.aggregate_query {
-        aggregates_response = Some(connector_query::<Vec<IndexMap<FieldName, serde_json::Value>>>(
-            &calcite_reference,
-            &aggregate_query,
-            plan.is_explain
+        aggregates_response = Some(connector_query::<
+            Vec<IndexMap<FieldName, serde_json::Value>>,
+        >(
+            &calcite_reference, &aggregate_query, plan.is_explain
         )?);
     }
 
-
     // Group results based on variables if present
     if let Some(vars_count) = plan.variables_count {
-        Ok(response_processing_with_variables(rows_data, aggregates_response, vars_count))
+        Ok(response_processing_with_variables(
+            rows_data,
+            aggregates_response,
+            vars_count,
+        ))
     } else {
         let aggregate_response_in_rowset = aggregates_response
             .map(|r| r.first().map(|x| x.clone()))
@@ -211,12 +220,11 @@ pub fn execute_query_plan(
     }
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 struct ExplainQueryPlan {
     // Will deserialize the single key-value pair from the JSON object
     #[serde(flatten)]
-    plan: HashMap<String, String>
+    plan: HashMap<String, String>,
 }
 
 #[derive(Debug)]
@@ -234,49 +242,62 @@ pub fn explain_query_plan(
 
     // Execute explain row query if present
     if let Some(row_query) = plan.row_query {
-        let first_row = connector_query::<Vec<String>>(
-            &calcite_reference,
-            &row_query,
-            plan.is_explain
-        )?.first().unwrap().clone();
+        let first_row =
+            connector_query::<Vec<String>>(&calcite_reference, &row_query, plan.is_explain)?
+                .first()
+                .unwrap()
+                .clone();
         let first_row = serde_json::from_str::<ExplainQueryPlan>(&first_row).map_err(|e| {
             ndc_sdk::connector::ErrorResponse::from_error(
-                crate::error::Error::CouldNotParseCalciteExplainResponse(e)
+                crate::error::Error::CouldNotParseCalciteExplainResponse(e),
             )
         })?;
 
-        rows_explain = Some(first_row.plan.values().next().ok_or(Error::FoundNoRowsInCalciteExplainResponse).map_err(|e| ErrorResponse::from_error(e))?.clone());
+        rows_explain = Some(
+            first_row
+                .plan
+                .values()
+                .next()
+                .ok_or(Error::FoundNoRowsInCalciteExplainResponse)
+                .map_err(|e| ErrorResponse::from_error(e))?
+                .clone(),
+        );
     }
 
     // Execute explain aggregate query if present
     if let Some(aggregate_query) = plan.aggregate_query {
-        let first_row = connector_query::<Vec<String>>(
-            &calcite_reference,
-            &aggregate_query,
-            plan.is_explain
-        )?.first().unwrap().clone();
+        let first_row =
+            connector_query::<Vec<String>>(&calcite_reference, &aggregate_query, plan.is_explain)?
+                .first()
+                .unwrap()
+                .clone();
         let first_row = serde_json::from_str::<ExplainQueryPlan>(&first_row).map_err(|e| {
             ndc_sdk::connector::ErrorResponse::from_error(
-                crate::error::Error::CouldNotParseCalciteExplainResponse(e)
+                crate::error::Error::CouldNotParseCalciteExplainResponse(e),
             )
         })?;
 
-        aggregates_explain = Some(first_row.plan.values().next().ok_or(Error::FoundNoRowsInCalciteExplainResponse).map_err(|e| ErrorResponse::from_error(e))?.clone());
+        aggregates_explain = Some(
+            first_row
+                .plan
+                .values()
+                .next()
+                .ok_or(Error::FoundNoRowsInCalciteExplainResponse)
+                .map_err(|e| ErrorResponse::from_error(e))?
+                .clone(),
+        );
     }
-
-
-
 
     Ok(ExplainResponse {
         aggregates_explain,
-        rows_explain
+        rows_explain,
     })
 }
 
 fn response_processing_with_variables(
     rows: Option<Vec<IndexMap<FieldName, RowFieldValue>>>,
     aggregates: Option<Vec<IndexMap<FieldName, Value>>>,
-    variables_set_count: usize
+    variables_set_count: usize,
 ) -> Vec<RowSet> {
     // Pre-create result vector with empty RowSets for each variable
     let mut result = Vec::new();
@@ -334,12 +355,15 @@ mod tests {
     use super::*;
     use serde_json::{json, Value as JsonValue};
 
-
-    fn create_test_row(index: i64, field: &str, value: Value) -> IndexMap<FieldName, RowFieldValue> {
+    fn create_test_row(
+        index: i64,
+        field: &str,
+        value: Value,
+    ) -> IndexMap<FieldName, RowFieldValue> {
         let mut row = IndexMap::new();
         row.insert(
             "__var_set_index".into(),
-            RowFieldValue(Value::Number(index.into()))
+            RowFieldValue(Value::Number(index.into())),
         );
         row.insert(field.into(), RowFieldValue(value));
         row
@@ -357,10 +381,7 @@ mod tests {
         let result = response_processing_with_variables(None, None, 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
-        assert_eq!(json_result, json!([
-            {},
-            {}
-        ]));
+        assert_eq!(json_result, json!([{}, {}]));
     }
 
     #[test]
@@ -374,19 +395,22 @@ mod tests {
         let result = response_processing_with_variables(Some(rows), None, 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
-        assert_eq!(json_result, json!([
-            {
-                "rows": [
-                    { "field1": "value1" },
-                    { "field3": "value3" }
-                ]
-            },
-            {
-                "rows": [
-                    { "field2": "value2" }
-                ]
-            }
-        ]));
+        assert_eq!(
+            json_result,
+            json!([
+                {
+                    "rows": [
+                        { "field1": "value1" },
+                        { "field3": "value3" }
+                    ]
+                },
+                {
+                    "rows": [
+                        { "field2": "value2" }
+                    ]
+                }
+            ])
+        );
     }
 
     #[test]
@@ -399,14 +423,17 @@ mod tests {
         let result = response_processing_with_variables(None, Some(aggregates), 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
-        assert_eq!(json_result, json!([
-            {
-                "aggregates": { "sum": 100 },
-            },
-            {
-                "aggregates": { "sum": 50 },
-            }
-        ]));
+        assert_eq!(
+            json_result,
+            json!([
+                {
+                    "aggregates": { "sum": 100 },
+                },
+                {
+                    "aggregates": { "sum": 50 },
+                }
+            ])
+        );
     }
 
     #[test]
@@ -424,20 +451,23 @@ mod tests {
         let result = response_processing_with_variables(Some(rows), Some(aggregates), 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
-        assert_eq!(json_result, json!([
-            {
-                "aggregates": { "sum": 100 },
-                "rows": [
-                    { "field1": "value1" }
-                ]
-            },
-            {
-                "aggregates": { "avg": 50 },
-                "rows": [
-                    { "field2": "value2" }
-                ]
-            }
-        ]));
+        assert_eq!(
+            json_result,
+            json!([
+                {
+                    "aggregates": { "sum": 100 },
+                    "rows": [
+                        { "field1": "value1" }
+                    ]
+                },
+                {
+                    "aggregates": { "avg": 50 },
+                    "rows": [
+                        { "field2": "value2" }
+                    ]
+                }
+            ])
+        );
     }
 
     #[test]
@@ -450,17 +480,18 @@ mod tests {
         let result = response_processing_with_variables(Some(rows), None, 2);
         let json_result: JsonValue = serde_json::to_value(&result).unwrap();
 
-        assert_eq!(json_result, json!([
-            {
-                "rows": [
-                    { "field2": "value2" }
-                ]
-            },
-            {
-                "rows": []
-            }
-        ]));
+        assert_eq!(
+            json_result,
+            json!([
+                {
+                    "rows": [
+                        { "field2": "value2" }
+                    ]
+                },
+                {
+                    "rows": []
+                }
+            ])
+        );
     }
-
-
 }

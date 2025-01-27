@@ -2,22 +2,25 @@
 //!
 //! Creates the Calcite query statement for a single query.
 //!
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use indexmap::IndexMap;
-use once_cell::sync::Lazy;
 use crate::error::Error;
+use indexmap::IndexMap;
+use ndc_models::{
+    Aggregate, ArgumentName, ComparisonOperatorName, ComparisonTarget, ComparisonValue,
+    ExistsInCollection, Expression, Field, FieldName, OrderByTarget, Query, RelationshipArgument,
+    UnaryComparisonOperator, VariableName,
+};
+use once_cell::sync::Lazy;
+use serde_json::Value;
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::fmt;
 use std::fmt::{Display, Formatter};
-use ndc_models::{Aggregate, ArgumentName, ComparisonOperatorName, ComparisonTarget, ComparisonValue, ExistsInCollection, Expression, Field, FieldName, OrderByTarget, Query, RelationshipArgument, UnaryComparisonOperator, VariableName};
-use serde_json::Value;
 use tracing::{event, Level};
 
-use ndc_calcite_schema::version5::ParsedConfiguration;
-use ndc_calcite_schema::calcite::TableMetadata;
 use crate::query::{QueryComponents, SqlFrom};
+use ndc_calcite_schema::calcite::TableMetadata;
+use ndc_calcite_schema::version5::ParsedConfiguration;
 
 const HASURA_CTE_VARS: &str = "hasura_cte_vars";
-
 
 // #[tracing::instrument(skip(variables, argument), level=Level::DEBUG)]
 // fn eval_argument(
@@ -39,18 +42,25 @@ const HASURA_CTE_VARS: &str = "hasura_cte_vars";
 // should be used in the Calcite schema generation and the SQL query generation.
 static SQL_OPERATIONS: Lazy<HashMap<ComparisonOperatorName, String>> = Lazy::new(|| {
     vec![
-    ("_gt".into(), ">".into()),
-    ("_lt".into(), "<".into()),
-    ("_gte".into(), ">=".into()),
-    ("_lte".into(), "<=".into()),
-    ("_eq".into(), "=".into()),
-    ("_in".into(), "IN".into()),
-    ("_like".into(), "LIKE".into()),
-    ].into_iter().collect()
+        ("_gt".into(), ">".into()),
+        ("_lt".into(), "<".into()),
+        ("_gte".into(), ">=".into()),
+        ("_lte".into(), "<=".into()),
+        ("_eq".into(), "=".into()),
+        ("_in".into(), "IN".into()),
+        ("_like".into(), "LIKE".into()),
+    ]
+    .into_iter()
+    .collect()
 });
 
 #[tracing::instrument(skip(supports_json_object, alias, item, table), level=Level::DEBUG)]
-fn get_field_statement(supports_json_object: bool, alias: &FieldName, item: &FieldName, table: &QualifiedTable) -> String {
+fn get_field_statement(
+    supports_json_object: bool,
+    alias: &FieldName,
+    item: &FieldName,
+    table: &QualifiedTable,
+) -> String {
     if supports_json_object {
         format!("'{}', {}.\"{}\"", alias, table, item)
     } else {
@@ -100,7 +110,7 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Variab
         for column in &columns {
             let sql_value = match row.get(column) {
                 Some(value) => value_to_sql(column, value)?,
-                None => "NULL".to_string()
+                None => "NULL".to_string(),
             };
             pairs.push(format!("{} AS \"{}\"", sql_value, column));
         }
@@ -111,7 +121,10 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Variab
     cte.push_str(&selects.join("\n    UNION ALL\n"));
     cte.push_str("\n)");
 
-    Ok(VariablesCTE { query: cte, columns })
+    Ok(VariablesCTE {
+        query: cte,
+        columns,
+    })
 }
 
 #[tracing::instrument(skip(
@@ -132,7 +145,8 @@ fn select(
     for (key, field) in fields {
         match field {
             Field::Column { column, .. } => {
-                let field_statement = get_field_statement(does_supports_json_object, &key, &column, &table);
+                let field_statement =
+                    get_field_statement(does_supports_json_object, &key, &column, &table);
                 if !field_statements.contains(&field_statement) {
                     field_statements.push(field_statement);
                 }
@@ -144,7 +158,6 @@ fn select(
     }
 
     Ok(field_statements)
-
 }
 
 #[tracing::instrument(skip(query), level=Level::DEBUG)]
@@ -203,7 +216,11 @@ fn create_column_name(name: &FieldName, field_path: &Option<Vec<FieldName>>) -> 
 }
 
 #[tracing::instrument(skip(name, aggregate_expr), level=Level::DEBUG)]
-fn generate_aggregate_statement(name: &FieldName, aggregate_expr: String, supports_json_object: bool) -> String {
+fn generate_aggregate_statement(
+    name: &FieldName,
+    aggregate_expr: String,
+    supports_json_object: bool,
+) -> String {
     if supports_json_object {
         format!("'{}', {}", name, aggregate_expr)
     } else {
@@ -212,42 +229,63 @@ fn generate_aggregate_statement(name: &FieldName, aggregate_expr: String, suppor
 }
 
 #[tracing::instrument(skip(column, field_path), level=Level::DEBUG)]
-fn aggregate_column_name(supports_json_object: bool, column: &FieldName, field_path: &Option<Vec<FieldName>>) -> String {
+fn aggregate_column_name(
+    supports_json_object: bool,
+    column: &FieldName,
+    field_path: &Option<Vec<FieldName>>,
+) -> String {
     let column_name = create_column_name(column, field_path);
-     if supports_json_object {
+    if supports_json_object {
         format!("\"{}\"", column_name)
-     } else {
-         column_name
-     }
+    } else {
+        column_name
+    }
 }
 
-
 #[tracing::instrument(skip(aggregate_fields), level=Level::DEBUG)]
-fn aggregates(supports_json_object: bool, aggregate_fields: &IndexMap<FieldName, Aggregate>, column_qualifier: String) -> Vec<String> {
-    let mut aggregates: Vec<String> = Vec::new();
+fn aggregates(
+    supports_json_object: bool,
+    aggregate_fields: &IndexMap<FieldName, Aggregate>,
+    column_qualifier: String,
+) -> Vec<String> {
+    let mut aggregates_expr: Vec<String> = Vec::new();
     let mut columns_to_select: HashSet<&FieldName> = HashSet::new();
-    let qualify_column = |column: &str| format!("\"{}\".\"{}\"", column_qualifier, column);
-    for (name, aggregate) in aggregate_fields.iter() {
+    let qualify_column = |column: &str| format!("\"{column_qualifier}\".\"{column}\"");
+    for (name, aggregate) in aggregate_fields {
         let aggregate_expr = match aggregate {
-            Aggregate::ColumnCount { column, distinct, field_path } => {
+            Aggregate::ColumnCount {
+                column,
+                distinct,
+                field_path,
+            } => {
                 let column_name = aggregate_column_name(supports_json_object, column, field_path);
                 columns_to_select.insert(column);
-                format!("COUNT({}{})", if *distinct { "DISTINCT " } else { "" }, qualify_column( &column_name))
+                format!(
+                    "COUNT({}{})",
+                    if *distinct { "DISTINCT " } else { "" },
+                    qualify_column(&column_name)
+                )
             }
-            Aggregate::SingleColumn { column, field_path, function } => {
+            Aggregate::SingleColumn {
+                column,
+                field_path,
+                function,
+            } => {
                 let column_name = aggregate_column_name(supports_json_object, column, field_path);
 
                 columns_to_select.insert(column);
                 // TODO: We need to validate the function name here
-                format!("{}({})", function, qualify_column (&column_name))
+
+                format!("{}({})", function, qualify_column(&column_name))
             }
-            Aggregate::StarCount {} => format!("COUNT(*)"),
+            Aggregate::StarCount {} => "COUNT(*)".to_string(),
         };
-        let aggregate_phrase = generate_aggregate_statement(name, aggregate_expr, supports_json_object);
-        aggregates.push(aggregate_phrase);
+        let aggregate_phrase =
+            generate_aggregate_statement(name, aggregate_expr, supports_json_object);
+        aggregates_expr.push(aggregate_phrase);
     }
 
-    aggregates
+    aggregates_expr
 }
 
 #[derive(Debug, Clone)]
@@ -257,7 +295,6 @@ impl Display for Alias {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.0)
     }
-
 }
 
 impl From<&str> for Alias {
@@ -266,13 +303,11 @@ impl From<&str> for Alias {
     }
 }
 
-
 impl From<FieldName> for Alias {
     fn from(s: FieldName) -> Self {
         Alias(s.to_string())
     }
 }
-
 
 #[tracing::instrument(skip(configuration, variables, query), level=Level::DEBUG)]
 fn predicates(
@@ -304,8 +339,6 @@ fn sql_quotes(input: &str) -> String {
     input.replace("'", "\\'").replace("\"", "__UTF8__")
 }
 
-
-
 #[tracing::instrument(skip(
     configuration,
     variables,
@@ -317,7 +350,6 @@ fn process_sql_expression(
     variables: &Option<VariablesCTE>,
     expr: &Expression,
 ) -> Result<String, crate::error::Error> {
-
     match expr {
         Expression::And { expressions } => {
             let processed_expressions: Vec<String> = expressions
@@ -338,35 +370,36 @@ fn process_sql_expression(
             Ok(format!("({})", processed_expressions.join(" OR ")))
         }
         Expression::Not { expression } => {
-            let embed_expression = process_sql_expression(configuration, table, variables, expression)?;
+            let embed_expression =
+                process_sql_expression(configuration, table, variables, expression)?;
             Ok(format!("(NOT {})", embed_expression))
-        },
+        }
         Expression::UnaryComparisonOperator { operator, column } => match operator {
-            UnaryComparisonOperator::IsNull => {
-                match column {
-                    ComparisonTarget::Column { name, field_path, .. } => {
-                        Ok(format!("\"{}\" IS NULL", create_column_name(name, field_path)))
-                    }
-                    ComparisonTarget::RootCollectionColumn { .. } => {
-                        todo!()
-                    }
+            UnaryComparisonOperator::IsNull => match column {
+                ComparisonTarget::Column {
+                    name, field_path, ..
+                } => Ok(format!(
+                    "\"{}\" IS NULL",
+                    create_column_name(name, field_path)
+                )),
+                ComparisonTarget::RootCollectionColumn { .. } => {
+                    todo!()
                 }
-            }
+            },
         },
         Expression::BinaryComparisonOperator {
             column,
             operator,
             value,
         } => {
-            let sql_operation: &String =
-                SQL_OPERATIONS
+            let sql_operation: &String = SQL_OPERATIONS
                 .get(operator)
                 .ok_or(crate::error::Error::OperatorNotSupported(operator.clone()))?;
             let left_side = match column {
                 ComparisonTarget::Column {
                     name, field_path, ..
                 } => {
-                    format!("\"{}\"", create_column_name( name, field_path))
+                    format!("\"{}\"", create_column_name(name, field_path))
                 }
                 ComparisonTarget::RootCollectionColumn { .. } => {
                     todo!()
@@ -398,51 +431,69 @@ fn process_sql_expression(
                         .find(|&var| var == name)
                         .ok_or(Error::VariableNotFound(name.to_string()))?;
                     format!("\"{HASURA_CTE_VARS}\".\"{}\"", variable)
-                },
-
+                }
             };
             Ok(format!("{} {} {}", left_side, sql_operation, right_side))
         }
-        Expression::Exists { in_collection, predicate } => {
-            match in_collection {
-                ExistsInCollection::Related { .. } => {
-                    return Err(Error::RelationshipsAreNotSupported);
-                }
-                ExistsInCollection::Unrelated { collection, .. } => {
-                    if let Some(pred_expression) = predicate {
-                        let foreign_table = create_qualified_table_name(
-                            configuration.clone().metadata.unwrap().get(collection).unwrap()
-                        );
+        Expression::Exists {
+            in_collection,
+            predicate,
+        } => match in_collection {
+            ExistsInCollection::Related { .. } => {
+                return Err(Error::RelationshipsAreNotSupported);
+            }
+            ExistsInCollection::Unrelated { collection, .. } => {
+                if let Some(pred_expression) = predicate {
+                    let foreign_table = create_qualified_table_name(
+                        configuration
+                            .clone()
+                            .metadata
+                            .unwrap()
+                            .get(collection)
+                            .unwrap(),
+                    );
 
-                        let expression = process_sql_expression(configuration, &foreign_table , variables, pred_expression).unwrap();
-                        Ok(format!("EXISTS (SELECT 1 FROM {} WHERE {})", foreign_table, expression))
-                    } else {
-                        Ok("".into())
-                    }
-                }
-                ExistsInCollection::NestedCollection { .. } => {
-                    Err(Error::NestedCollectionNotSupported)
-
+                    let expression = process_sql_expression(
+                        configuration,
+                        &foreign_table,
+                        variables,
+                        pred_expression,
+                    )
+                    .unwrap();
+                    Ok(format!(
+                        "EXISTS (SELECT 1 FROM {} WHERE {})",
+                        foreign_table, expression
+                    ))
+                } else {
+                    Ok("".into())
                 }
             }
-        }
+            ExistsInCollection::NestedCollection { .. } => Err(Error::NestedCollectionNotSupported),
+        },
     }
 }
 
 #[tracing::instrument(skip_all, level=Level::DEBUG)]
-fn create_arguments(variables: &BTreeMap<VariableName, Value>, arguments: &BTreeMap<ArgumentName, RelationshipArgument>) -> Vec<String> {
-    let arguments: Vec<String> = arguments.iter().map(|(name, arg)| {
-        let value = match arg {
-            RelationshipArgument::Variable { name } => variables.get(name).unwrap().to_string(),
-            RelationshipArgument::Literal { value } => value.to_string(),
-            RelationshipArgument::Column { name } => format!("\"{}\"", name)
-        };
-        match name.as_str() {
-            "limit" => format!("LIMIT {}", value),
-            "offset" => format!("OFFSET {}", value),
-            _ => "".to_string()
-        }
-    }).filter(|arg| !arg.is_empty()).collect();
+fn create_arguments(
+    variables: &BTreeMap<VariableName, Value>,
+    arguments: &BTreeMap<ArgumentName, RelationshipArgument>,
+) -> Vec<String> {
+    let arguments: Vec<String> = arguments
+        .iter()
+        .map(|(name, arg)| {
+            let value = match arg {
+                RelationshipArgument::Variable { name } => variables.get(name).unwrap().to_string(),
+                RelationshipArgument::Literal { value } => value.to_string(),
+                RelationshipArgument::Column { name } => format!("\"{}\"", name),
+            };
+            match name.as_str() {
+                "limit" => format!("LIMIT {}", value),
+                "offset" => format!("OFFSET {}", value),
+                _ => "".to_string(),
+            }
+        })
+        .filter(|arg| !arg.is_empty())
+        .collect();
     arguments
 }
 
@@ -472,7 +523,7 @@ pub fn create_qualified_table_name(table_metadata: &TableMetadata) -> QualifiedT
     }
 
     path.push(format!("\"{}\"", &table_metadata.name));
-    QualifiedTable( path.join("."))
+    QualifiedTable(path.join("."))
 }
 
 #[derive(Debug)]
@@ -502,7 +553,11 @@ impl SqlQueryComponents {
 
         let from_clause = match &self.from.1 {
             SqlFrom::Table(table) => table.to_string(), // TODO: Handle the alias
-            SqlFrom::SubQuery(subquery) => format!("({}) AS {}", subquery.to_sql(supports_json_object), self.from.0),
+            SqlFrom::SubQuery(subquery) => format!(
+                "({}) AS {}",
+                subquery.to_sql(supports_json_object),
+                self.from.0
+            ),
         };
 
         let select_clause = if self.select.is_empty() {
@@ -537,7 +592,6 @@ impl SqlQueryComponents {
             }
         };
 
-
         let expanded_where_clause = match &self.where_clause {
             None => "".to_string(),
             Some(w) => {
@@ -549,20 +603,16 @@ impl SqlQueryComponents {
             }
         };
 
-        let format_clause = |clause: &Option<String>| {
-            match clause {
-                None => "".into(),
-                Some(p) => {
-                    if p.is_empty() {
-                        "".into()
-                    } else {
-                        format!(" {}", p)
-                    }
+        let format_clause = |clause: &Option<String>| match clause {
+            None => "".into(),
+            Some(p) => {
+                if p.is_empty() {
+                    "".into()
+                } else {
+                    format!(" {}", p)
                 }
             }
         };
-
-
 
         let pagination_clause = format_clause(&self.pagination);
         let join = format_clause(&self.join);
@@ -570,12 +620,24 @@ impl SqlQueryComponents {
         if supports_json_object {
             format!(
                 "SELECT JSON_OBJECT({}) FROM {}{}{}{}{}",
-                select_clause, from_clause, join, expanded_where_clause, order_by_clause, pagination_clause
+                select_clause,
+                from_clause,
+                join,
+                expanded_where_clause,
+                order_by_clause,
+                pagination_clause
             )
         } else {
             format!(
                 "{} SELECT {} FROM {}{}{}{}{}{}",
-                with_clause, select_clause, from_clause, join, expanded_where_clause, order_by_clause, pagination_clause,group_by_clause
+                with_clause,
+                select_clause,
+                from_clause,
+                join,
+                expanded_where_clause,
+                order_by_clause,
+                pagination_clause,
+                group_by_clause
             )
         }
     }
@@ -603,7 +665,6 @@ fn generate_fields_query(
             }
         }
     };
-
 
     let select_clause: String = match select {
         None => "".into(),
@@ -642,15 +703,13 @@ fn generate_fields_query(
         }
     };
 
-    let format_clause = |clause: Option<String>| {
-        match clause {
-            None => "".into(),
-            Some(p) => {
-                if p.is_empty() {
-                    "".into()
-                } else {
-                    format!(" {}", p)
-                }
+    let format_clause = |clause: Option<String>| match clause {
+        None => "".into(),
+        Some(p) => {
+            if p.is_empty() {
+                "".into()
+            } else {
+                format!(" {}", p)
             }
         }
     };
@@ -668,14 +727,18 @@ fn generate_fields_query(
     } else {
         let query = format!(
             "{} SELECT {} FROM {}{}{}{}{}",
-            with_clause, select_clause, from, join, expanded_where_clause, order_by_clause, pagination_clause
+            with_clause,
+            select_clause,
+            from,
+            join,
+            expanded_where_clause,
+            order_by_clause,
+            pagination_clause
         );
         event!(Level::INFO, message = format!("Generated query {}", query));
         query
     }
 }
-
-
 
 /*
 WITH "vars" AS (
@@ -706,9 +769,8 @@ pub fn generate_aggregate_query<'a>(
     pagination: Option<String>,
     order_by: Option<String>,
     variables_cte: &Option<VariablesCTE>,
-    aggregate_fields: &'a IndexMap<FieldName, Aggregate>
+    aggregate_fields: &'a IndexMap<FieldName, Aggregate>,
 ) -> String {
-
     let mut columns_to_select_in_subquery = HashSet::new();
     for (_, aggregate) in aggregate_fields {
         match aggregate {
@@ -723,16 +785,16 @@ pub fn generate_aggregate_query<'a>(
         }
     }
 
-    let mut subquery_select = columns_to_select_in_subquery.iter().map(|column| {
-         get_field_statement(supports_json_object, column.into(), column, table)
-    }).collect::<Vec<String>>();
+    let mut subquery_select = columns_to_select_in_subquery
+        .iter()
+        .map(|column| get_field_statement(supports_json_object, column, column, table))
+        .collect::<Vec<String>>();
 
     let mut join_clause = None;
 
     if variables_cte.is_some() {
         join_clause = Some(format!("CROSS JOIN \"{HASURA_CTE_VARS}\""));
         subquery_select.push(format!("\"{HASURA_CTE_VARS}\".\"__var_set_index\""));
-
     };
 
     let aggregates_subquery = SqlQueryComponents {
@@ -751,21 +813,24 @@ pub fn generate_aggregate_query<'a>(
         aggregates_group_by = Some("\"aggregates_subquery\".\"__var_set_index\"".to_string());
     }
 
-    let mut aggregates = aggregates(supports_json_object, aggregate_fields, "aggregates_subquery".to_string());
-
+    let mut aggregates = aggregates(
+        supports_json_object,
+        aggregate_fields,
+        "aggregates_subquery".to_string(),
+    );
 
     if variables_cte.is_some() {
         aggregates_group_by = Some("\"aggregates_subquery\".\"__var_set_index\"".to_string());
         aggregates.push("\"aggregates_subquery\".\"__var_set_index\"".to_string());
     }
 
-
-
-
     let aggregates_query = SqlQueryComponents {
         with: variables_cte.as_ref().map(|vars| vars.query.clone()),
         select: aggregates.join(", "),
-        from: (Alias("aggregates_subquery".to_string()), (SqlFrom::SubQuery(Box::new(aggregates_subquery)))),
+        from: (
+            Alias("aggregates_subquery".to_string()),
+            (SqlFrom::SubQuery(Box::new(aggregates_subquery))),
+        ),
         join: None,
         where_clause: None,
         order_by: None,
@@ -797,20 +862,9 @@ mod tests {
     fn test_simple_count_star() {
         let table = setup_test_table();
         let mut aggregates = IndexMap::new();
-        aggregates.insert(
-            "total_count".into(),
-            Aggregate::StarCount {},
-        );
+        aggregates.insert("total_count".into(), Aggregate::StarCount {});
 
-        let result = generate_aggregate_query(
-            false,
-            &table,
-            None,
-            None,
-            None,
-            &None,
-            &aggregates
-        );
+        let result = generate_aggregate_query(false, &table, None, None, None, &None, &aggregates);
 
         assert_eq!(
             result.trim(),
@@ -838,7 +892,7 @@ mod tests {
             None,
             None,
             &None,
-            &aggregates
+            &aggregates,
         );
 
         assert_sql_eq(
@@ -848,7 +902,8 @@ mod tests {
                 SELECT public.users."status" as "status"
                 FROM public.users
                 WHERE status = 'active'
-            ) AS aggregates_subquery"#.trim()
+            ) AS aggregates_subquery"#
+                .trim(),
         );
     }
 
@@ -865,20 +920,13 @@ mod tests {
             },
         );
 
-        let result = generate_aggregate_query(
-            false,
-            &table,
-            None,
-            None,
-            None,
-            &None,
-            &aggregates
-        );
+        let result = generate_aggregate_query(false, &table, None, None, None, &None, &aggregates);
 
         assert_eq!(
             result.trim(),
             r#"SELECT AVG(age) AS avg_age
-            FROM (SELECT age FROM public.users) AS aggregates_subquery"#.trim()
+            FROM (SELECT age FROM public.users) AS aggregates_subquery"#
+                .trim()
         );
     }
 
@@ -886,25 +934,15 @@ mod tests {
     fn test_with_variables_cte() {
         let table = setup_test_table();
         let mut aggregates = IndexMap::new();
-        aggregates.insert(
-            "total_count".into(),
-            Aggregate::StarCount {},
-        );
+        aggregates.insert("total_count".into(), Aggregate::StarCount {});
 
         let variables_cte = Some(VariablesCTE {
             query: "WITH vars AS (SELECT 1 AS var_index)".to_string(),
             columns: vec!["var_index".into()],
         });
 
-        let result = generate_aggregate_query(
-            false,
-            &table,
-            None,
-            None,
-            None,
-            &variables_cte,
-            &aggregates
-        );
+        let result =
+            generate_aggregate_query(false, &table, None, None, None, &variables_cte, &aggregates);
 
         assert_eq!(
             result.trim(),
@@ -915,7 +953,8 @@ mod tests {
                 FROM public.users
                 CROSS JOIN "hasura_vars"
             ) AS aggregates_subquery
-            GROUP BY aggregates_subquery.__var_set_index"#.trim()
+            GROUP BY aggregates_subquery.__var_set_index"#
+                .trim()
         );
     }
 
@@ -973,8 +1012,6 @@ mod tests {
 
 // write tests for generate_aggregate_query
 
-
-
 #[tracing::instrument(skip(
     configuration,
     query,
@@ -986,8 +1023,6 @@ pub fn parse_query<'a>(
     query: &'a Query,
     variables: &'a Option<Vec<BTreeMap<VariableName, Value>>>,
 ) -> Result<QueryComponents, Error> {
-
-
     let variables_cte = match variables {
         Some(v) => Some(generate_cte_vars(&v)?),
         None => None,
@@ -997,9 +1032,13 @@ pub fn parse_query<'a>(
 
     let mut query_components = QueryComponents::default();
 
-
     if let Some(fields) = &query.fields {
-        let select_clause = select(&variables_cte, &qualified_table, configuration.supports_json_object, &fields)?;
+        let select_clause = select(
+            &variables_cte,
+            &qualified_table,
+            configuration.supports_json_object,
+            &fields,
+        )?;
 
         let join_clause = if variables_cte.is_some() {
             Some(format!("CROSS JOIN \"{HASURA_CTE_VARS}\""))
@@ -1014,8 +1053,6 @@ pub fn parse_query<'a>(
         query_components.order_by = Some(order_by(query).join(", "));
         query_components.pagination = Some(pagination(query).join(" "));
         query_components.predicates = Some(predicates);
-
-
     }
 
     Ok(query_components)
