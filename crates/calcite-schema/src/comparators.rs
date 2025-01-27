@@ -89,6 +89,14 @@ pub fn numeric_comparators(
         ("_eq".into(), ComparisonOperatorDefinition::Equal),
         ("_in".into(), ComparisonOperatorDefinition::In),
         (
+            "_neq".into(),
+            ComparisonOperatorDefinition::Custom {
+                argument_type: Type::Named {
+                    name: TypeName::from(underlying.clone()),
+                },
+            },
+        ),
+        (
             "_gt".into(),
             ComparisonOperatorDefinition::Custom {
                 argument_type: Type::Named {

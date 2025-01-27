@@ -47,6 +47,7 @@ static SQL_OPERATIONS: Lazy<HashMap<ComparisonOperatorName, String>> = Lazy::new
         ("_gte".into(), ">=".into()),
         ("_lte".into(), "<=".into()),
         ("_eq".into(), "=".into()),
+        ("_neq".into(), "<>".into()),
         ("_in".into(), "IN".into()),
         ("_like".into(), "LIKE".into()),
     ]
@@ -64,7 +65,7 @@ fn get_field_statement(
     if supports_json_object {
         format!("'{}', {}.\"{}\"", alias, table, item)
     } else {
-        format!("{}.\"{}\" AS \"{}\"", table, item, alias) // TODO: Don't use `t`
+        format!("{}.\"{}\" AS \"{}\"", table, item, alias)
     }
 }
 
