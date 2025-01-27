@@ -6,6 +6,8 @@ pub(crate) enum Error {
     CollectionNotFound(CollectionName),
     #[error("Variable {0} not found")]
     VariableNotFound(String),
+    #[error("Exists operator is not supported")]
+    ExistsOperatorNotSupported,
     #[error("Variable {0} is an object and only scalar values are supported as variable values")]
     UnsupportedVariableObjectValue(VariableName),
     #[error("Variable {0} is an array and only scalar values are supported as variable values")]

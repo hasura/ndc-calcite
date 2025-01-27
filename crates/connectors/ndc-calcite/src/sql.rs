@@ -86,44 +86,50 @@ pub struct VariablesCTE {
     pub columns: Vec<VariableName>,
 }
 
-fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<VariablesCTE, Error> {
+fn generate_cte_vars(
+    vars: &Vec<BTreeMap<VariableName, Value>>,
+    variables_referenced: HashSet<VariableName>,
+) -> Result<VariablesCTE, Error> {
     // Collect all unique column names while preserving order
-    let mut columns: BTreeSet<VariableName> = BTreeSet::new();
-    for row in vars {
-        for name in row.keys() {
-            columns.insert(name.clone());
-        }
-    }
 
-    let mut columns: Vec<VariableName> = columns.into_iter().collect();
+    let mut columns: Vec<VariableName> = vec!["__var_set_index".into()];
+    columns.extend(variables_referenced.into_iter());
 
-    let mut cte = format!("WITH \"{HASURA_CTE_VARS}\" AS (\n");
+    let cte_columns = columns
+        .iter()
+        .map(|name| format!("\"{}\"", name))
+        .collect::<Vec<String>>()
+        .join(", ");
 
-    let mut selects = Vec::new();
+    let mut cte = format!("WITH \"{HASURA_CTE_VARS}\" ({cte_columns}) AS (\n");
 
     if vars.is_empty() {
-        columns.push("\"__var_set_index\"".into());
-        let columns_expr = columns.join(",");
-        let cte_expression = format!("WITH \"{HASURA_CTE_VARS}\"({columns_expr}) AS ");
+        // If there are no variables, we still need to generate a CTE that will return 0 rows
+        let cte_expression = format!("WITH \"{HASURA_CTE_VARS}\"({cte_columns}) AS ");
         let column_values_expression = columns
             .iter()
             .map(|_| "0".to_string())
             .collect::<Vec<String>>()
             .join(", ");
         return Ok(VariablesCTE {
-            query: format!("{cte_expression} ( VALUES  ({column_values_expression}) LIMIT 0 )"),
+            query: format!("WITH \"{HASURA_CTE_VARS}\"({cte_columns}) AS ( VALUES  ({column_values_expression}) LIMIT 0 )"),
             columns,
         });
     }
 
+    let mut selects = Vec::new();
+
     // Iterate with enumeration to get the index
     for (idx, row) in vars.iter().enumerate() {
         let mut pairs = Vec::new();
-        // Add the index column
+        // // Add the index column
         pairs.push(format!("{idx} AS \"__var_set_index\""));
 
         // Include all columns, using NULL for missing ones
         for column in &columns {
+            if column == &"__var_set_index".into() {
+                continue;
+            }
             let sql_value = match row.get(column) {
                 Some(value) => value_to_sql(column, value)?,
                 None => "NULL".to_string(),
@@ -134,13 +140,16 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Variab
         selects.push(format!("    SELECT {}", pairs.join(", ")));
     }
 
-    cte.push_str(&selects.join("\n    UNION ALL\n"));
-    cte.push_str("\n)");
+    let query = format!(
+        r#"WITH "{HASURA_CTE_VARS}" ({cte_columns}) AS (
+{selects}
+)"#,
+        HASURA_CTE_VARS = HASURA_CTE_VARS,
+        cte_columns = cte_columns,
+        selects = selects.join("\n    UNION ALL\n")
+    );
 
-    Ok(VariablesCTE {
-        query: cte,
-        columns,
-    })
+    Ok(VariablesCTE { query, columns })
 }
 
 #[tracing::instrument(skip(
@@ -325,15 +334,15 @@ impl From<FieldName> for Alias {
     }
 }
 
-#[tracing::instrument(skip(configuration, variables, query), level=Level::DEBUG)]
+#[tracing::instrument(skip(configuration, variable_references, query), level=Level::DEBUG)]
 fn predicates(
     configuration: &ParsedConfiguration,
     table: &QualifiedTable,
-    variables: &Option<VariablesCTE>,
+    variable_references: &mut HashSet<VariableName>,
     query: &Query,
 ) -> Result<String, Error> {
     if let Some(predicate) = &query.predicate {
-        process_sql_expression(configuration, table, variables, predicate)
+        process_sql_expression(configuration, table, variable_references, predicate)
     } else {
         Ok("".into())
     }
@@ -357,38 +366,38 @@ fn sql_quotes(input: &str) -> String {
 
 #[tracing::instrument(skip(
     configuration,
-    variables,
+    variable_references,
     expr
 ), level=Level::DEBUG)]
 fn process_sql_expression(
     configuration: &ParsedConfiguration,
     table: &QualifiedTable,
-    variables: &Option<VariablesCTE>,
+    variable_references: &mut HashSet<VariableName>,
     expr: &Expression,
 ) -> Result<String, crate::error::Error> {
     match expr {
         Expression::And { expressions } => {
-            let processed_expressions: Vec<String> = expressions
+            let and_sub_expressions: Vec<String> = expressions
                 .iter()
-                .filter_map(|expression| {
-                    process_sql_expression(configuration, table, variables, expression).ok()
+                .map(|expression| {
+                    process_sql_expression(configuration, table, variable_references, expression)
                 })
-                .collect();
-            Ok(format!("({})", processed_expressions.join(" AND ")))
+                .collect::<Result<_, crate::error::Error>>()?;
+            Ok(format!("({})", and_sub_expressions.join(" AND ")))
         }
         Expression::Or { expressions } => {
-            let processed_expressions: Vec<String> = expressions
+            let or_sub_expressions: Vec<String> = expressions
                 .iter()
-                .filter_map(|expression| {
-                    process_sql_expression(configuration, table, variables, expression).ok()
+                .map(|expression| {
+                    process_sql_expression(configuration, table, variable_references, expression)
                 })
-                .collect();
-            Ok(format!("({})", processed_expressions.join(" OR ")))
+                .collect::<Result<_, crate::error::Error>>()?;
+            Ok(format!("({})", or_sub_expressions.join(" OR ")))
         }
         Expression::Not { expression } => {
             let embed_expression =
-                process_sql_expression(configuration, table, variables, expression)?;
-            Ok(format!("(NOT {})", embed_expression))
+                process_sql_expression(configuration, table, variable_references, expression)?;
+            Ok(format!("(NOT {embed_expression})"))
         }
         Expression::UnaryComparisonOperator { operator, column } => match operator {
             UnaryComparisonOperator::IsNull => match column {
@@ -432,78 +441,22 @@ fn process_sql_expression(
                 },
                 ComparisonValue::Scalar { value } => {
                     let sql_value = sql_quotes(&sql_brackets(&value.to_string()));
-                    if sql_value == "()" {
-                        format!("(SELECT {} FROM {} WHERE FALSE)", left_side, table)
+                    if sql_value == "()" && sql_operation == "IN" {
+                        // This is a special case where the value is an empty array
+                        format!("(SELECT NULL FROM UNNEST(ARRAY[0]) WHERE 1 = 0)")
                     } else {
                         sql_value
                     }
                 }
                 ComparisonValue::Variable { name } => {
+                    variable_references.insert(name.clone());
                     format!("\"{HASURA_CTE_VARS}\".\"{name}\"")
                 }
             };
             Ok(format!("{} {} {}", left_side, sql_operation, right_side))
         }
-        Expression::Exists {
-            in_collection,
-            predicate,
-        } => match in_collection {
-            ExistsInCollection::Related { .. } => {
-                return Err(Error::RelationshipsAreNotSupported);
-            }
-            ExistsInCollection::Unrelated { collection, .. } => {
-                if let Some(pred_expression) = predicate {
-                    let foreign_table = create_qualified_table_name(
-                        configuration
-                            .clone()
-                            .metadata
-                            .unwrap_or_default()
-                            .get(collection)
-                            .ok_or(Error::CollectionNotFound(collection.clone()))?,
-                    );
-
-                    let expression = process_sql_expression(
-                        configuration,
-                        &foreign_table,
-                        variables,
-                        pred_expression,
-                    )
-                    .unwrap();
-                    Ok(format!(
-                        "EXISTS (SELECT 1 FROM {} WHERE {})",
-                        foreign_table, expression
-                    ))
-                } else {
-                    Ok("".into())
-                }
-            }
-            ExistsInCollection::NestedCollection { .. } => Err(Error::NestedCollectionNotSupported),
-        },
+        Expression::Exists { .. } => Err(crate::error::Error::ExistsOperatorNotSupported),
     }
-}
-
-#[tracing::instrument(skip_all, level=Level::DEBUG)]
-fn create_arguments(
-    variables: &BTreeMap<VariableName, Value>,
-    arguments: &BTreeMap<ArgumentName, RelationshipArgument>,
-) -> Vec<String> {
-    let arguments: Vec<String> = arguments
-        .iter()
-        .map(|(name, arg)| {
-            let value = match arg {
-                RelationshipArgument::Variable { name } => variables.get(name).unwrap().to_string(),
-                RelationshipArgument::Literal { value } => value.to_string(),
-                RelationshipArgument::Column { name } => format!("\"{}\"", name),
-            };
-            match name.as_str() {
-                "limit" => format!("LIMIT {}", value),
-                "offset" => format!("OFFSET {}", value),
-                _ => "".to_string(),
-            }
-        })
-        .filter(|arg| !arg.is_empty())
-        .collect();
-    arguments
 }
 
 #[derive(Debug, Clone)]
@@ -935,12 +888,19 @@ pub fn parse_query<'a>(
     query: &'a Query,
     variables: &'a Option<Vec<BTreeMap<VariableName, Value>>>,
 ) -> Result<QueryComponents, Error> {
+    let mut variable_references = HashSet::new();
+
+    let predicates = predicates(
+        &configuration,
+        &qualified_table,
+        &mut variable_references,
+        query,
+    )?;
+
     let variables_cte = match variables {
-        Some(v) => Some(generate_cte_vars(v)?),
+        Some(v) => Some(generate_cte_vars(v, variable_references)?),
         None => None,
     };
-
-    let predicates = predicates(&configuration, &qualified_table, &variables_cte, query)?;
 
     let mut query_components = QueryComponents::default();
 
