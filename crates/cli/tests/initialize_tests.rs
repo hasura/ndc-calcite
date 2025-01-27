@@ -101,7 +101,7 @@ async fn test_do_not_initialize_when_files_already_exist() -> anyhow::Result<()>
             with_metadata: false,
         },
         context,
-        calcite_singleton
+        calcite_singleton,
     )
     .await
     {

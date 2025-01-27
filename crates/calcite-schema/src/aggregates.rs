@@ -12,9 +12,9 @@
 //!
 //! Aggregates could be extended here.
 
-use std::collections::BTreeMap;
-use tracing::{Level};
 use ndc_models::{AggregateFunctionDefinition, AggregateFunctionName, Type};
+use std::collections::BTreeMap;
+use tracing::Level;
 
 /// Generates numeric aggregate functions for a given underlying type.
 ///
@@ -47,7 +47,7 @@ fn aggregate_function_definition(underlying_type: &str) -> AggregateFunctionDefi
     AggregateFunctionDefinition {
         result_type: Type::Nullable {
             underlying_type: Box::new(Type::Named {
-                name: underlying_type.into()
+                name: underlying_type.into(),
             }),
         },
     }

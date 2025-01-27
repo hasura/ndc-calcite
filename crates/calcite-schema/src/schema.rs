@@ -2,19 +2,19 @@
 //!
 //! Introspects Calcite metadata and generates the NDC schema.
 
-use std::fs::File;
-use std::io::Write;
-use std::path::Path;
 use jni::objects::GlobalRef;
 use ndc_models as models;
 use ndc_models::SchemaResponse;
+use std::fs::File;
+use std::io::Write;
+use std::path::Path;
 
-use tracing::{debug, event, Level};
-use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DOCKER_CONNECTOR_RW};
-use ndc_sdk::connector::{Result, ErrorResponse};
-use crate::{collections, scalars};
 use crate::models::get_models;
 use crate::version5::ParsedConfiguration;
+use crate::{collections, scalars};
+use ndc_calcite_values::values::{CONFIGURATION_FILENAME, DOCKER_CONNECTOR_RW};
+use ndc_sdk::connector::{ErrorResponse, Result};
+use tracing::{debug, event, Level};
 
 /// Retrieves the schema metadata based on the provided configuration and Calcite global reference.
 ///
@@ -43,7 +43,10 @@ use crate::version5::ParsedConfiguration;
 /// ```
 // ANCHOR: get_schema
 #[tracing::instrument(skip(configuration, calcite_ref), level=Level::INFO)]
-pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -> Result<SchemaResponse> {
+pub fn get_schema(
+    configuration: &ParsedConfiguration,
+    calcite_ref: GlobalRef,
+) -> Result<SchemaResponse> {
     let mut data_models = configuration.metadata.clone().unwrap_or_default();
     if data_models.is_empty() {
         data_models = get_models(&calcite_ref);
@@ -59,25 +62,38 @@ pub fn get_schema(configuration: &ParsedConfiguration, calcite_ref: GlobalRef) -
         functions,
         procedures,
     };
-    let file_path =  Path::new(DOCKER_CONNECTOR_RW).join(CONFIGURATION_FILENAME);
-    event!(Level::INFO, config_path = format!("Configuration file path: {}", file_path.display()));
+    let file_path = Path::new(DOCKER_CONNECTOR_RW).join(CONFIGURATION_FILENAME);
+    event!(
+        Level::INFO,
+        config_path = format!("Configuration file path: {}", file_path.display())
+    );
     let mut new_configuration = configuration.clone();
     new_configuration.metadata = Some(data_models.clone());
     let file_path_clone = file_path.clone();
     let file = File::create(file_path);
     match file {
         Ok(mut file) => {
-            let serialized_json = serde_json::to_string_pretty(&new_configuration).map_err(ErrorResponse::from_error)?;
-            file.write_all(serialized_json.as_bytes()).map_err(ErrorResponse::from_error)?;
-            event!(Level::INFO, "Wrote metadata to config: {}", serde_json::to_string(&schema).unwrap());
+            let serialized_json = serde_json::to_string_pretty(&new_configuration)
+                .map_err(ErrorResponse::from_error)?;
+            file.write_all(serialized_json.as_bytes())
+                .map_err(ErrorResponse::from_error)?;
+            event!(
+                Level::INFO,
+                "Wrote metadata to config: {}",
+                serde_json::to_string(&schema).unwrap()
+            );
         }
         Err(_) => {
             debug!("Unable to create config file: {:?}", file_path_clone);
-            event!(Level::DEBUG, "Unable to create config file {:?}, schema: {:?}", file_path_clone, serde_json::to_string(&schema).unwrap());
+            event!(
+                Level::DEBUG,
+                "Unable to create config file {:?}, schema: {:?}",
+                file_path_clone,
+                serde_json::to_string(&schema).unwrap()
+            );
             // Not updating the config file is not fatal
         }
     }
     Ok(schema)
-
 }
 // ANCHOR_END: get_schema

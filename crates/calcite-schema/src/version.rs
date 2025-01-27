@@ -1,4 +1,4 @@
-use tracing::{Level};
+use tracing::Level;
 
 #[derive(Debug, Copy, Clone)]
 pub enum VersionTag {

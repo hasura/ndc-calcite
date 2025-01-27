@@ -2,9 +2,9 @@
 //!
 //! You can create new comparison functions here.
 //!
-use std::collections::BTreeMap;
 use ndc_models::{ComparisonOperatorDefinition, ComparisonOperatorName, Type, TypeName};
-use tracing::{Level};
+use std::collections::BTreeMap;
+use tracing::Level;
 
 /// Generate string comparison operators based on the underlying type.
 ///
@@ -82,7 +82,9 @@ pub fn string_comparators(
 /// ```
 // ANCHOR: numeric_comparators
 #[tracing::instrument(skip(underlying), level=Level::INFO)]
-pub fn numeric_comparators(underlying: String) -> BTreeMap<ComparisonOperatorName, ComparisonOperatorDefinition> {
+pub fn numeric_comparators(
+    underlying: String,
+) -> BTreeMap<ComparisonOperatorName, ComparisonOperatorDefinition> {
     let numeric_comparison_operators = BTreeMap::from_iter([
         ("_eq".into(), ComparisonOperatorDefinition::Equal),
         ("_in".into(), ComparisonOperatorDefinition::In),

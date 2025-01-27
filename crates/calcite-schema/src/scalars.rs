@@ -2,10 +2,10 @@
 //!
 //! Make additional changes to scalar definitions here.
 //!
-use std::collections::BTreeMap;
-use ndc_models::{ComparisonOperatorDefinition, ScalarType, ScalarTypeName, TypeRepresentation};
 use crate::{aggregates, comparators};
-use tracing::{Level};
+use ndc_models::{ComparisonOperatorDefinition, ScalarType, ScalarTypeName, TypeRepresentation};
+use std::collections::BTreeMap;
+use tracing::Level;
 
 /// Retrieves a mapping of scalar types with their respective properties.
 ///

@@ -1,10 +1,10 @@
-use jni::objects::{GlobalRef, JObject, JString, JValueGen};
-use std::collections::HashMap;
-use jni::objects::JValueGen::Object;
-use ndc_models::CollectionName;
-use tracing::{event, Level};
 use crate::calcite::TableMetadata;
 use crate::jvm::get_jvm;
+use jni::objects::JValueGen::Object;
+use jni::objects::{GlobalRef, JObject, JString, JValueGen};
+use ndc_models::CollectionName;
+use std::collections::HashMap;
+use tracing::{event, Level};
 
 /// Retrieves models from Calcite.
 ///

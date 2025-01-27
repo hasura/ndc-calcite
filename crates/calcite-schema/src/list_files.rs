@@ -31,7 +31,11 @@ pub fn list_files_in_directory(dir: &Path) -> Result<Vec<String>, Box<dyn std::e
 
         // if no files were found, sleep for 5 seconds before trying again
         if attempt < attempts - 1 {
-            eprintln!("No files found on attempt {}. Retrying after {} seconds...", attempt + 1, seconds);
+            eprintln!(
+                "No files found on attempt {}. Retrying after {} seconds...",
+                attempt + 1,
+                seconds
+            );
             std::thread::sleep(std::time::Duration::from_secs(seconds));
         }
     }

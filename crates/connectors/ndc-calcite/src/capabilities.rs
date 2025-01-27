@@ -6,7 +6,10 @@
 //! - Nested fields
 //! - Explain
 
-use ndc_models::{Capabilities, CapabilitiesResponse, ExistsCapabilities, LeafCapability, MutationCapabilities, NestedFieldCapabilities, QueryCapabilities};
+use ndc_models::{
+    Capabilities, CapabilitiesResponse, ExistsCapabilities, LeafCapability, MutationCapabilities,
+    NestedFieldCapabilities, QueryCapabilities,
+};
 use tracing::Level;
 
 /// Calculates the capabilities of the Calcite system.

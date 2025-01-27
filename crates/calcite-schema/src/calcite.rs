@@ -8,12 +8,12 @@
 //! call get_schema first to populate the config file.
 extern crate serde_json;
 
-use std::collections::HashMap;
-use std::env;
-use ndc_models::{FieldName};
+use ndc_models::FieldName;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::HashMap;
+use std::env;
 
 fn from_env_var<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
@@ -52,24 +52,24 @@ pub struct Schema {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub path: Option<Vec<Value>>,
     #[serde(rename = "sqlDialectFactory")]
-    #[serde(deserialize_with = "from_env_var", default="default_as_none")]
+    #[serde(deserialize_with = "from_env_var", default = "default_as_none")]
     pub sql_dialect_factory: Option<String>,
     #[serde(rename = "jdbcUser")]
-    #[serde(deserialize_with = "from_env_var", default="default_as_none")]
+    #[serde(deserialize_with = "from_env_var", default = "default_as_none")]
     pub jdbc_user: Option<String>,
     #[serde(rename = "jdbcPassword")]
-    #[serde(deserialize_with = "from_env_var", default="default_as_none")]
+    #[serde(deserialize_with = "from_env_var", default = "default_as_none")]
     pub jdbc_password: Option<String>,
     #[serde(rename = "jdbcUrl")]
-    #[serde(deserialize_with = "from_env_var", default="default_as_none")]
+    #[serde(deserialize_with = "from_env_var", default = "default_as_none")]
     pub jdbc_url: Option<String>,
     #[serde(rename = "jdbcCatalog")]
-    #[serde(deserialize_with = "from_env_var", default="default_as_none")]
+    #[serde(deserialize_with = "from_env_var", default = "default_as_none")]
     pub jdbc_catalog: Option<String>,
     #[serde(rename = "jdbcSchema")]
-    #[serde(deserialize_with = "from_env_var", default="default_as_none")]
+    #[serde(deserialize_with = "from_env_var", default = "default_as_none")]
     pub jdbc_schema: Option<String>,
-    #[serde(deserialize_with = "from_env_var", default="default_as_none")]
+    #[serde(deserialize_with = "from_env_var", default = "default_as_none")]
     pub factory: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub operand: Option<Operand>,
@@ -115,14 +115,14 @@ pub struct Tile {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dimensions: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub measures: Option<Vec<Measure>>
+    pub measures: Option<Vec<Measure>>,
 }
 #[derive(Eq, PartialEq, JsonSchema, Serialize, Deserialize, Clone, Debug)]
 pub struct Measure {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub agg: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub args: Option<Value>
+    pub args: Option<Value>,
 }
 #[derive(Eq, PartialEq, JsonSchema, Serialize, Deserialize, Clone, Debug)]
 pub struct Materialization {
@@ -131,7 +131,7 @@ pub struct Materialization {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub table: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub sql: Option<String>
+    pub sql: Option<String>,
 }
 
 #[derive(Eq, PartialEq, JsonSchema, Serialize, Deserialize, Clone, Debug)]
@@ -202,7 +202,7 @@ pub struct Table {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub columns: Option<Vec<Column>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[serde(rename="fieldDefs")]
+    #[serde(rename = "fieldDefs")]
     pub field_defs: Option<Vec<FieldDef>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sql: Option<String>,
@@ -211,7 +211,7 @@ pub struct Table {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub history: Option<bool>
+    pub history: Option<bool>,
 }
 
 /// Represents a function.
@@ -225,7 +225,7 @@ pub struct Function {
     #[serde(rename = "methodName")]
     pub method_name: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub path: Option<Vec<String>>
+    pub path: Option<Vec<String>>,
 }
 
 /// Represents the operand used in the schema.
@@ -284,7 +284,7 @@ pub struct Model {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub functions: Option<Vec<Function>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub types: Option<Vec<Type>>
+    pub types: Option<Vec<Type>>,
 }
 
 /// Represents an exported key between two tables in a database.
@@ -350,7 +350,7 @@ pub struct TableMetadata {
     pub primary_keys: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "exportedKeys")]
-    pub exported_keys: Option<Vec<ExportedKey>>
+    pub exported_keys: Option<Vec<ExportedKey>>,
 }
 
 /// Represents the metadata of a column in a database table.
@@ -361,6 +361,5 @@ pub struct ColumnMetadata {
     pub description: Option<String>,
     #[serde(rename = "scalarType")]
     pub scalar_type: String,
-    pub nullable: bool
+    pub nullable: bool,
 }
-

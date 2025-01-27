@@ -6,17 +6,17 @@
 use std::fmt;
 
 use indexmap::IndexMap;
-use jni::JNIEnv;
-use jni::objects::{GlobalRef, JObject, JString, JValueGen};
 use jni::objects::JValueGen::Object;
+use jni::objects::{GlobalRef, JObject, JString, JValueGen};
+use jni::JNIEnv;
 use ndc_models as models;
 use ndc_models::{FieldName, RowFieldValue};
 use ndc_sdk::connector::ErrorResponse;
+use ndc_sdk::connector::Result;
 use opentelemetry::trace::TraceContextExt;
 use serde_json::Value;
 use tracing::{event, Level};
 use tracing_opentelemetry::OpenTelemetrySpanExt;
-use ndc_sdk::connector::Result;
 
 use serde::Deserialize;
 
@@ -59,10 +59,18 @@ pub type Row = IndexMap<FieldName, RowFieldValue>;
 /// }
 /// ```
 #[tracing::instrument(skip(configuration, env), level = Level::INFO)]
-pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a mut JNIEnv<'a>) -> Result<JObject<'a>> {
-    let class = env.find_class("com/hasura/CalciteQuery").map_err(ErrorResponse::from_error)?;
-    let instance = env.new_object(class, "()V", &[]).map_err(ErrorResponse::from_error)?;
-    let _ = create_jvm_connection(configuration, &instance, env).expect("Failed to create JVM connection");
+pub fn create_query_engine<'a>(
+    configuration: &'a ParsedConfiguration,
+    env: &'a mut JNIEnv<'a>,
+) -> Result<JObject<'a>> {
+    let class = env
+        .find_class("com/hasura/CalciteQuery")
+        .map_err(ErrorResponse::from_error)?;
+    let instance = env
+        .new_object(class, "()V", &[])
+        .map_err(ErrorResponse::from_error)?;
+    let _ = create_jvm_connection(configuration, &instance, env)
+        .expect("Failed to create JVM connection");
     event!(Level::INFO, "Instantiated Calcite Query Engine");
     Ok(instance)
 }
@@ -71,7 +79,7 @@ pub fn create_query_engine<'a>(configuration: &'a ParsedConfiguration, env: &'a 
 pub struct CalciteErrorResponse {
     pub error_type: String,
     pub error_message: String,
-    #[serde(default)]  // Makes cause optional
+    #[serde(default)] // Makes cause optional
     pub cause: Option<String>,
 }
 
@@ -130,65 +138,105 @@ enum CalciteResponse<T> {
 #[tracing::instrument(
     fields(internal.visibility = "user"), skip(calcite_reference), level = Level::INFO
 )]
-pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
+pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize>(
     calcite_reference: &GlobalRef,
     sql_query: &str,
     explain: bool,
 ) -> Result<T> {
-
     // This method of retrieving current span context is not working!!!
     let span = tracing::Span::current();
     let otel_context = span.context();
     let span_id = otel_context.span().span_context().span_id();
     let trace_id = otel_context.span().span_context().trace_id();
 
-    let jvm = get_jvm(true).lock().map_err(|e| ErrorResponse::from_error(CalciteError { message: format!("Failed to get JVM: {}", e) }))?;
-    let mut java_env = jvm.attach_current_thread().map_err(ErrorResponse::from_error)?;
-    let calcite_query = java_env.new_local_ref(calcite_reference).map_err(ErrorResponse::from_error)?;
+    let jvm = get_jvm(true).lock().map_err(|e| {
+        ErrorResponse::from_error(CalciteError {
+            message: format!("Failed to get JVM: {}", e),
+        })
+    })?;
+    let mut java_env = jvm
+        .attach_current_thread()
+        .map_err(ErrorResponse::from_error)?;
+    let calcite_query = java_env
+        .new_local_ref(calcite_reference)
+        .map_err(ErrorResponse::from_error)?;
 
-    let temp_string = java_env.new_string(sql_query).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to get sql query string") })))?;
-    let trace_id_jstring = java_env.new_string(trace_id.to_string()).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to get trace id string") })))?;
-    let span_id_jstring = java_env.new_string(span_id.to_string()).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to get span id string") })))?;
+    let temp_string = java_env
+        .new_string(sql_query)
+        .or(Err(ErrorResponse::from_error(CalciteError {
+            message: String::from("Failed to get sql query string"),
+        })))?;
+    let trace_id_jstring =
+        java_env
+            .new_string(trace_id.to_string())
+            .or(Err(ErrorResponse::from_error(CalciteError {
+                message: String::from("Failed to get trace id string"),
+            })))?;
+    let span_id_jstring =
+        java_env
+            .new_string(span_id.to_string())
+            .or(Err(ErrorResponse::from_error(CalciteError {
+                message: String::from("Failed to get span id string"),
+            })))?;
     let temp_obj = JObject::from(temp_string);
     let trace_id_obj = JObject::from(trace_id_jstring);
     let span_id_obj = JObject::from(span_id_jstring);
 
-    let query_args: &[JValueGen<&JObject<'_>>] = &[Object(&temp_obj), Object(&trace_id_obj), Object(&span_id_obj)];
-    let result = java_env.call_method(
-        calcite_query,
-        if explain { "queryPlanModels" } else { "queryModels" },
-        "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
-        query_args).map_err(|e| ErrorResponse::from_error(CalciteError { message: format!("Failed to execute query: {}", e) }))?;
-
+    let query_args: &[JValueGen<&JObject<'_>>] = &[
+        Object(&temp_obj),
+        Object(&trace_id_obj),
+        Object(&span_id_obj),
+    ];
+    let result = java_env
+        .call_method(
+            calcite_query,
+            if explain {
+                "queryPlanModels"
+            } else {
+                "queryModels"
+            },
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;",
+            query_args,
+        )
+        .map_err(|e| {
+            ErrorResponse::from_error(CalciteError {
+                message: format!("Failed to execute query: {}", e),
+            })
+        })?;
 
     match result {
         Object(obj) => {
-            let json_string: String = java_env.get_string(&JString::from(obj))
-                .map_err(|e|
-                         ErrorResponse::from_error(
-                             CalciteError {
-                                 message: format!(
-                                     "Internal: failed to convert JString to Rust String : {}", e)}))?.into();
-
+            let json_string: String = java_env
+                .get_string(&JString::from(obj))
+                .map_err(|e| {
+                    ErrorResponse::from_error(CalciteError {
+                        message: format!(
+                            "Internal: failed to convert JString to Rust String : {}",
+                            e
+                        ),
+                    })
+                })?
+                .into();
 
             let rows: T = match serde_json::from_str::<CalciteResponse<T>>(&json_string) {
-                Ok(json_rows) => {
-                    match json_rows {
-                        CalciteResponse::CRSuccess(rows) => rows,
-                        CalciteResponse::CRError(err) => {
-                            let err_msg = if let Some(cause) = err.cause {
-                                format!("{} {}", err.error_message, cause)
-                            } else {
-                                err.error_message
-                            };
-                            let err = CalciteError {
-                                message: format!("Failed to execute query in calcite: {}", err_msg) };
-                            return Err(ErrorResponse::from_error(err));
-                        }
+                Ok(json_rows) => match json_rows {
+                    CalciteResponse::CRSuccess(rows) => rows,
+                    CalciteResponse::CRError(err) => {
+                        let err_msg = if let Some(cause) = err.cause {
+                            format!("{} {}", err.error_message, cause)
+                        } else {
+                            err.error_message
+                        };
+                        let err = CalciteError {
+                            message: format!("Failed to execute query in calcite: {}", err_msg),
+                        };
+                        return Err(ErrorResponse::from_error(err));
                     }
                 },
                 Err(e) => {
-                    let err = CalciteError { message: format!("Failed to parse response from Calcite: {}", e) };
+                    let err = CalciteError {
+                        message: format!("Failed to parse response from Calcite: {}", e),
+                    };
                     return Err(ErrorResponse::from_error(err));
                 }
             };
@@ -200,7 +248,12 @@ pub fn connector_query<T: for<'a> serde::Deserialize<'a> + serde::Serialize> (
             Ok(rows)
         }
         x => {
-            let err = CalciteError { message: format!("Invalid response from Calcite. Expected an object, but got: {:?}", x) };
+            let err = CalciteError {
+                message: format!(
+                    "Invalid response from Calcite. Expected an object, but got: {:?}",
+                    x
+                ),
+            };
             Err(ErrorResponse::from_error(err))
         }
     }
@@ -220,24 +273,25 @@ fn fix_rows(rows: Vec<Row>, query_metadata: &models::Query) -> Vec<Row> {
         key_sample.push(key);
     }
 
-    rows.into_iter().map(|mut row| {
-        if max_keys > row.len() {
-            for key in &key_sample {
-                if !row.contains_key(key) {
-                    row.insert(key.clone(), RowFieldValue(Value::Null));
+    rows.into_iter()
+        .map(|mut row| {
+            if max_keys > row.len() {
+                for key in &key_sample {
+                    if !row.contains_key(key) {
+                        row.insert(key.clone(), RowFieldValue(Value::Null));
+                    }
                 }
             }
-        }
-        for (_key, value) in &mut row {
-            let RowFieldValue(val) = value;
-            if val == "null" {
-                *value = RowFieldValue(Value::Null);
+            for (_key, value) in &mut row {
+                let RowFieldValue(val) = value;
+                if val == "null" {
+                    *value = RowFieldValue(Value::Null);
+                }
             }
-
-        }
-        row.swap_remove("CONSTANT");
-        row
-    }).collect()
+            row.swap_remove("CONSTANT");
+            row
+        })
+        .collect()
 }
 // ANCHOR_END: calcite_query
 
