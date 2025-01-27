@@ -95,17 +95,32 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Variab
         }
     }
 
-    let columns: Vec<VariableName> = columns.into_iter().collect();
+    let mut columns: Vec<VariableName> = columns.into_iter().collect();
 
     let mut cte = format!("WITH \"{HASURA_CTE_VARS}\" AS (\n");
 
     let mut selects = Vec::new();
 
+    if vars.is_empty() {
+        columns.push("\"__var_set_index\"".into());
+        let columns_expr = columns.join(",");
+        let cte_expression = format!("WITH \"{HASURA_CTE_VARS}\"({columns_expr}) AS ");
+        let column_values_expression = columns
+            .iter()
+            .map(|_| "0".to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+        return Ok(VariablesCTE {
+            query: format!("{cte_expression} ( VALUES  ({column_values_expression}) LIMIT 0 )"),
+            columns,
+        });
+    }
+
     // Iterate with enumeration to get the index
     for (idx, row) in vars.iter().enumerate() {
         let mut pairs = Vec::new();
         // Add the index column
-        pairs.push(format!("{} AS \"__var_set_index\"", idx));
+        pairs.push(format!("{idx} AS \"__var_set_index\""));
 
         // Include all columns, using NULL for missing ones
         for column in &columns {
@@ -113,7 +128,7 @@ fn generate_cte_vars(vars: &Vec<BTreeMap<VariableName, Value>>) -> Result<Variab
                 Some(value) => value_to_sql(column, value)?,
                 None => "NULL".to_string(),
             };
-            pairs.push(format!("{} AS \"{}\"", sql_value, column));
+            pairs.push(format!("{sql_value} AS \"{column}\""));
         }
 
         selects.push(format!("    SELECT {}", pairs.join(", ")));
@@ -424,14 +439,7 @@ fn process_sql_expression(
                     }
                 }
                 ComparisonValue::Variable { name } => {
-                    let variable = variables
-                        .as_ref()
-                        .ok_or(Error::VariableNotFound(name.to_string()))?
-                        .columns
-                        .iter()
-                        .find(|&var| var == name)
-                        .ok_or(Error::VariableNotFound(name.to_string()))?;
-                    format!("\"{HASURA_CTE_VARS}\".\"{}\"", variable)
+                    format!("\"{HASURA_CTE_VARS}\".\"{name}\"")
                 }
             };
             Ok(format!("{} {} {}", left_side, sql_operation, right_side))
@@ -449,9 +457,9 @@ fn process_sql_expression(
                         configuration
                             .clone()
                             .metadata
-                            .unwrap()
+                            .unwrap_or_default()
                             .get(collection)
-                            .unwrap(),
+                            .ok_or(Error::TableNotFound(collection.clone()))?,
                     );
 
                     let expression = process_sql_expression(
@@ -644,103 +652,6 @@ impl SqlQueryComponents {
     }
 }
 
-// TODO: Remove this! `SqlQueryComponents`'s `to_sql` does what this function does.
-#[tracing::instrument(level=Level::INFO)]
-fn generate_fields_query(
-    supports_json_object: bool,
-    from: String,
-    with: Option<String>,
-    select: Option<String>,
-    order_by: Option<String>,
-    pagination: Option<String>,
-    where_clause: Option<String>,
-    join_clause: Option<String>,
-) -> String {
-    let with_clause = match with {
-        None => "".into(),
-        Some(with) => {
-            if with.is_empty() {
-                "".into()
-            } else {
-                with
-            }
-        }
-    };
-
-    let select_clause: String = match select {
-        None => "".into(),
-        Some(select) => {
-            if select.is_empty() {
-                if supports_json_object {
-                    "'CONSTANT', 1".into()
-                } else {
-                    "1 AS \"CONSTANT\"".into()
-                }
-            } else {
-                select.to_string()
-            }
-        }
-    };
-
-    let order_by_clause = match order_by {
-        None => "".into(),
-        Some(ord) => {
-            if ord.is_empty() {
-                "".into()
-            } else {
-                format!(" ORDER BY {}", ord)
-            }
-        }
-    };
-
-    let expanded_where_clause = match where_clause {
-        None => "".to_string(),
-        Some(w) => {
-            if w.is_empty() {
-                "".to_string()
-            } else {
-                format!(" WHERE {}", w).to_string()
-            }
-        }
-    };
-
-    let format_clause = |clause: Option<String>| match clause {
-        None => "".into(),
-        Some(p) => {
-            if p.is_empty() {
-                "".into()
-            } else {
-                format!(" {}", p)
-            }
-        }
-    };
-
-    let pagination_clause = format_clause(pagination);
-    let join = format_clause(join_clause);
-
-    if supports_json_object {
-        let query = format!(
-            "SELECT JSON_OBJECT({}) FROM {}{}{}{}{}",
-            select_clause, from, join, expanded_where_clause, order_by_clause, pagination_clause
-        );
-        event!(Level::INFO, message = format!("Generated query {}", query));
-        query
-    } else {
-        let query = format!(
-            "{} SELECT {} FROM {}{}{}{}{}",
-            with_clause,
-            select_clause,
-            from,
-            join,
-            expanded_where_clause,
-            order_by_clause,
-            pagination_clause
-        );
-        event!(Level::INFO, message = format!("Generated query {}", query));
-        query
-    }
-}
-
 /*
 WITH "vars" AS (
   SELECT 0 as "__var_set_index", 1 as "AlbumId"
@@ -763,14 +674,14 @@ FROM (
 ) "t"
 GROUP BY "t"."__var_set_index"
 */
-pub fn generate_aggregate_query<'a>(
+pub fn generate_aggregate_query(
     supports_json_object: bool,
     table: &QualifiedTable,
     predicate: Option<String>,
     pagination: Option<String>,
     order_by: Option<String>,
     variables_cte: &Option<VariablesCTE>,
-    aggregate_fields: &'a IndexMap<FieldName, Aggregate>,
+    aggregate_fields: &IndexMap<FieldName, Aggregate>,
 ) -> String {
     let mut columns_to_select_in_subquery = HashSet::new();
     for (_, aggregate) in aggregate_fields {
@@ -1025,7 +936,7 @@ pub fn parse_query<'a>(
     variables: &'a Option<Vec<BTreeMap<VariableName, Value>>>,
 ) -> Result<QueryComponents, Error> {
     let variables_cte = match variables {
-        Some(v) => Some(generate_cte_vars(&v)?),
+        Some(v) => Some(generate_cte_vars(v)?),
         None => None,
     };
 
