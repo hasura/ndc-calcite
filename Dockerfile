@@ -4,8 +4,7 @@ WORKDIR /app
 RUN apt-get update && \
     apt-get install -y pkg-config libssl-dev && \
     rm -rf /var/lib/apt/lists/*
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo install cargo-chef
+RUN cargo install cargo-chef
 
 # Planning stage
 FROM chef AS planner
@@ -17,18 +16,21 @@ RUN cargo chef prepare --recipe-path recipe.json
 FROM chef AS cacher
 COPY --from=planner /app/recipe.json recipe.json
 RUN mkdir -p /app/target
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/app/target \
-    cargo chef cook --release --recipe-path recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
 # Final Rust build stage
 FROM chef AS builder
+WORKDIR /app
 COPY . .
-RUN mkdir -p target
-COPY --from=cacher /app/target target
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/app/target \
-    cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
+
+# Debug the directory structure before build
+RUN ls -la
+
+# Build with verbose output and explicit binary checking
+RUN RUST_BACKTRACE=1 cargo build -vv --release --bin ndc-calcite --bin ndc-calcite-cli && \
+    ls -la target/release/ && \
+    test -f target/release/ndc-calcite && \
+    test -f target/release/ndc-calcite-cli
 
 # Java build stage
 FROM eclipse-temurin:21-jdk-jammy AS java-build
@@ -58,9 +60,7 @@ COPY calcite-rs-jni/build.sh ./
 # Make build script executable and run it with DOCKER_BUILD flag
 RUN chmod +x build.sh && \
     chmod +x calcite/gradlew
-RUN --mount=type=cache,target=/root/.gradle \
-    --mount=type=cache,target=/root/.m2 \
-    DOCKER_BUILD=1 ./build.sh
+RUN DOCKER_BUILD=1 ./build.sh
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-jammy AS runtime
@@ -73,9 +73,16 @@ RUN mkdir -p \
     /app/connector && \
     chmod -R 666 /app/connector
 
-# Copy binaries and JARs
-COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin/
-COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin/
+# First verify the files exist before copying
+RUN mkdir -p /usr/local/bin
+
+# Copy binaries and JARs with explicit error checking
+COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin/ndc-calcite
+RUN test -f /usr/local/bin/ndc-calcite && chmod +x /usr/local/bin/ndc-calcite
+
+COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin/ndc-calcite-cli
+RUN test -f /usr/local/bin/ndc-calcite-cli && chmod +x /usr/local/bin/ndc-calcite-cli
+
 COPY --from=java-build /calcite-rs-jni/jni/target/ /calcite-rs-jni/jni/target/
 
 # Set environment variables
