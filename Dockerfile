@@ -1,7 +1,10 @@
 # Build stage for cargo-chef
 FROM rust:1.78.0-slim AS chef
 WORKDIR /app
-RUN --mount=type=cache,target=/usr/local/cargo/registry \
+RUN apt-get update && \
+    apt-get install -y pkg-config libssl-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    --mount=type=cache,target=/usr/local/cargo/registry \
     cargo install cargo-chef
 
 # Planning stage
