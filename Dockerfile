@@ -1,67 +1,89 @@
-# build stage for cargo-chef
-FROM rust:1.78.0 AS chef
+# Build stage for cargo-chef
+FROM rust:1.78.0-slim AS chef
 WORKDIR /app
-RUN cargo install cargo-chef
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    cargo install cargo-chef
 
-# planning stage
+# Planning stage
 FROM chef AS planner
-COPY Cargo.toml Cargo.lock crates ./app/
+COPY Cargo.toml Cargo.lock ./
+COPY crates ./crates/
 RUN cargo chef prepare --recipe-path recipe.json
 
-# caching stage
+# Caching stage
 FROM chef AS cacher
 COPY --from=planner /app/recipe.json recipe.json
-RUN cargo chef cook --recipe-path recipe.json
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    cargo chef cook --release --recipe-path recipe.json
 
-# final build stage
+# Final Rust build stage
 FROM chef AS builder
 COPY . .
-RUN cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
+COPY --from=cacher /app/target target
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/app/target \
+    cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
 
-# java-build stage
-FROM debian:trixie-slim AS java-build
-COPY scripts/java_env_jdk.sh ./scripts/
-RUN apt-get update && apt-get install -y openjdk-21-jdk maven ca-certificates
-RUN . /scripts/java_env_jdk.sh
-RUN java -version && mvn --version
-COPY calcite-rs-jni/ /calcite-rs-jni/
-RUN mkdir -p /root/.m2 /root/.gradle
-VOLUME /root/.m2 /root/.gradle
-
+# Java build stage
+FROM eclipse-temurin:21-jdk-jammy AS java-build
 WORKDIR /calcite-rs-jni
-RUN apt-get update && apt-get install -y gradle
+
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    maven \
+    gradle \
+    python3 \
+    python3-venv \
+    python3-pip \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy build script first for better layer caching
+COPY calcite-rs-jni/build.sh ./
 RUN chmod +x build.sh
 
-# Run build.sh with detailed logging
-RUN sh -x build.sh 2>&1 | tee build.log || (echo "=== Build failed. Last 50 lines of build.log: ===" && tail -n 50 build.log && exit 1)
+# Copy project files
+COPY calcite-rs-jni/pom.xml ./
+COPY calcite-rs-jni/calcite ./calcite/
+COPY calcite-rs-jni/src ./src/
+COPY calcite-rs-jni/py_graphql_sql ./py_graphql_sql/
 
-# Put all the jars into target/dependency folder
-RUN mvn dependency:copy-dependencies
+# Set environment variable to skip local-only steps
+ENV DOCKER_BUILD=1
 
-# runtime stage
-FROM debian:trixie-slim AS runtime
-COPY scripts/java_env_jre.sh ./scripts/
+# Run build script with caching
+RUN --mount=type=cache,target=/root/.m2 \
+    --mount=type=cache,target=/root/.gradle \
+    --mount=type=cache,target=/root/.cache/pip \
+    ./build.sh 2>&1 | tee build.log || \
+    (echo "=== Build failed. Last 50 lines of build.log: ===" && \
+     tail -n 50 build.log && exit 1)
 
-RUN apt-get update &&  \
-    apt-get install -y openjdk-21-jre-headless &&  \
-    apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+# Copy dependencies
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:copy-dependencies
 
-RUN . /scripts/java_env_jre.sh && \
-    mkdir -p /calcite-rs-jni/jni/target && \
-    mkdir -p /etc/ndc-calcite && \
-    mkdir -p /app/connector && \
+# Runtime stage
+FROM eclipse-temurin:21-jre-jammy AS runtime
+WORKDIR /app
+
+# Create required directories with proper permissions
+RUN mkdir -p \
+    /calcite-rs-jni/jni/target \
+    /etc/ndc-calcite \
+    /app/connector && \
     chmod -R 666 /app/connector
 
-COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin
-COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin
+# Copy binaries and JARs
+COPY --from=builder /app/target/release/ndc-calcite /usr/local/bin/
+COPY --from=builder /app/target/release/ndc-calcite-cli /usr/local/bin/
 COPY --from=java-build /calcite-rs-jni/jni/target/ /calcite-rs-jni/jni/target/
 
-ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector
-ENV CONNECTOR_CONTEXT_PATH=/etc/connector
-ENV RUST_BACKTRACE=full
-
-WORKDIR /app
+# Set environment variables
+ENV HASURA_CONFIGURATION_DIRECTORY=/etc/connector \
+    CONNECTOR_CONTEXT_PATH=/etc/connector \
+    RUST_BACKTRACE=full
 
 ENTRYPOINT ["ndc-calcite"]
 CMD ["serve"]

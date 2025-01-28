@@ -1,115 +1,98 @@
 #!/bin/bash
 
-# Exit on any error
-set -e
+set -eo pipefail
 
-# Function to clean macOS metadata files if possible
-clean_mac_metadata() {
-    if [[ "$OSTYPE" == "darwin"* ]] && command -v dot_clean >/dev/null 2>&1; then
-        echo "Cleaning macOS metadata files..."
-        dot_clean "$1"
-    fi
+# Constants
+CALCITE_VERSION="1.38.0-SNAPSHOT"
+CALCITE_ARTIFACTS=(
+    "core/calcite-core"
+    "graphql/calcite-graphql"
+    "linq4j/calcite-linq4j"
+)
+
+# Function to handle errors
+error_handler() {
+    echo "Error occurred in script at line: ${1}"
+    exit 1
 }
 
-# Function to check if directory exists
+trap 'error_handler ${LINENO}' ERR
+
+# Function to check directory existence
 check_directory() {
-    if [ ! -d "$1" ]; then
-        echo "Error: Directory $1 not found"
+    local dir=$1
+    if [ ! -d "$dir" ]; then
+        echo "Error: Directory $dir not found"
         exit 1
     fi
 }
 
-# Function to run Gradle commands with error handling
-run_gradle() {
-    # Create build directory if it doesn't exist
-    mkdir -p build
+# Function to install calcite artifacts
+install_calcite_artifact() {
+    local path=$1
+    local artifact_id=$(basename "$path")
+    local jar_path="calcite/${path}/build/libs/${artifact_id}-${CALCITE_VERSION}.jar"
 
-    if ! ./gradlew $1; then
-        echo "Gradle $1 failed. Checking if this is the first build..."
-        if [ "$1" == "clean" ]; then
+    echo "Installing ${artifact_id}..."
+    mvn install:install-file \
+        -Dfile="$jar_path" \
+        -DgroupId=org.apache.calcite \
+        -DartifactId="$artifact_id" \
+        -Dversion="$CALCITE_VERSION" \
+        -Dpackaging=jar
+}
+
+# Function to run Gradle commands
+run_gradle() {
+    local command=$1
+    echo "Running Gradle $command..."
+    ./gradlew "$command" || {
+        if [ "$command" = "clean" ]; then
             echo "First build detected, continuing..."
         else
-            echo "Error: Gradle $1 failed"
+            echo "Error: Gradle $command failed"
             exit 1
         fi
-    fi
-
-    clean_mac_metadata "."
+    }
 }
 
 # Main build process
 main() {
-    # Check if calcite directory exists
+    echo "Starting build process..."
+
+    # Check and build calcite
     check_directory "calcite"
-
-    # Navigate to calcite directory
-    echo "Entering calcite directory..."
-    cd calcite || exit 1
-    clean_mac_metadata "."
-
-    # Run Gradle commands
-    echo "Running Gradle clean..."
+    cd calcite
     run_gradle "clean"
-
-    echo "Running Gradle assemble..."
     run_gradle "assemble"
+    cd ..
 
-    # Return to parent directory
-    echo "Returning to parent directory..."
-cd ..
+    # Install calcite artifacts
+    for artifact in "${CALCITE_ARTIFACTS[@]}"; do
+        install_calcite_artifact "$artifact"
+    done
 
-# Install calcite-core
-mvn install:install-file -Dfile=calcite/core/build/libs/calcite-core-1.38.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-core -Dversion=1.38.0-SNAPSHOT -Dpackaging=jar
+    # Maven build steps
+    echo "Running Maven build steps..."
+    mvn clean install
+    mvn dependency:copy-dependencies
 
-# Install calcite-graphql
-mvn install:install-file -Dfile=calcite/graphql/build/libs/calcite-graphql-1.38.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-graphql -Dversion=1.38.0-SNAPSHOT -Dpackaging=jar
+    # Python setup (if running locally)
+    if [ -z "$DOCKER_BUILD" ]; then
+        check_directory "py_graphql_sql"
+        cd py_graphql_sql
 
-# Install calcite-linq4j
-mvn install:install-file -Dfile=calcite/linq4j/build/libs/calcite-linq4j-1.38.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-linq4j -Dversion=1.38.0-SNAPSHOT -Dpackaging=jar
-
-# Run Maven commands
-    echo "Running Maven clean install..."
-    if ! mvn clean install; then
-        echo "Error: Maven clean install failed"
-        exit 1
+        echo "Setting up Python environment..."
+        python3 -m venv .venv
+        # shellcheck disable=SC1091
+        source .venv/bin/activate
+        pip install poetry
+        python3 build.py
+        cd ..
     fi
-    clean_mac_metadata "."
 
-    echo "Running Maven dependency copy..."
-    if ! mvn dependency:copy-dependencies; then
-        echo "Error: Maven dependency copy failed"
-        exit 1
-    fi
-    clean_mac_metadata "."
-
-    # Setup Python environment
-    check_directory "py_graphql_sql"
-    cd py_graphql_sql || exit 1
-
-    echo "Creating Python virtual environment..."
-    python3 -m venv .venv
-    clean_mac_metadata "."
-
-    echo "Activating virtual environment..."
-    source .venv/bin/activate
-    clean_mac_metadata "."
-
-    echo "Installing poetry..."
-    if ! pip install poetry; then
-        echo "Error: Failed to install poetry"
-        exit 1
-    fi
-    clean_mac_metadata "."
-
-    echo "Running Python build..."
-    if ! python3 build.py; then
-        echo "Error: Python build failed"
-        exit 1
-    fi
-    clean_mac_metadata "."
-cd ..
-echo "Build process completed successfully!"
+    echo "Build process completed successfully!"
 }
 
-# Run the main function
+# Run main function with error handling
 main
