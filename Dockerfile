@@ -48,16 +48,11 @@ COPY calcite-rs-jni/calcite ./calcite/
 COPY calcite-rs-jni/jdbc ./jdbc/
 COPY calcite-rs-jni/sqlengine ./sqlengine/
 COPY calcite-rs-jni/py_graphql_sql ./py_graphql_sql/
+COPY calcite-rs-jni/build.sh ./
 
-# First build Calcite with Gradle
-WORKDIR /calcite-rs-jni/calcite
-RUN gradle clean build -x test
-
-# Then build the rest with Maven
-WORKDIR /calcite-rs-jni
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn clean install -DskipTests && \
-    mvn clean install dependency:copy-dependencies
+# Make build script executable and run it with DOCKER_BUILD flag
+RUN chmod +x build.sh && \
+    DOCKER_BUILD=1 ./build.sh
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-jammy AS runtime
