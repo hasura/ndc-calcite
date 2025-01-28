@@ -39,10 +39,6 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy build script first for better layer caching
-COPY calcite-rs-jni/build.sh ./
-RUN chmod +x build.sh
-
 # Copy project files
 COPY calcite-rs-jni/pom.xml ./
 COPY calcite-rs-jni/jni ./jni/
@@ -53,20 +49,32 @@ COPY calcite-rs-jni/jdbc ./jdbc/
 COPY calcite-rs-jni/sqlengine ./sqlengine/
 COPY calcite-rs-jni/py_graphql_sql ./py_graphql_sql/
 
-# Set environment variable to skip local-only steps
-ENV DOCKER_BUILD=1
+# Build and install required Calcite artifacts
+RUN cd calcite && \
+    ./gradlew clean assemble && \
+    mvn install:install-file \
+        -Dfile=core/build/libs/calcite-core-1.38.0-SNAPSHOT.jar \
+        -DgroupId=org.apache.calcite \
+        -DartifactId=calcite-core \
+        -Dversion=1.38.0-SNAPSHOT \
+        -Dpackaging=jar && \
+    mvn install:install-file \
+        -Dfile=graphql/build/libs/calcite-graphql-1.38.0-SNAPSHOT.jar \
+        -DgroupId=org.apache.calcite \
+        -DartifactId=calcite-graphql \
+        -Dversion=1.38.0-SNAPSHOT \
+        -Dpackaging=jar && \
+    mvn install:install-file \
+        -Dfile=linq4j/build/libs/calcite-linq4j-1.38.0-SNAPSHOT.jar \
+        -DgroupId=org.apache.calcite \
+        -DartifactId=calcite-linq4j \
+        -Dversion=1.38.0-SNAPSHOT \
+        -Dpackaging=jar && \
+    cd ..
 
-# Run build script with caching
+# Run Maven build
 RUN --mount=type=cache,target=/root/.m2 \
-    --mount=type=cache,target=/root/.gradle \
-    --mount=type=cache,target=/root/.cache/pip \
-    ./build.sh 2>&1 | tee build.log || \
-    (echo "=== Build failed. Last 50 lines of build.log: ===" && \
-     tail -n 50 build.log && exit 1)
-
-# Copy dependencies
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:copy-dependencies
+    mvn clean install dependency:copy-dependencies
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-jammy AS runtime
