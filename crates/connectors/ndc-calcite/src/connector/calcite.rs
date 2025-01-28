@@ -12,6 +12,7 @@ use ndc_models as models;
 use ndc_models::{Capabilities, CollectionName, VariableName};
 use ndc_sdk::connector::{Connector, ConnectorSetup, ErrorResponse, Result};
 use ndc_sdk::json_response::JsonResponse;
+use regex::Regex;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::ffi::OsStr;
@@ -107,15 +108,34 @@ impl ConnectorSetup for Calcite {
                     Value::String(String::new()),
                 ))?;
 
-            let models = fs::read_to_string(model_file_path.clone()).unwrap();
+            let mut models = fs::read_to_string(model_file_path.clone()).unwrap();
+
+            for (key, value) in std::env::vars() {
+                let env_var_identifier = format!("${{{}}}", key);
+                models = models.replace(&env_var_identifier, &value);
+            }
+
+            // Create a regex pattern to match `${*}`
+            let re = Regex::new(r"\$\{.*?\}").unwrap();
+            // check if there is any placeholder left in the model file, which means
+            // there is an extra env var which is not allowed in the metadata or there is
+            // a mismatch between the two files.
+            let final_model_string = if re.is_match(&models) {
+                Err(ErrorResponse::from_error(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "Some environment variable placeholders are not updated in the model file",
+                )))
+            } else {
+                Ok(&models)
+            }?;
 
             if has_yaml_extension(&model_file_path.clone()) {
                 let model_object: Model =
-                    serde_yaml::from_str(&models).map_err(ErrorResponse::from_error)?;
+                    serde_yaml::from_str(final_model_string).map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             } else {
                 let model_object: Model =
-                    serde_json::from_str(&models).map_err(ErrorResponse::from_error)?;
+                    serde_json::from_str(final_model_string).map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             }
 

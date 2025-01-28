@@ -7,8 +7,6 @@ use anyhow::Ok;
 use clap::Subcommand;
 use include_dir::Dir;
 use include_dir::{include_dir, DirEntry};
-use regex::Regex;
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 use tokio::fs;
 
@@ -16,7 +14,7 @@ use ndc_calcite_schema::configuration::{
     has_configuration, introspect, parse_configuration, upgrade_to_latest_version,
     write_parsed_configuration, ParsedConfiguration,
 };
-use ndc_calcite_schema::environment::{Environment, Variable};
+use ndc_calcite_schema::environment::Environment;
 use ndc_calcite_schema::jvm::init_jvm;
 use ndc_calcite_schema::version5::CalciteRefSingleton;
 
@@ -167,130 +165,22 @@ async fn update(
 ) -> anyhow::Result<()> {
     let config_path = &context.context_path;
 
-    // Read the `connector-metadata.yaml` file and create a map of supported environment variables
+    // Check if `connector-metadata.yaml` file is present
     let metadata_yaml_file = config_path.join(".hasura-connector/connector-metadata.yaml");
-    let metadata = if metadata_yaml_file.exists() {
-        let metadata_yaml = fs::read_to_string(metadata_yaml_file).await?;
-        Ok(Some(serde_yaml::from_str::<
-            metadata::ConnectorMetadataDefinition,
-        >(&metadata_yaml)?))
-    } else {
-        Err(anyhow::Error::msg(format!("Metadata file does not exist at {config_path:?}/.hasura-connector/connector-metadata.yaml")))
-    }?;
-    let supported_env_vars = metadata
-        .as_ref()
-        .map(|m| m.supported_environment_variables.clone())
-        .unwrap_or_default();
 
-    let mut env_var_map = BTreeMap::new();
-    for env_var in supported_env_vars.iter() {
-        match (env_var.required, &env_var.default_value) {
-            // if required and no default value, throw an error
-            (true, None) => {
-                let variable_value = context
-                    .environment
-                    .read(&Variable::new(env_var.name.clone()))
-                    .map_err(|err| match err {
-                        ndc_calcite_schema::environment::Error::NonUnicodeValue(os_string) => {
-                            anyhow::Error::msg(format!("Non-Unicode value: {:?}", os_string))
-                        }
-                        ndc_calcite_schema::environment::Error::VariableNotPresent(variable) => {
-                            anyhow::Error::msg(format!("Variable not present: {:?}", variable))
-                        }
-                    })?;
-                env_var_map.insert(env_var.name.clone(), variable_value);
-            }
-            // if required and default value:
-            //   1. return the default value if the env var is not present
-            //   2. throw an error if there is a problem reading the env var
-            (true, Some(default)) => {
-                let variable_value = context
-                    .environment
-                    .read(&Variable::new(env_var.name.clone()));
-                let variable_value_result = match variable_value {
-                    Result::Ok(value) => Result::Ok(value),
-                    Err(err) => {
-                        if err
-                            == (ndc_calcite_schema::environment::Error::VariableNotPresent(
-                                Variable::new(env_var.name.clone()),
-                            ))
-                        {
-                            Ok(default.to_string())
-                        } else {
-                            Err(anyhow::Error::msg(format!(
-                                "Error reading the env var: {}",
-                                env_var.name.clone()
-                            )))
-                        }
-                    }
-                }?;
-                env_var_map.insert(env_var.name.clone(), variable_value_result);
-            }
-            // if not required and no default is present, return an
-            // empty value if the env var is not present.  Note: if
-            // the type of the env var is not string, and the model
-            // file has a non-string placeholder (e.g. <$>FOO), it'll
-            // return just a space which will lead to a JSON parsing
-            // error.  So, default values for non-string env vars are
-            // required.
-            (false, None) => {
-                let variable_value = context
-                    .environment
-                    .read(&Variable::new(env_var.name.clone()))
-                    .unwrap_or_default();
-                env_var_map.insert(env_var.name.clone(), variable_value);
-            }
-            // if not required and default value is present, return the default value
-            (false, Some(default)) => {
-                let variable_value = context
-                    .environment
-                    .read(&Variable::new(env_var.name.clone()))
-                    .unwrap_or(default.to_string());
-                env_var_map.insert(env_var.name.clone(), variable_value);
-            }
-        }
+    if !metadata_yaml_file.exists() {
+        return Err(anyhow::Error::msg(format!(
+            "Metadata file does not exist at {config_path:?}/.hasura-connector/connector-metadata.yaml"
+        )));
     }
 
-    // Replace the placeholders in the model file with the environment variables
+    // Check if the model file is present
 
     let model_file = config_path.join("model.json");
-    let mut model_file_value = if model_file.exists() {
-        let model_json_stringified = fs::read_to_string(model_file.clone()).await?;
-        Ok(model_json_stringified)
-    } else {
-        Err(anyhow::Error::msg("Model file does not exist"))
-    }?;
 
-    // for each env var present in the map from the metadata file, replace the placeholder in the model file
-    for (key, value) in &env_var_map {
-        // include the identifiers with the env var to avoid replacing the wrong value
-        let env_var_identifier = format!("{{{{{}}}}}", key);
-        model_file_value = model_file_value.replace(&env_var_identifier, value);
+    if !model_file.exists() {
+        return Err(anyhow::Error::msg("Model file does not exist"));
     }
-
-    // Create a regex pattern to match `{{*}}`
-    let re = Regex::new(r"\{\{.*?\}\}").unwrap();
-
-    // check if there is any placeholder left in the model file, which means
-    // there is an extra env var which is not allowed in the metadata or there is
-    // a mismatch between the two files.
-    let final_model_string = if re.is_match(&model_file_value) {
-        Err(anyhow::Error::msg(
-            "Some environment variable placeholders are not updated in the model file",
-        ))
-    } else {
-        Ok(model_file_value)
-    }?;
-    // convert the final model value to JSON value
-    let updated_model: serde_json::Value = serde_json::from_str(&final_model_string).map_err(|err|
-        anyhow::Error::msg(format!("Not a valid JSON (the default value of a non string env variable might be missing): {}", err))
-    )?;
-
-    fs::write(
-        model_file,
-        serde_json::to_string_pretty(&updated_model).unwrap(),
-    )
-    .await?;
 
     // if !has_configuration(config_path) {
     //     initialize(true, &context).await?
