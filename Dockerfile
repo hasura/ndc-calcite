@@ -49,31 +49,14 @@ COPY calcite-rs-jni/jdbc ./jdbc/
 COPY calcite-rs-jni/sqlengine ./sqlengine/
 COPY calcite-rs-jni/py_graphql_sql ./py_graphql_sql/
 
-# Build and install required Calcite artifacts
-RUN cd calcite &&  \
-    mvn clean install -DskipTests && \
-    mvn install:install-file \
-        -Dfile=core/build/libs/calcite-core-1.38.0-SNAPSHOT.jar \
-        -DgroupId=org.apache.calcite \
-        -DartifactId=calcite-core \
-        -Dversion=1.38.0-SNAPSHOT \
-        -Dpackaging=jar && \
-    mvn install:install-file \
-        -Dfile=graphql/build/libs/calcite-graphql-1.38.0-SNAPSHOT.jar \
-        -DgroupId=org.apache.calcite \
-        -DartifactId=calcite-graphql \
-        -Dversion=1.38.0-SNAPSHOT \
-        -Dpackaging=jar && \
-    mvn install:install-file \
-        -Dfile=linq4j/build/libs/calcite-linq4j-1.38.0-SNAPSHOT.jar \
-        -DgroupId=org.apache.calcite \
-        -DartifactId=calcite-linq4j \
-        -Dversion=1.38.0-SNAPSHOT \
-        -Dpackaging=jar && \
-    cd ..
+# First build Calcite with Gradle
+WORKDIR /calcite-rs-jni/calcite
+RUN gradle clean build -x test
 
-# Run Maven build
+# Then build the rest with Maven
+WORKDIR /calcite-rs-jni
 RUN --mount=type=cache,target=/root/.m2 \
+    mvn clean install -DskipTests && \
     mvn clean install dependency:copy-dependencies
 
 # Runtime stage
