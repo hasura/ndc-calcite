@@ -16,8 +16,8 @@ RUN cargo chef prepare --recipe-path recipe.json
 # Caching stage
 FROM chef AS cacher
 COPY --from=planner /app/recipe.json recipe.json
-RUN mkdir -p /app/target && \
-    --mount=type=cache,target=/usr/local/cargo/registry \
+RUN mkdir -p /app/target
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/app/target \
     cargo chef cook --release --recipe-path recipe.json
 
