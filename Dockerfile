@@ -46,7 +46,6 @@ RUN chmod +x build.sh
 # Copy project files
 COPY calcite-rs-jni/pom.xml ./
 COPY calcite-rs-jni/calcite ./calcite/
-COPY calcite-rs-jni/src ./src/
 COPY calcite-rs-jni/py_graphql_sql ./py_graphql_sql/
 
 # Set environment variable to skip local-only steps
