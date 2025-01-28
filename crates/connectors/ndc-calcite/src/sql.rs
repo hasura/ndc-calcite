@@ -921,12 +921,12 @@ pub fn parse_query<'a>(
 
         query_components.select = Some(select_clause.join(","));
         query_components.join = join_clause;
-        query_components.variables_cte = variables_cte;
-
-        query_components.order_by = Some(order_by(query).join(", "));
-        query_components.pagination = Some(pagination(query).join(" "));
-        query_components.predicates = Some(predicates);
     }
+
+    query_components.order_by = Some(order_by(query).join(", "));
+    query_components.pagination = Some(pagination(query).join(" "));
+    query_components.predicates = Some(predicates);
+    query_components.variables_cte = variables_cte;
 
     Ok(query_components)
 }
