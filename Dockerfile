@@ -50,7 +50,8 @@ COPY calcite-rs-jni/sqlengine ./sqlengine/
 COPY calcite-rs-jni/py_graphql_sql ./py_graphql_sql/
 
 # Build and install required Calcite artifacts
-RUN cd calcite && \
+RUN cd calcite &&  \
+    chmod +x gradlew && \
     ./gradlew clean assemble && \
     mvn install:install-file \
         -Dfile=core/build/libs/calcite-core-1.38.0-SNAPSHOT.jar \
