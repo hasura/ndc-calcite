@@ -6,8 +6,11 @@
 //! - Nested fields
 //! - Explain
 
-use ndc_models::{Capabilities, CapabilitiesResponse, ExistsCapabilities, LeafCapability, MutationCapabilities, NestedFieldCapabilities, QueryCapabilities, RelationshipCapabilities};
-use tracing::{Level};
+use ndc_models::{
+    Capabilities, CapabilitiesResponse, ExistsCapabilities, LeafCapability, MutationCapabilities,
+    NestedFieldCapabilities, QueryCapabilities,
+};
+use tracing::Level;
 
 /// Calculates the capabilities of the Calcite system.
 ///
@@ -51,10 +54,7 @@ pub fn calcite_capabilities() -> CapabilitiesResponse {
                 transactional: None,
                 explain: None,
             },
-            relationships: Some(RelationshipCapabilities {
-                order_by_aggregate: None,
-                relation_comparisons: None,
-            }),
+            relationships: None,
         },
     }
 }

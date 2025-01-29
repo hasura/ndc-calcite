@@ -3,33 +3,34 @@
 //! Provides HTTP server paths for required NDC functions. Connecting
 //! the request to the underlying code and providing the result.
 //!
-use std::collections::BTreeMap;
-use std::{env, fs};
-use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
 use async_trait::async_trait;
 use dotenv;
 use http::status::StatusCode;
 use jni::objects::GlobalRef;
-use regex::Regex;
 use ndc_calcite_values::values::CONFIGURATION_FILENAME;
 use ndc_models as models;
-use ndc_models::{ArgumentName, Capabilities, CollectionName, Relationship, RelationshipName, VariableName};
-use ndc_sdk::connector::{Connector, ConnectorSetup, ErrorResponse};
-use ndc_sdk::connector::error::Result;
+use ndc_models::{Capabilities, CollectionName, VariableName};
+use ndc_sdk::connector::{Connector, ConnectorSetup, ErrorResponse, Result};
 use ndc_sdk::json_response::JsonResponse;
+use regex::Regex;
 use serde_json::Value;
-use tracing::{event, info_span, Level, span, Span};
+use std::collections::BTreeMap;
+use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
+use std::{env, fs};
+
 use tracing::Instrument;
+use tracing::{event, info_span, span, Level, Span};
 
 use crate::capabilities::calcite_capabilities;
-use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
+use crate::query::{ExplainResponse, QueryPlan};
 use ndc_calcite_schema::calcite::Model;
+use ndc_calcite_schema::jvm::{get_jvm, init_jvm};
 use ndc_calcite_schema::schema::get_schema as retrieve_schema;
 use ndc_calcite_schema::version5::ParsedConfiguration;
-use crate::{calcite, query};
+
 use crate::calcite::CalciteError;
-use crate::query::QueryParams;
+use crate::{calcite, query};
 
 #[derive(Clone, Default, Debug)]
 pub struct Calcite {}
@@ -39,18 +40,17 @@ pub struct CalciteState {
     pub calcite_ref: GlobalRef,
 }
 
-#[tracing::instrument(skip(config, coll, args, coll_rel, query, vars, state), level=Level::INFO)]
-fn execute_query_with_variables(
+#[tracing::instrument(skip(config, coll, query, vars, state), level=Level::INFO)]
+fn handle_query(
     config: &ParsedConfiguration,
     coll: &CollectionName,
-    args: &BTreeMap<ArgumentName, models::RelationshipArgument>,
-    coll_rel: &BTreeMap<RelationshipName, Relationship>,
     query: &models::Query,
-    vars: &BTreeMap<VariableName, Value>,
+    vars: &Option<Vec<BTreeMap<VariableName, Value>>>,
     state: &CalciteState,
-    explain: &bool
-) -> Result<models::RowSet> {
-    query::orchestrate_query(QueryParams { config, coll, coll_rel, args, query, vars, state, explain})
+    explain: bool,
+) -> Result<Vec<models::RowSet>> {
+    let plan = query::generate_query_plan(config, coll, query, vars, state, explain)?;
+    query::execute_query_plan(&state.calcite_ref, plan)
 }
 
 const CONFIG_ERROR_MSG: &str = "Could not find model file.";
@@ -72,21 +72,25 @@ impl ConnectorSetup for Calcite {
         &self,
         configuration_dir: impl AsRef<Path> + Send,
     ) -> Result<<Self as Connector>::Configuration> {
-
         let span = span!(Level::INFO, "parse_configuration");
         dotenv::dotenv().ok();
 
         fn get_config_file_path(configuration_dir: impl AsRef<Path> + Send) -> PathBuf {
-                configuration_dir.as_ref().join(CONFIGURATION_FILENAME)
+            configuration_dir.as_ref().join(CONFIGURATION_FILENAME)
         }
 
         fn configure_path(span: Span, configuration_dir: &(impl AsRef<Path> + Send)) {
-            span.record("configuration_dir", format!("{:?}", configuration_dir.as_ref().display()));
+            span.record(
+                "configuration_dir",
+                format!("{:?}", configuration_dir.as_ref().display()),
+            );
         }
 
-        fn parse_json<T: Connector<Configuration = ParsedConfiguration>>(json_str: String) -> Result<T::Configuration> {
-            let mut json_object: ParsedConfiguration = serde_json::from_str(&json_str)
-                .map_err(|err| ErrorResponse::from_error(err))?;
+        fn parse_json<T: Connector<Configuration = ParsedConfiguration>>(
+            json_str: String,
+        ) -> Result<T::Configuration> {
+            let mut json_object: ParsedConfiguration =
+                serde_json::from_str(&json_str).map_err(|err| ErrorResponse::from_error(err))?;
 
             update_model(&mut json_object)?;
 
@@ -98,7 +102,11 @@ impl ConnectorSetup for Calcite {
                 .model_file_path
                 .clone()
                 .or_else(|| env::var("MODEL_FILE").ok())
-                .ok_or(ErrorResponse::new(StatusCode::from_u16(500).unwrap(), CONFIG_ERROR_MSG.to_string(), Value::String(String::new())))?;
+                .ok_or(ErrorResponse::new(
+                    StatusCode::from_u16(500).unwrap(),
+                    CONFIG_ERROR_MSG.to_string(),
+                    Value::String(String::new()),
+                ))?;
 
             let mut models = fs::read_to_string(model_file_path.clone()).unwrap();
 
@@ -113,20 +121,21 @@ impl ConnectorSetup for Calcite {
             // there is an extra env var which is not allowed in the metadata or there is
             // a mismatch between the two files.
             let final_model_string = if re.is_match(&models) {
-                Err(ErrorResponse::from_error(
-                    std::io::Error::new(std::io::ErrorKind::Other, "Some environment variable placeholders are not updated in the model file")
-                ))
+                Err(ErrorResponse::from_error(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "Some environment variable placeholders are not updated in the model file",
+                )))
             } else {
                 Ok(&models)
             }?;
 
             if has_yaml_extension(&model_file_path.clone()) {
-                let model_object: Model = serde_yaml::from_str(final_model_string)
-                    .map_err(ErrorResponse::from_error)?;
+                let model_object: Model =
+                    serde_yaml::from_str(final_model_string).map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             } else {
-                let model_object: Model = serde_json::from_str(final_model_string)
-                    .map_err(ErrorResponse::from_error)?;
+                let model_object: Model =
+                    serde_json::from_str(final_model_string).map_err(ErrorResponse::from_error)?;
                 json_object.model = Some(model_object);
             }
 
@@ -147,7 +156,6 @@ impl ConnectorSetup for Calcite {
     ) -> Result<<Self as Connector>::State> {
         init_state(configuration)
     }
-
 }
 
 #[async_trait]
@@ -155,10 +163,7 @@ impl Connector for Calcite {
     type Configuration = ParsedConfiguration;
     type State = CalciteState;
 
-    fn fetch_metrics(
-        _configuration: &Self::Configuration,
-        _state: &Self::State,
-    ) -> Result<()> {
+    fn fetch_metrics(_configuration: &Self::Configuration, _state: &Self::State) -> Result<()> {
         Ok(())
     }
 
@@ -179,15 +184,19 @@ impl Connector for Calcite {
         async {
             info_span!("inside tracing Calcite");
         }
-            .instrument(info_span!("tracing Calcite"))
-            .await;
+        .instrument(info_span!("tracing Calcite"))
+        .await;
         dotenv::dotenv().ok();
         let calcite;
         let calcite_ref;
         {
             let java_vm = get_jvm(false).lock().unwrap();
             let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-            calcite = calcite::create_query_engine(configuration, &mut env).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to lock JVM") })))?;
+            calcite = calcite::create_query_engine(configuration, &mut env).or(Err(
+                ErrorResponse::from_error(CalciteError {
+                    message: String::from("Failed to lock JVM"),
+                }),
+            ))?;
             let env = java_vm.attach_current_thread_as_daemon().unwrap();
             calcite_ref = env.new_global_ref(calcite).unwrap();
         }
@@ -195,7 +204,11 @@ impl Connector for Calcite {
         let schema = retrieve_schema(configuration, calcite_ref);
         match schema {
             Ok(schema) => Ok(JsonResponse::from(schema)),
-            Err(_) => Err(ErrorResponse::new(StatusCode::from_u16(500).unwrap(),"Problem getting schema.".to_string(),Value::String("".to_string()))),
+            Err(_) => Err(ErrorResponse::new(
+                StatusCode::from_u16(500).unwrap(),
+                "Problem getting schema.".to_string(),
+                Value::String("".to_string()),
+            )),
         }
     }
 
@@ -204,50 +217,44 @@ impl Connector for Calcite {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::ExplainResponse>> {
-        let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
-        let mut map: BTreeMap<String, String> = BTreeMap::new();
-        let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
-        let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
-            input_map.iter()
-                .map(|(key, value)|
-                (key.clone(), convert_to_relationship_argument(value))
-                )
-                .collect();
-        for variables in &variable_sets {
-            let row_set = execute_query_with_variables(
-                configuration,
-                &request.collection,
-                &relationship_arguments,
-                &request.collection_relationships,
-                &request.query,
-                variables,
-                &state,
-                &true
-            ).map_err(|error| ErrorResponse::from_error(error))?;
-            match row_set.aggregates {
-                None => {}
-                Some(map_index) => {
-                    let map_btree: BTreeMap<String, String> = map_index.iter()
-                        .map(|(key, value)| (key.clone().to_string(), value.to_string()))
-                        .collect();
-                    map.extend(map_btree);
-                }
-            };
-            match row_set.rows {
-                None => {}
-                Some(r) => {
-                    for map_index in r {
-                        let map_btree: BTreeMap<String, String> = map_index.iter()
-                            .map(|(key, value)| (key.clone().to_string(), value.0.to_string()))
-                            .collect();
-                        map.extend(map_btree);
-                    }
-                }
-            }
+        let variable_sets = request.variables;
+        let mut details: BTreeMap<String, String> = BTreeMap::new();
+        let plan = query::generate_query_plan(
+            &configuration,
+            &request.collection,
+            &request.query,
+            &variable_sets,
+            state,
+            true,
+        )?;
+        let QueryPlan {
+            aggregate_query,
+            row_query,
+            ..
+        } = &plan;
+
+        if let Some(aggregate) = aggregate_query {
+            details.insert("aggregate_query".to_string(), aggregate.to_string());
         }
-        let explain_response = models::ExplainResponse {
-            details: map,
-        };
+
+        if let Some(row) = row_query.as_ref() {
+            details.insert("row_query".to_string(), row.clone());
+        }
+
+        let ExplainResponse {
+            rows_explain,
+            aggregates_explain,
+        } = query::explain_query_plan(state.calcite_ref.clone(), plan)?;
+
+        if let Some(aggregate) = aggregates_explain {
+            details.insert("aggregates_explain".to_string(), aggregate);
+        }
+
+        if let Some(row) = rows_explain {
+            details.insert("rows_explain".to_string(), row);
+        }
+
+        let explain_response = models::ExplainResponse { details };
         Ok(JsonResponse::from(explain_response))
     }
 
@@ -272,60 +279,39 @@ impl Connector for Calcite {
         state: &Self::State,
         request: models::QueryRequest,
     ) -> Result<JsonResponse<models::QueryResponse>> {
-        let variable_sets = request.variables.unwrap_or(vec![BTreeMap::new()]);
-        let mut row_sets = vec![];
-        let input_map: BTreeMap<ArgumentName, models::Argument> = request.arguments.clone();
-        let relationship_arguments : BTreeMap<ArgumentName, models::RelationshipArgument> =
-            input_map.iter()
-                .map(|(key, value)|
-                // Assuming we have a function `convert_to_relationship_argument`
-                // that takes an argument and returns a relationship argument
-                (key.clone(), convert_to_relationship_argument(value))
-                )
-                .collect();
-        for variables in &variable_sets {
-            let row_set = match execute_query_with_variables(
-                configuration,
-                &request.collection,
-                &relationship_arguments,
-                &request.collection_relationships,
-                &request.query,
-                variables,
-                &state,
-                &false
-            ) {
-                Ok(row_set) => {
-                    event!(Level::INFO, result = "execute_query_with_variables was successful");
-                    row_set
-                },
-                Err(e) => {
-                    event!(Level::ERROR, "Error executing query: {:?}", e);
-                    return Err(e.into());
-                },
-            };
-            // println!("Get row set");
-            // println!("{:?}", serde_json::to_string_pretty(&row_set));
-            row_sets.push(row_set);
-            // println!("Pushed row set");
-        }
-        // println!("Returning row sets");
+        let variable_sets = request.variables;
+
+        let plan = query::generate_query_plan(
+            &configuration,
+            &request.collection,
+            &request.query,
+            &variable_sets,
+            state,
+            false,
+        )?;
+        let query_response = query::execute_query_plan(&state.calcite_ref, plan);
+
+        let row_sets = match query_response {
+            Ok(row_set) => {
+                event!(Level::INFO, result = "execute_query_plan was successful");
+                row_set
+            }
+            Err(e) => {
+                event!(Level::ERROR, "Error executing query: {:?}", e);
+                return Err(e.into());
+            }
+        };
+
         Ok(models::QueryResponse(row_sets).into())
     }
 }
 
-fn convert_to_relationship_argument(p0: &models::Argument) -> models::RelationshipArgument {
-    match p0 {
-        models::Argument::Variable { name } => models::RelationshipArgument::Variable { name: name.clone() },
-        models::Argument::Literal { value } => models::RelationshipArgument::Literal { value: value.clone() }
-    }
-}
-
-fn init_state(
-    configuration: &ParsedConfiguration,
-) -> Result<CalciteState> {
-
+fn init_state(configuration: &ParsedConfiguration) -> Result<CalciteState> {
     dotenv::dotenv().ok();
-    init_jvm(&ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()), true);
+    init_jvm(
+        &ndc_calcite_schema::configuration::ParsedConfiguration::Version5(configuration.clone()),
+        true,
+    );
     let jvm = get_jvm(true);
     match jvm.lock() {
         Ok(java_vm) => {
@@ -333,15 +319,19 @@ fn init_state(
             let calcite_ref;
             {
                 let mut env = java_vm.attach_current_thread_as_daemon().unwrap();
-                calcite = calcite::create_query_engine(configuration, &mut env).or(Err(ErrorResponse::from_error(CalciteError { message: String::from("Failed to get Calcite engine.") })))?;
+                calcite = calcite::create_query_engine(configuration, &mut env).or(Err(
+                    ErrorResponse::from_error(CalciteError {
+                        message: String::from("Failed to get Calcite engine."),
+                    }),
+                ))?;
                 let env = java_vm.attach_current_thread_as_daemon().unwrap();
                 calcite_ref = env.new_global_ref(calcite).unwrap();
             }
             Ok(CalciteState { calcite_ref })
         }
-        Err(_) => {
-            Err(ErrorResponse::from_error(CalciteError { message: "Unable to get mutex lock on JVM.".to_string() }))
-        }
+        Err(_) => Err(ErrorResponse::from_error(CalciteError {
+            message: "Unable to get mutex lock on JVM.".to_string(),
+        })),
     }
 }
 #[cfg(test)]
@@ -355,7 +345,6 @@ mod tests {
 
     #[tokio::test]
     async fn capabilities_match_ndc_spec_version() -> Result<()> {
-
         let manifest_dir = env!("CARGO_MANIFEST_DIR");
         let config_dir = PathBuf::from(manifest_dir).join("test_configuration");
 

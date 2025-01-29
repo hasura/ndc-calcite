@@ -7,13 +7,12 @@ use tracing::Level;
 
 use crate::environment::Environment;
 use crate::error::{
-    MakeRuntimeConfigurationError, ParseConfigurationError,
-    WriteParsedConfigurationError,
+    MakeRuntimeConfigurationError, ParseConfigurationError, WriteParsedConfigurationError,
 };
 use crate::list_files::list_files_in_directory;
+use crate::version::VersionTag;
 use crate::version5;
 use crate::version5::CalciteRefSingleton;
-use crate::version::VersionTag;
 
 #[tracing::instrument(skip(), level = Level::INFO)]
 pub fn generate_latest_schema() -> RootSchema {
@@ -66,7 +65,6 @@ impl ParsedConfiguration {
 /// 'ParsedConfiguration'.
 ///
 
-
 pub async fn introspect(
     input: ParsedConfiguration,
     _context_path: &PathBuf,
@@ -81,10 +79,10 @@ pub async fn introspect(
 }
 
 #[tracing::instrument(skip(configuration_dir))]
-pub fn has_configuration(
-    configuration_dir: impl AsRef<Path> + Send,
-) -> bool {
-    !list_files_in_directory(configuration_dir.as_ref()).unwrap().is_empty()
+pub fn has_configuration(configuration_dir: impl AsRef<Path> + Send) -> bool {
+    !list_files_in_directory(configuration_dir.as_ref())
+        .unwrap()
+        .is_empty()
 }
 
 pub async fn parse_configuration(

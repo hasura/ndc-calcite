@@ -4,20 +4,111 @@
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
-    "playlisttrack": {
+    "Customer": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
       "schema": "TEST",
-      "name": "playlisttrack",
+      "name": "customer",
       "columns": {
-        "PlaylistId": {
-          "name": "PlaylistId",
+        "FirstName": {
+          "name": "FirstName",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "City": {
+          "name": "City",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "CustomerId": {
+          "name": "CustomerId",
           "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Phone": {
+          "name": "Phone",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "SupportRepId": {
+          "name": "SupportRepId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "LastName": {
+          "name": "LastName",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Company": {
+          "name": "Company",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Address": {
+          "name": "Address",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "PostalCode": {
+          "name": "PostalCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "State": {
+          "name": "State",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Country": {
+          "name": "Country",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Email": {
+          "name": "Email",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Fax": {
+          "name": "Fax",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Invoiceline": {
+      "physicalCatalog": "hasura",
+      "physicalSchema": "testing",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "invoiceline",
+      "columns": {
+        "Quantity": {
+          "name": "Quantity",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "InvoiceId": {
+          "name": "InvoiceId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "UnitPrice": {
+          "name": "UnitPrice",
+          "scalarType": "DOUBLE",
           "nullable": true
         },
         "TrackId": {
           "name": "TrackId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "InvoiceLineId": {
+          "name": "InvoiceLineId",
           "scalarType": "INTEGER",
           "nullable": true
         }
@@ -25,7 +116,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "playlist": {
+    "Playlist": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -46,146 +137,7 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "mediatype": {
-      "physicalCatalog": "hasura",
-      "physicalSchema": "testing",
-      "catalog": "",
-      "schema": "TEST",
-      "name": "mediatype",
-      "columns": {
-        "Name": {
-          "name": "Name",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "MediaTypeId": {
-          "name": "MediaTypeId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "album": {
-      "physicalCatalog": "hasura",
-      "physicalSchema": "testing",
-      "catalog": "",
-      "schema": "TEST",
-      "name": "album",
-      "columns": {
-        "Title": {
-          "name": "Title",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "AlbumId": {
-          "name": "AlbumId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "ArtistId": {
-          "name": "ArtistId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "invoiceline": {
-      "physicalCatalog": "hasura",
-      "physicalSchema": "testing",
-      "catalog": "",
-      "schema": "TEST",
-      "name": "invoiceline",
-      "columns": {
-        "Quantity": {
-          "name": "Quantity",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "TrackId": {
-          "name": "TrackId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "InvoiceId": {
-          "name": "InvoiceId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "UnitPrice": {
-          "name": "UnitPrice",
-          "scalarType": "DOUBLE",
-          "nullable": true
-        },
-        "InvoiceLineId": {
-          "name": "InvoiceLineId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "invoice": {
-      "physicalCatalog": "hasura",
-      "physicalSchema": "testing",
-      "catalog": "",
-      "schema": "TEST",
-      "name": "invoice",
-      "columns": {
-        "Total": {
-          "name": "Total",
-          "scalarType": "DOUBLE",
-          "nullable": true
-        },
-        "BillingAddress": {
-          "name": "BillingAddress",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "InvoiceDate": {
-          "name": "InvoiceDate",
-          "scalarType": "TIMESTAMP",
-          "nullable": true
-        },
-        "BillingCity": {
-          "name": "BillingCity",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "BillingPostalCode": {
-          "name": "BillingPostalCode",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "BillingCountry": {
-          "name": "BillingCountry",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "InvoiceId": {
-          "name": "InvoiceId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "BillingState": {
-          "name": "BillingState",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "CustomerId": {
-          "name": "CustomerId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "artist": {
+    "Artist": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -206,132 +158,16 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "customer": {
+    "Album": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
       "schema": "TEST",
-      "name": "customer",
+      "name": "album",
       "columns": {
-        "Phone": {
-          "name": "Phone",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Address": {
-          "name": "Address",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "City": {
-          "name": "City",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Company": {
-          "name": "Company",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Country": {
-          "name": "Country",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "LastName": {
-          "name": "LastName",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "CustomerId": {
-          "name": "CustomerId",
+        "AlbumId": {
+          "name": "AlbumId",
           "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "FirstName": {
-          "name": "FirstName",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "PostalCode": {
-          "name": "PostalCode",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "State": {
-          "name": "State",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Fax": {
-          "name": "Fax",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Email": {
-          "name": "Email",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "SupportRepId": {
-          "name": "SupportRepId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "employee": {
-      "physicalCatalog": "hasura",
-      "physicalSchema": "testing",
-      "catalog": "",
-      "schema": "TEST",
-      "name": "employee",
-      "columns": {
-        "BirthDate": {
-          "name": "BirthDate",
-          "scalarType": "TIMESTAMP",
-          "nullable": true
-        },
-        "EmployeeId": {
-          "name": "EmployeeId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "LastName": {
-          "name": "LastName",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "State": {
-          "name": "State",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "City": {
-          "name": "City",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Fax": {
-          "name": "Fax",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "HireDate": {
-          "name": "HireDate",
-          "scalarType": "TIMESTAMP",
-          "nullable": true
-        },
-        "Email": {
-          "name": "Email",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "PostalCode": {
-          "name": "PostalCode",
-          "scalarType": "VARCHAR",
           "nullable": true
         },
         "Title": {
@@ -339,36 +175,16 @@
           "scalarType": "VARCHAR",
           "nullable": true
         },
-        "Address": {
-          "name": "Address",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "ReportsTo": {
-          "name": "ReportsTo",
+        "ArtistId": {
+          "name": "ArtistId",
           "scalarType": "INTEGER",
-          "nullable": true
-        },
-        "Phone": {
-          "name": "Phone",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "FirstName": {
-          "name": "FirstName",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "Country": {
-          "name": "Country",
-          "scalarType": "VARCHAR",
           "nullable": true
         }
       },
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "genre": {
+    "Genre": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
@@ -389,23 +205,197 @@
       "primaryKeys": [],
       "exportedKeys": []
     },
-    "track": {
+    "Invoice": {
+      "physicalCatalog": "hasura",
+      "physicalSchema": "testing",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "invoice",
+      "columns": {
+        "CustomerId": {
+          "name": "CustomerId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Total": {
+          "name": "Total",
+          "scalarType": "DOUBLE",
+          "nullable": true
+        },
+        "BillingPostalCode": {
+          "name": "BillingPostalCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "InvoiceDate": {
+          "name": "InvoiceDate",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "BillingCity": {
+          "name": "BillingCity",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "BillingState": {
+          "name": "BillingState",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "BillingAddress": {
+          "name": "BillingAddress",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "BillingCountry": {
+          "name": "BillingCountry",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "InvoiceId": {
+          "name": "InvoiceId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Employee": {
+      "physicalCatalog": "hasura",
+      "physicalSchema": "testing",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "employee",
+      "columns": {
+        "Title": {
+          "name": "Title",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "LastName": {
+          "name": "LastName",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "BirthDate": {
+          "name": "BirthDate",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "FirstName": {
+          "name": "FirstName",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Email": {
+          "name": "Email",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "HireDate": {
+          "name": "HireDate",
+          "scalarType": "TIMESTAMP",
+          "nullable": true
+        },
+        "State": {
+          "name": "State",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Country": {
+          "name": "Country",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "PostalCode": {
+          "name": "PostalCode",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Phone": {
+          "name": "Phone",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "EmployeeId": {
+          "name": "EmployeeId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Address": {
+          "name": "Address",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "ReportsTo": {
+          "name": "ReportsTo",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Fax": {
+          "name": "Fax",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "City": {
+          "name": "City",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "PlaylistTrack": {
+      "physicalCatalog": "hasura",
+      "physicalSchema": "testing",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "playlisttrack",
+      "columns": {
+        "TrackId": {
+          "name": "TrackId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "PlaylistId": {
+          "name": "PlaylistId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Mediatype": {
+      "physicalCatalog": "hasura",
+      "physicalSchema": "testing",
+      "catalog": "",
+      "schema": "TEST",
+      "name": "mediatype",
+      "columns": {
+        "MediaTypeId": {
+          "name": "MediaTypeId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Name": {
+          "name": "Name",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "Track": {
       "physicalCatalog": "hasura",
       "physicalSchema": "testing",
       "catalog": "",
       "schema": "TEST",
       "name": "track",
       "columns": {
-        "Name": {
-          "name": "Name",
-          "scalarType": "VARCHAR",
-          "nullable": true
-        },
-        "GenreId": {
-          "name": "GenreId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
         "TrackId": {
           "name": "TrackId",
           "scalarType": "INTEGER",
@@ -416,18 +406,18 @@
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "MediaTypeId": {
-          "name": "MediaTypeId",
-          "scalarType": "INTEGER",
-          "nullable": true
-        },
         "AlbumId": {
           "name": "AlbumId",
           "scalarType": "INTEGER",
           "nullable": true
         },
-        "Bytes": {
-          "name": "Bytes",
+        "Composer": {
+          "name": "Composer",
+          "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "MediaTypeId": {
+          "name": "MediaTypeId",
           "scalarType": "INTEGER",
           "nullable": true
         },
@@ -436,9 +426,19 @@
           "scalarType": "DOUBLE",
           "nullable": true
         },
-        "Composer": {
-          "name": "Composer",
+        "GenreId": {
+          "name": "GenreId",
+          "scalarType": "INTEGER",
+          "nullable": true
+        },
+        "Name": {
+          "name": "Name",
           "scalarType": "VARCHAR",
+          "nullable": true
+        },
+        "Bytes": {
+          "name": "Bytes",
+          "scalarType": "INTEGER",
           "nullable": true
         }
       },

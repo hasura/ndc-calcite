@@ -36,7 +36,7 @@ pub struct EnvironmentVariableDefinition {
     pub description: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_value: Option<String>,
-    pub required: bool
+    pub required: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

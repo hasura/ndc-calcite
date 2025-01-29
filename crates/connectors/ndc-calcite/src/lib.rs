@@ -86,10 +86,10 @@
 
 pub mod calcite;
 pub mod capabilities;
-pub mod sql;
+pub mod error;
 pub mod query;
+pub mod sql;
 
 pub mod connector {
     pub mod calcite;
 }
-

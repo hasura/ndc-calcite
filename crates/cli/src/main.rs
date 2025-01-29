@@ -2,12 +2,12 @@
 //!
 //! This is intended to be automatically downloaded and invoked via the Hasura CLI, as a plugin.
 //! It is unlikely that end-users will use it directly.
-use std::path::PathBuf;
-use std::process::ExitCode;
 use clap::Parser;
 use ndc_calcite_cli::*;
 use ndc_calcite_schema as configuration;
 use ndc_calcite_schema::version5::CalciteRefSingleton;
+use std::path::PathBuf;
+use std::process::ExitCode;
 
 /// The release version specified at build time.
 ///

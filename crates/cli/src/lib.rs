@@ -3,11 +3,11 @@
 //! The CLI can do a few things. This provides a central point where those things are routed and
 //! then done, making it easier to test this crate deterministically.
 
-use std::path::PathBuf;
 use anyhow::Ok;
 use clap::Subcommand;
 use include_dir::Dir;
 use include_dir::{include_dir, DirEntry};
+use std::path::PathBuf;
 use tokio::fs;
 
 use ndc_calcite_schema::configuration::{
@@ -163,7 +163,7 @@ async fn update(
     context: Context<impl Environment>,
     calcite_ref_singleton: &CalciteRefSingleton,
 ) -> anyhow::Result<()> {
-    let config_path =  &context.context_path;
+    let config_path = &context.context_path;
 
     // Check if `connector-metadata.yaml` file is present
     let metadata_yaml_file = config_path.join(".hasura-connector/connector-metadata.yaml");
