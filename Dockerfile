@@ -9,6 +9,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     openjdk-21-jdk \
     maven \
     ca-certificates \
+    python3.13-venv \
     gradle && \
     rm -rf /var/lib/apt/lists/*
 
