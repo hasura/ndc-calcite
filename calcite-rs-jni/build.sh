@@ -83,30 +83,30 @@ mvn install:install-file -Dfile=calcite/linq4j/build/libs/calcite-linq4j-1.38.0-
     clean_mac_metadata "."
 
     # Setup Python environment
-    check_directory "py_graphql_sql"
-    cd py_graphql_sql || exit 1
+    # check_directory "py_graphql_sql"
+    # cd py_graphql_sql || exit 1
 
-    echo "Creating Python virtual environment..."
-    python3 -m venv .venv
-    clean_mac_metadata "."
+    # echo "Creating Python virtual environment..."
+    # python3 -m venv .venv
+    # clean_mac_metadata "."
 
-    echo "Activating virtual environment..."
-    source .venv/bin/activate
-    clean_mac_metadata "."
+    # echo "Activating virtual environment..."
+    # source .venv/bin/activate
+    # clean_mac_metadata "."
 
-    echo "Installing poetry..."
-    if ! pip install poetry; then
-        echo "Error: Failed to install poetry"
-        exit 1
-    fi
-    clean_mac_metadata "."
+    # echo "Installing poetry..."
+    # if ! pip install poetry; then
+    #     echo "Error: Failed to install poetry"
+    #     exit 1
+    # fi
+    # clean_mac_metadata "."
 
-    echo "Running Python build..."
-    if ! python3 build.py; then
-        echo "Error: Python build failed"
-        exit 1
-    fi
-    clean_mac_metadata "."
+    # echo "Running Python build..."
+    # if ! python3 build.py; then
+    #     echo "Error: Python build failed"
+    #     exit 1
+    # fi
+    # clean_mac_metadata "."
 cd ..
 echo "Build process completed successfully!"
 }
