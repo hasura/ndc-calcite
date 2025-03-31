@@ -43,9 +43,22 @@ pub struct EnvironmentVariableDefinition {
 #[serde(rename_all = "camelCase")]
 pub struct Commands {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub update: Option<String>,
+    pub update: Option<UpdateOptions>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub watch: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", tag = "type")]
+pub enum UpdateOptions {
+    Dockerized(DockerComposeUpdateOptions),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DockerComposeUpdateOptions {
+    pub docker_image: String,
+    pub command_args: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
