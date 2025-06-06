@@ -7,20 +7,14 @@
       "type": "custom",
       "factory": "org.apache.calcite.adapter.splunk.SplunkSchemaFactory",
       "operand": {
-        "url": "http://localhost:8089",
-        "username": "admin",
-        "password": "changeme"
-      },
-      "tables": [
-        {
-          "name": "splunk_table",
-          "type": "custom",
-          "factory": "org.apache.calcite.adapter.splunk.SplunkTableFactory",
-          "operand": {
-            "search": "search index=_internal | head 10"
-          }
-        }
-      ]
+        "host": "ec2-18-191-10-145.us-east-2.compute.amazonaws.com",
+        "port": 8089,
+        "protocol": "https",
+        "username": "<your username>",
+        "password": "<your password>",
+        "cim_model": "Authentication",
+        "disable_ssl_validation": true
+      }
     }
   ]
 }
