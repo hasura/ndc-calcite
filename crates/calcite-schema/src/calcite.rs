@@ -266,6 +266,24 @@ pub struct Operand {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "pathToRootCert")]
     pub path_to_root_cert: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "cimModel")]
+    pub cim_model: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "cimModels")]
+    pub cim_models: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "disableSslValidation")]
+    pub disable_ssl_validation: Option<bool>,
+    // Custom table fields
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "fieldMapping")]
+    pub field_mapping: Option<HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "fieldMappings")]
+    pub field_mappings: Option<Vec<String>>,
 }
 
 /// Represents a model. This is explained in greater detail
