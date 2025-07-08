@@ -54,14 +54,2194 @@
   "model_file_path": "./model.json",
   "fixes": true,
   "metadata": {
+    "certificates": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "certificates",
+      "columns": {
+        "ssl_subject_common_name": {
+          "name": "ssl_subject_common_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "ssl_version": {
+          "name": "ssl_version",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "ssl_serial": {
+          "name": "ssl_serial",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "ssl_hash": {
+          "name": "ssl_hash",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "ssl_issuer": {
+          "name": "ssl_issuer",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "ssl_signature_algorithm": {
+          "name": "ssl_signature_algorithm",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "ssl_issuer_common_name": {
+          "name": "ssl_issuer_common_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "ssl_start_time": {
+          "name": "ssl_start_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "ssl_end_time": {
+          "name": "ssl_end_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "ssl_key_length": {
+          "name": "ssl_key_length",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "ssl_subject": {
+          "name": "ssl_subject",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "interprocess_messaging": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "interprocess_messaging",
+      "columns": {
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "message_type": {
+          "name": "message_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "queue_depth": {
+          "name": "queue_depth",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "response_time": {
+          "name": "response_time",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "protocol": {
+          "name": "protocol",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "message_id": {
+          "name": "message_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_process": {
+          "name": "dest_process",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_process": {
+          "name": "src_process",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "queue_name": {
+          "name": "queue_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "message_size": {
+          "name": "message_size",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "network_resolution": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "network_resolution",
+      "columns": {
+        "ttl": {
+          "name": "ttl",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "duration": {
+          "name": "duration",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "reply_code": {
+          "name": "reply_code",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "answer_count": {
+          "name": "answer_count",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "query_count": {
+          "name": "query_count",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "response_time": {
+          "name": "response_time",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "answer": {
+          "name": "answer",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "query": {
+          "name": "query",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "query_type": {
+          "name": "query_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "reply_code_id": {
+          "name": "reply_code_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "web": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "web",
+      "columns": {
+        "src_port": {
+          "name": "src_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "uri": {
+          "name": "uri",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "app": {
+          "name": "app",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "uri_query": {
+          "name": "uri_query",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "status": {
+          "name": "status",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "http_user_agent": {
+          "name": "http_user_agent",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "url_domain": {
+          "name": "url_domain",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "http_method": {
+          "name": "http_method",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes": {
+          "name": "bytes",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "http_referrer": {
+          "name": "http_referrer",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "http_content_type": {
+          "name": "http_content_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_ip": {
+          "name": "src_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_ip": {
+          "name": "dest_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "url": {
+          "name": "url",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "uri_path": {
+          "name": "uri_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "cookie": {
+          "name": "cookie",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes_out": {
+          "name": "bytes_out",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "bytes_in": {
+          "name": "bytes_in",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "inventory": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "inventory",
+      "columns": {
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "version": {
+          "name": "version",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "os": {
+          "name": "os",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "mac": {
+          "name": "mac",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "category": {
+          "name": "category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "updates": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "updates",
+      "columns": {
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature": {
+          "name": "signature",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_size": {
+          "name": "file_size",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "update_name": {
+          "name": "update_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "status": {
+          "name": "status",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "severity": {
+          "name": "severity",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "kb": {
+          "name": "kb",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_name": {
+          "name": "file_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "category": {
+          "name": "category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_hash": {
+          "name": "file_hash",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
     "vulnerabilities": {
       "physicalSchema": "splunk",
       "catalog": "",
       "schema": "splunk",
       "name": "vulnerabilities",
       "columns": {
+        "signature": {
+          "name": "signature",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "category": {
+          "name": "category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "severity": {
+          "name": "severity",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
         "host": {
           "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "cve": {
+          "name": "cve",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "cvss": {
+          "name": "cvss",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature_id": {
+          "name": "signature_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "data_access": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "data_access",
+      "columns": {
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "object_path": {
+          "name": "object_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "object_type": {
+          "name": "object_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "object": {
+          "name": "object",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "authentication": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "authentication",
+      "columns": {
+        "dest_bunit": {
+          "name": "dest_bunit",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user_role": {
+          "name": "user_role",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user_bunit": {
+          "name": "user_bunit",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "src_nt_domain": {
+          "name": "src_nt_domain",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_nt_domain": {
+          "name": "dest_nt_domain",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "app": {
+          "name": "app",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "reason": {
+          "name": "reason",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature": {
+          "name": "signature",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "duration": {
+          "name": "duration",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src_user_type": {
+          "name": "src_user_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_Successful_Authentication": {
+          "name": "is_Successful_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "is_not_Insecure_Authentication": {
+          "name": "is_not_Insecure_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "is_Insecure_Authentication": {
+          "name": "is_Insecure_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "tag": {
+          "name": "tag",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_priority": {
+          "name": "dest_priority",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_category": {
+          "name": "dest_category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user_priority": {
+          "name": "user_priority",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "authentication_service": {
+          "name": "authentication_service",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_user_role": {
+          "name": "src_user_role",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_not_Privileged_Authentication": {
+          "name": "is_not_Privileged_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src_user_priority": {
+          "name": "src_user_priority",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_priority": {
+          "name": "src_priority",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_user_id": {
+          "name": "src_user_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_Failed_Authentication": {
+          "name": "is_Failed_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src_user": {
+          "name": "src_user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_category": {
+          "name": "src_category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_user_bunit": {
+          "name": "src_user_bunit",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_user_category": {
+          "name": "src_user_category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_bunit": {
+          "name": "src_bunit",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_not_Default_Authentication": {
+          "name": "is_not_Default_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user_type": {
+          "name": "user_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_Default_Authentication": {
+          "name": "is_Default_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "vendor_account": {
+          "name": "vendor_account",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_not_Failed_Authentication": {
+          "name": "is_not_Failed_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "signature_id": {
+          "name": "signature_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_Privileged_Authentication": {
+          "name": "is_Privileged_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "user_category": {
+          "name": "user_category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "is_not_Successful_Authentication": {
+          "name": "is_not_Successful_Authentication",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "authentication_method": {
+          "name": "authentication_method",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "response_time": {
+          "name": "response_time",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "endpoint": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "endpoint",
+      "columns": {
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "service_hash": {
+          "name": "service_hash",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_modify_time": {
+          "name": "file_modify_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "process_hash": {
+          "name": "process_hash",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "process_name": {
+          "name": "process_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "process_path": {
+          "name": "process_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "process_id": {
+          "name": "process_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "file_name": {
+          "name": "file_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_size": {
+          "name": "file_size",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "file_create_time": {
+          "name": "file_create_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "registry_value_name": {
+          "name": "registry_value_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "protocol": {
+          "name": "protocol",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "service": {
+          "name": "service",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_hash": {
+          "name": "file_hash",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "process": {
+          "name": "process",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "registry_value_data": {
+          "name": "registry_value_data",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "start_mode": {
+          "name": "start_mode",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "registry_key_name": {
+          "name": "registry_key_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "service_name": {
+          "name": "service_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "service_path": {
+          "name": "service_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "state": {
+          "name": "state",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "parent_process_name": {
+          "name": "parent_process_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "parent_process": {
+          "name": "parent_process",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "registry_path": {
+          "name": "registry_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "file_path": {
+          "name": "file_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "parent_process_id": {
+          "name": "parent_process_id",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "registry_value_type": {
+          "name": "registry_value_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "event_signatures": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "event_signatures",
+      "columns": {
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "severity": {
+          "name": "severity",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature": {
+          "name": "signature",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature_id": {
+          "name": "signature_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "databases": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "databases",
+      "columns": {
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes_in": {
+          "name": "bytes_in",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src_port": {
+          "name": "src_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "duration": {
+          "name": "duration",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes_out": {
+          "name": "bytes_out",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "query": {
+          "name": "query",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "app": {
+          "name": "app",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "network_traffic": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "network_traffic",
+      "columns": {
+        "bytes_out": {
+          "name": "bytes_out",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vlan": {
+          "name": "vlan",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes": {
+          "name": "bytes",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "packets": {
+          "name": "packets",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "dest_ip": {
+          "name": "dest_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "duration": {
+          "name": "duration",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src_port": {
+          "name": "src_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "packets_in": {
+          "name": "packets_in",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "dest_mac": {
+          "name": "dest_mac",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_ip": {
+          "name": "src_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "protocol": {
+          "name": "protocol",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "transport": {
+          "name": "transport",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "bytes_in": {
+          "name": "bytes_in",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "packets_out": {
+          "name": "packets_out",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "direction": {
+          "name": "direction",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_mac": {
+          "name": "src_mac",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "network_sessions": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "network_sessions",
+      "columns": {
+        "src_port": {
+          "name": "src_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "packets_in": {
+          "name": "packets_in",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "lease_duration": {
+          "name": "lease_duration",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature": {
+          "name": "signature",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes_out": {
+          "name": "bytes_out",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "src_ip": {
+          "name": "src_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes_in": {
+          "name": "bytes_in",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "duration": {
+          "name": "duration",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vendor_class": {
+          "name": "vendor_class",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "packets_out": {
+          "name": "packets_out",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "dest_ip": {
+          "name": "dest_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "transport": {
+          "name": "transport",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "alerts": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "alerts",
+      "columns": {
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "tag": {
+          "name": "tag",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "status": {
+          "name": "status",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "severity": {
+          "name": "severity",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "alert_id": {
+          "name": "alert_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature_id": {
+          "name": "signature_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature": {
+          "name": "signature",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "alert_type": {
+          "name": "alert_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "malware": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "malware",
+      "columns": {
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_name": {
+          "name": "file_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_hash": {
+          "name": "file_hash",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature": {
+          "name": "signature",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "category": {
+          "name": "category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature_id": {
+          "name": "signature_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "file_path": {
+          "name": "file_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "jvm": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "jvm",
+      "columns": {
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "jvm_version": {
+          "name": "jvm_version",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "jvm_threads_active": {
+          "name": "jvm_threads_active",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "process_name": {
+          "name": "process_name",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "jvm_memory_heap_max": {
+          "name": "jvm_memory_heap_max",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "jvm_gc_time": {
+          "name": "jvm_gc_time",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "jvm_memory_nonheap_used": {
+          "name": "jvm_memory_nonheap_used",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "jvm_classes_loaded": {
+          "name": "jvm_classes_loaded",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "jvm_memory_heap_used": {
+          "name": "jvm_memory_heap_used",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "jvm_gc_count": {
+          "name": "jvm_gc_count",
+          "scalarType": "INTEGER",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "ticket_management": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "ticket_management",
+      "columns": {
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "severity": {
+          "name": "severity",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "category": {
+          "name": "category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "ticket_id": {
+          "name": "ticket_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "status": {
+          "name": "status",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "priority": {
+          "name": "priority",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        }
+      },
+      "primaryKeys": [],
+      "exportedKeys": []
+    },
+    "intrusion_detection": {
+      "physicalSchema": "splunk",
+      "catalog": "",
+      "schema": "splunk",
+      "name": "intrusion_detection",
+      "columns": {
+        "host": {
+          "name": "host",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "protocol": {
+          "name": "protocol",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "tag": {
+          "name": "tag",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "ids_type": {
+          "name": "ids_type",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest_port": {
+          "name": "dest_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "dest_ip": {
+          "name": "dest_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "vendor_product": {
+          "name": "vendor_product",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_port": {
+          "name": "src_port",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "signature_id": {
+          "name": "signature_id",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "src_ip": {
+          "name": "src_ip",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "severity": {
+          "name": "severity",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -75,299 +2255,9 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "cvss": {
-          "name": "cvss",
-          "scalarType": "DOUBLE",
-          "nullable": false
-        },
-        "signature_id": {
-          "name": "signature_id",
+        "transport": {
+          "name": "transport",
           "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "cve": {
-          "name": "cve",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "severity": {
-          "name": "severity",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "data_access": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "data_access",
-      "columns": {
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "object": {
-          "name": "object",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "object_path": {
-          "name": "object_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "object_type": {
-          "name": "object_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "web": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "web",
-      "columns": {
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "http_user_agent": {
-          "name": "http_user_agent",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_port": {
-          "name": "src_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "uri": {
-          "name": "uri",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "uri_query": {
-          "name": "uri_query",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "bytes_out": {
-          "name": "bytes_out",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "http_referrer": {
-          "name": "http_referrer",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "http_method": {
-          "name": "http_method",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "uri_path": {
-          "name": "uri_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "bytes": {
-          "name": "bytes",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "src_ip": {
-          "name": "src_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "url": {
-          "name": "url",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "cookie": {
-          "name": "cookie",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "url_domain": {
-          "name": "url_domain",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "app": {
-          "name": "app",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_ip": {
-          "name": "dest_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "status": {
-          "name": "status",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "bytes_in": {
-          "name": "bytes_in",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "http_content_type": {
-          "name": "http_content_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
           "nullable": false
         }
       },
@@ -380,8 +2270,33 @@
       "schema": "splunk",
       "name": "performance",
       "columns": {
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "cpu_load_percent": {
+          "name": "cpu_load_percent",
+          "scalarType": "DOUBLE",
+          "nullable": false
+        },
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "mem": {
+          "name": "mem",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
         "index": {
           "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -409,31 +2324,6 @@
           "name": "mem_used",
           "scalarType": "INTEGER",
           "nullable": false
-        },
-        "mem": {
-          "name": "mem",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "cpu_load_percent": {
-          "name": "cpu_load_percent",
-          "scalarType": "DOUBLE",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
         }
       },
       "primaryKeys": [],
@@ -445,28 +2335,18 @@
       "schema": "splunk",
       "name": "email",
       "columns": {
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "recipient_status": {
-          "name": "recipient_status",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_hash": {
-          "name": "file_hash",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
         "subject": {
           "name": "subject",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "recipient_count": {
+          "name": "recipient_count",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -475,9 +2355,29 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "file_size": {
-          "name": "file_size",
+        "sourcetype": {
+          "name": "sourcetype",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "sender": {
+          "name": "sender",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "size": {
+          "name": "size",
           "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "return_addr": {
+          "name": "return_addr",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "content_type": {
+          "name": "content_type",
+          "scalarType": "VARCHAR",
           "nullable": false
         },
         "message_id": {
@@ -485,13 +2385,28 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "host": {
-          "name": "host",
+        "vendor_product": {
+          "name": "vendor_product",
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "user": {
-          "name": "user",
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_hash": {
+          "name": "file_hash",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -505,84 +2420,9 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "protocol": {
-          "name": "protocol",
+        "recipient_status": {
+          "name": "recipient_status",
           "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sender": {
-          "name": "sender",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "content_type": {
-          "name": "content_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "return_addr": {
-          "name": "return_addr",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "recipient_count": {
-          "name": "recipient_count",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "size": {
-          "name": "size",
-          "scalarType": "INTEGER",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "databases": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "databases",
-      "columns": {
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
           "nullable": false
         },
         "dest": {
@@ -590,39 +2430,9 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_port": {
-          "name": "src_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "bytes_in": {
-          "name": "bytes_in",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "duration": {
-          "name": "duration",
-          "scalarType": "DOUBLE",
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
           "nullable": false
         },
         "user": {
@@ -632,156 +2442,6 @@
         },
         "host": {
           "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "bytes_out": {
-          "name": "bytes_out",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "session_id": {
-          "name": "session_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "query": {
-          "name": "query",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "app": {
-          "name": "app",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "malware": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "malware",
-      "columns": {
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "category": {
-          "name": "category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_path": {
-          "name": "file_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_hash": {
-          "name": "file_hash",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_name": {
-          "name": "file_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature_id": {
-          "name": "signature_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "interprocess_messaging": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "interprocess_messaging",
-      "columns": {
-        "queue_name": {
-          "name": "queue_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -790,558 +2450,8 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "message_id": {
-          "name": "message_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "response_time": {
-          "name": "response_time",
-          "scalarType": "DOUBLE",
-          "nullable": false
-        },
-        "correlation_id": {
-          "name": "correlation_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "message_type": {
-          "name": "message_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "message_size": {
-          "name": "message_size",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "dest_process": {
-          "name": "dest_process",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_process": {
-          "name": "src_process",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "queue_depth": {
-          "name": "queue_depth",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "jvm": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "jvm",
-      "columns": {
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "jvm_version": {
-          "name": "jvm_version",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "jvm_classes_loaded": {
-          "name": "jvm_classes_loaded",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "jvm_memory_nonheap_used": {
-          "name": "jvm_memory_nonheap_used",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "jvm_gc_time": {
-          "name": "jvm_gc_time",
-          "scalarType": "DOUBLE",
-          "nullable": false
-        },
-        "process_name": {
-          "name": "process_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "jvm_gc_count": {
-          "name": "jvm_gc_count",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "jvm_memory_heap_used": {
-          "name": "jvm_memory_heap_used",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "jvm_memory_heap_max": {
-          "name": "jvm_memory_heap_max",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "jvm_threads_active": {
-          "name": "jvm_threads_active",
-          "scalarType": "INTEGER",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "network_traffic": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "network_traffic",
-      "columns": {
-        "dest_mac": {
-          "name": "dest_mac",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "packets_in": {
-          "name": "packets_in",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "src_port": {
-          "name": "src_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_mac": {
-          "name": "src_mac",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "transport": {
-          "name": "transport",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_ip": {
-          "name": "src_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "duration": {
-          "name": "duration",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "bytes_in": {
-          "name": "bytes_in",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "bytes_out": {
-          "name": "bytes_out",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "bytes": {
-          "name": "bytes",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "packets_out": {
-          "name": "packets_out",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "packets": {
-          "name": "packets",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_ip": {
-          "name": "dest_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "direction": {
-          "name": "direction",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "protocol": {
-          "name": "protocol",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vlan": {
-          "name": "vlan",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "ticket_management": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "ticket_management",
-      "columns": {
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "ticket_id": {
-          "name": "ticket_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "severity": {
-          "name": "severity",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "category": {
-          "name": "category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "status": {
-          "name": "status",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "priority": {
-          "name": "priority",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "inventory": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "inventory",
-      "columns": {
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "mac": {
-          "name": "mac",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "os": {
-          "name": "os",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "version": {
-          "name": "version",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "category": {
-          "name": "category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "network_resolution": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "network_resolution",
-      "columns": {
-        "answer_count": {
-          "name": "answer_count",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "answer": {
-          "name": "answer",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "duration": {
-          "name": "duration",
-          "scalarType": "DOUBLE",
-          "nullable": false
-        },
-        "query": {
-          "name": "query",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "response_time": {
-          "name": "response_time",
-          "scalarType": "DOUBLE",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "reply_code_id": {
-          "name": "reply_code_id",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "reply_code": {
-          "name": "reply_code",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "query_type": {
-          "name": "query_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "query_count": {
-          "name": "query_count",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "ttl": {
-          "name": "ttl",
+        "file_size": {
+          "name": "file_size",
           "scalarType": "INTEGER",
           "nullable": false
         }
@@ -1355,29 +2465,14 @@
       "schema": "splunk",
       "name": "change",
       "columns": {
-        "object_category": {
-          "name": "object_category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
         "host": {
           "name": "host",
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "user": {
-          "name": "user",
+        "dest": {
+          "name": "dest",
           "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
           "nullable": false
         },
         "sourcetype": {
@@ -1387,6 +2482,21 @@
         },
         "object": {
           "name": "object",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "index": {
+          "name": "index",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "object_attrs": {
+          "name": "object_attrs",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -1400,8 +2510,33 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "object_attrs": {
-          "name": "object_attrs",
+        "object_category": {
+          "name": "object_category",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "_extra": {
+          "name": "_extra",
+          "scalarType": "VARBINARY",
+          "nullable": false
+        },
+        "_time": {
+          "name": "_time",
+          "scalarType": "TIMESTAMP",
+          "nullable": false
+        },
+        "src": {
+          "name": "src",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "user": {
+          "name": "user",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -1410,38 +2545,13 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "status": {
-          "name": "status",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
+        "object_id": {
+          "name": "object_id",
           "scalarType": "VARCHAR",
           "nullable": false
         },
         "vendor_product": {
           "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -1450,333 +2560,8 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "object_id": {
-          "name": "object_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "intrusion_detection": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "intrusion_detection",
-      "columns": {
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "protocol": {
-          "name": "protocol",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "transport": {
-          "name": "transport",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "dest_ip": {
-          "name": "dest_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_ip": {
-          "name": "src_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_port": {
-          "name": "src_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "ids_type": {
-          "name": "ids_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "tag": {
-          "name": "tag",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "category": {
-          "name": "category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature_id": {
-          "name": "signature_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "severity": {
-          "name": "severity",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "updates": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "updates",
-      "columns": {
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "category": {
-          "name": "category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "kb": {
-          "name": "kb",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "severity": {
-          "name": "severity",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_size": {
-          "name": "file_size",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
         "status": {
           "name": "status",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_hash": {
-          "name": "file_hash",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "update_name": {
-          "name": "update_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_name": {
-          "name": "file_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "alerts": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "alerts",
-      "columns": {
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "tag": {
-          "name": "tag",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "alert_id": {
-          "name": "alert_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "alert_type": {
-          "name": "alert_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature_id": {
-          "name": "signature_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "status": {
-          "name": "status",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "severity": {
-          "name": "severity",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
           "scalarType": "VARCHAR",
           "nullable": false
         }
@@ -1795,53 +2580,8 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "src_user": {
-          "name": "src_user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "file_hash": {
-          "name": "file_hash",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_path": {
-          "name": "file_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_name": {
-          "name": "file_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
         "index": {
           "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "violation_count": {
-          "name": "violation_count",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "severity": {
-          "name": "severity",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -1850,8 +2590,28 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "vendor_product": {
-          "name": "vendor_product",
+        "source": {
+          "name": "source",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "dest": {
+          "name": "dest",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "severity": {
+          "name": "severity",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "file_size": {
+          "name": "file_size",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "action": {
+          "name": "action",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -1865,28 +2625,13 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "source": {
-          "name": "source",
+        "file_name": {
+          "name": "file_name",
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "file_size": {
-          "name": "file_size",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "bytes_out": {
-          "name": "bytes_out",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
+        "file_hash": {
+          "name": "file_hash",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -1894,74 +2639,24 @@
           "name": "rule_name",
           "scalarType": "VARCHAR",
           "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "event_signatures": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "event_signatures",
-      "columns": {
-        "severity": {
-          "name": "severity",
+        },
+        "src_user": {
+          "name": "src_user",
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
+        "violation_count": {
+          "name": "violation_count",
+          "scalarType": "INTEGER",
           "nullable": false
         },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature_id": {
-          "name": "signature_id",
+        "vendor_product": {
+          "name": "vendor_product",
           "scalarType": "VARCHAR",
           "nullable": false
         },
         "user": {
           "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -1970,8 +2665,18 @@
           "scalarType": "TIMESTAMP",
           "nullable": false
         },
-        "vendor_product": {
-          "name": "vendor_product",
+        "file_path": {
+          "name": "file_path",
+          "scalarType": "VARCHAR",
+          "nullable": false
+        },
+        "bytes_out": {
+          "name": "bytes_out",
+          "scalarType": "INTEGER",
+          "nullable": false
+        },
+        "signature": {
+          "name": "signature",
           "scalarType": "VARCHAR",
           "nullable": false
         }
@@ -1985,11 +2690,6 @@
       "schema": "splunk",
       "name": "splunk_audit_logs",
       "columns": {
-        "info": {
-          "name": "info",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
         "_extra": {
           "name": "_extra",
           "scalarType": "VARBINARY",
@@ -1997,16 +2697,6 @@
         },
         "sourcetype": {
           "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
           "scalarType": "VARCHAR",
           "nullable": false
         },
@@ -2015,94 +2705,24 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
         "search": {
           "name": "search",
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
         "index": {
           "name": "index",
           "scalarType": "VARCHAR",
           "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "endpoint": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "endpoint",
-      "columns": {
-        "service_hash": {
-          "name": "service_hash",
+        },
+        "info": {
+          "name": "info",
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "parent_process_id": {
-          "name": "parent_process_id",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "protocol": {
-          "name": "protocol",
+        "source": {
+          "name": "source",
           "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "registry_path": {
-          "name": "registry_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_name": {
-          "name": "file_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "service_path": {
-          "name": "service_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_create_time": {
-          "name": "file_create_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_size": {
-          "name": "file_size",
-          "scalarType": "INTEGER",
           "nullable": false
         },
         "action": {
@@ -2110,184 +2730,9 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "process_id": {
-          "name": "process_id",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "parent_process": {
-          "name": "parent_process",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "service": {
-          "name": "service",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "registry_value_data": {
-          "name": "registry_value_data",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "state": {
-          "name": "state",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "parent_process_name": {
-          "name": "parent_process_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_product": {
-          "name": "vendor_product",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "service_name": {
-          "name": "service_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_path": {
-          "name": "file_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "start_mode": {
-          "name": "start_mode",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_modify_time": {
-          "name": "file_modify_time",
+        "_time": {
+          "name": "_time",
           "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "registry_value_type": {
-          "name": "registry_value_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "file_hash": {
-          "name": "file_hash",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "process_hash": {
-          "name": "process_hash",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "registry_value_name": {
-          "name": "registry_value_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "process_name": {
-          "name": "process_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "registry_key_name": {
-          "name": "registry_key_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "process_path": {
-          "name": "process_path",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "process": {
-          "name": "process",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "certificates": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "certificates",
-      "columns": {
-        "ssl_issuer_common_name": {
-          "name": "ssl_issuer_common_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "ssl_key_length": {
-          "name": "ssl_key_length",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "ssl_subject_common_name": {
-          "name": "ssl_subject_common_name",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "ssl_version": {
-          "name": "ssl_version",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "ssl_issuer": {
-          "name": "ssl_issuer",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "ssl_signature_algorithm": {
-          "name": "ssl_signature_algorithm",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
           "nullable": false
         },
         "host": {
@@ -2295,453 +2740,8 @@
           "scalarType": "VARCHAR",
           "nullable": false
         },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "ssl_end_time": {
-          "name": "ssl_end_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "ssl_serial": {
-          "name": "ssl_serial",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "ssl_start_time": {
-          "name": "ssl_start_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "ssl_hash": {
-          "name": "ssl_hash",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "ssl_subject": {
-          "name": "ssl_subject",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "network_sessions": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "network_sessions",
-      "columns": {
-        "dest_port": {
-          "name": "dest_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "bytes_in": {
-          "name": "bytes_in",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "duration": {
-          "name": "duration",
-          "scalarType": "DOUBLE",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "vendor_class": {
-          "name": "vendor_class",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "packets_out": {
-          "name": "packets_out",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
         "user": {
           "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "transport": {
-          "name": "transport",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "lease_duration": {
-          "name": "lease_duration",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "src_ip": {
-          "name": "src_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "session_id": {
-          "name": "session_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "bytes_out": {
-          "name": "bytes_out",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "dest_ip": {
-          "name": "dest_ip",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "packets_in": {
-          "name": "packets_in",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_port": {
-          "name": "src_port",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        }
-      },
-      "primaryKeys": [],
-      "exportedKeys": []
-    },
-    "authentication": {
-      "physicalSchema": "splunk",
-      "catalog": "",
-      "schema": "splunk",
-      "name": "authentication",
-      "columns": {
-        "host": {
-          "name": "host",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user_bunit": {
-          "name": "user_bunit",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user_type": {
-          "name": "user_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "index": {
-          "name": "index",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_user_type": {
-          "name": "src_user_type",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user_category": {
-          "name": "user_category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "is_not_Insecure_Authentication": {
-          "name": "is_not_Insecure_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "is_Insecure_Authentication": {
-          "name": "is_Insecure_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "dest_category": {
-          "name": "dest_category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_user_priority": {
-          "name": "src_user_priority",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "source": {
-          "name": "source",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_user": {
-          "name": "src_user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "authentication_service": {
-          "name": "authentication_service",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user_role": {
-          "name": "user_role",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest": {
-          "name": "dest",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user_agent": {
-          "name": "user_agent",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_bunit": {
-          "name": "dest_bunit",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "tag": {
-          "name": "tag",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "response_time": {
-          "name": "response_time",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "user": {
-          "name": "user",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "is_Successful_Authentication": {
-          "name": "is_Successful_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "is_not_Failed_Authentication": {
-          "name": "is_not_Failed_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "src": {
-          "name": "src",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "is_not_Default_Authentication": {
-          "name": "is_not_Default_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "is_not_Successful_Authentication": {
-          "name": "is_not_Successful_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "is_Default_Authentication": {
-          "name": "is_Default_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "user_priority": {
-          "name": "user_priority",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "session_id": {
-          "name": "session_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "authentication_method": {
-          "name": "authentication_method",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_user_id": {
-          "name": "src_user_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_extra": {
-          "name": "_extra",
-          "scalarType": "VARBINARY",
-          "nullable": false
-        },
-        "is_not_Privileged_Authentication": {
-          "name": "is_not_Privileged_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "is_Failed_Authentication": {
-          "name": "is_Failed_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "action": {
-          "name": "action",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_category": {
-          "name": "src_category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_nt_domain": {
-          "name": "dest_nt_domain",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "dest_priority": {
-          "name": "dest_priority",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature_id": {
-          "name": "signature_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_bunit": {
-          "name": "src_bunit",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "sourcetype": {
-          "name": "sourcetype",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_nt_domain": {
-          "name": "src_nt_domain",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "app": {
-          "name": "app",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "user_id": {
-          "name": "user_id",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "signature": {
-          "name": "signature",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_user_category": {
-          "name": "src_user_category",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "src_user_role": {
-          "name": "src_user_role",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "is_Privileged_Authentication": {
-          "name": "is_Privileged_Authentication",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "vendor_account": {
-          "name": "vendor_account",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "_time": {
-          "name": "_time",
-          "scalarType": "TIMESTAMP",
-          "nullable": false
-        },
-        "src_user_bunit": {
-          "name": "src_user_bunit",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "reason": {
-          "name": "reason",
-          "scalarType": "VARCHAR",
-          "nullable": false
-        },
-        "duration": {
-          "name": "duration",
-          "scalarType": "INTEGER",
-          "nullable": false
-        },
-        "src_priority": {
-          "name": "src_priority",
           "scalarType": "VARCHAR",
           "nullable": false
         }
