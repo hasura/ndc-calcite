@@ -76,7 +76,11 @@ impl ConnectorSetup for Calcite {
         dotenv::dotenv().ok();
 
         fn get_config_file_path(configuration_dir: impl AsRef<Path> + Send) -> PathBuf {
-            configuration_dir.as_ref().join(CONFIGURATION_FILENAME)
+            // Check for CONFIG_FILE_PATH environment variable, fall back to default if not set
+            match env::var("CONFIG_FILE_PATH") {
+                Ok(custom_path) if !custom_path.is_empty() => PathBuf::from(custom_path),
+                _ => configuration_dir.as_ref().join(CONFIGURATION_FILENAME),
+            }
         }
 
         fn configure_path(span: Span, configuration_dir: &(impl AsRef<Path> + Send)) {

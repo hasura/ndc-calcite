@@ -18,13 +18,14 @@ A toolkit for creating Hasura DDN Native Data Connectors using Apache Calcite:
 #### Supported Data Sources for NDC Development
 
 File Formats:
-| Format    | Status  | Features |
-|-----------|---------|----------|
-| Arrow     | Tested  | File mount, High Performance |
-| CSV       | Tested  | S3, HTTP, file mount, Redis caching |
-| JSON      | Tested  | S3, HTTP, file mount, Redis caching |
-| XLSX      | Tested  | S3, HTTP, file mount, Redis caching |
-| Parquet   | Tested  | File mount (S3 support possible) |
+
+| Format    | Status  | Features                              |
+|-----------|---------|---------------------------------------|
+| Arrow     | Tested  | File mount, High Performance          |
+| CSV       | Tested  | S3, HTTP, file mount, Redis caching   |
+| JSON      | Tested  | S3, HTTP, file mount, Redis caching   |
+| XLSX      | Tested  | S3, HTTP, file mount, Redis caching   |
+| Parquet   | Tested  | File mount (S3 support possible)      |
 
 Databases:
 - PostgreSQL (Tested)
@@ -36,6 +37,7 @@ Databases:
 - SQLite (Tested)
 - H2 (Tested)
 - Cassandra (Tested)
+- Splunk (Tested)
 
 [View full database support matrix](ndc-calcite.md#databases)
 

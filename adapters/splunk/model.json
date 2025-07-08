@@ -7,20 +7,39 @@
       "type": "custom",
       "factory": "org.apache.calcite.adapter.splunk.SplunkSchemaFactory",
       "operand": {
-        "url": "http://localhost:8089",
+        "host": "ec2-18-191-10-145.us-east-2.compute.amazonaws.com",
+        "port": 8089,
+        "protocol": "https",
         "username": "admin",
-        "password": "changeme"
-      },
-      "tables": [
-        {
-          "name": "splunk_table",
-          "type": "custom",
-          "factory": "org.apache.calcite.adapter.splunk.SplunkTableFactory",
-          "operand": {
-            "search": "search index=_internal | head 10"
-          }
-        }
-      ]
+        "password": "admin123",
+        "cimModels": [
+          "alerts",
+          "authentication",
+          "certificates",
+          "change",
+          "data_access",
+          "databases",
+          "data_loss_prevention",
+          "email",
+          "endpoint",
+          "event_signatures",
+          "interprocess_messaging",
+          "intrusion_detection",
+          "inventory",
+          "jvm",
+          "malware",
+          "network_resolution",
+          "network_sessions",
+          "network_traffic",
+          "performance",
+          "splunk_audit_logs",
+          "ticket_management",
+          "updates",
+          "vulnerabilities",
+          "web"
+        ],
+        "disableSslValidation": true
+      }
     }
   ]
 }

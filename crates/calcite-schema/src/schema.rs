@@ -5,9 +5,10 @@
 use jni::objects::GlobalRef;
 use ndc_models as models;
 use ndc_models::SchemaResponse;
+use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::models::get_models;
 use crate::version5::ParsedConfiguration;
@@ -62,7 +63,13 @@ pub fn get_schema(
         functions,
         procedures,
     };
-    let file_path = Path::new(DOCKER_CONNECTOR_RW).join(CONFIGURATION_FILENAME);
+
+    // Check for CONFIG_FILE_PATH environment variable, fall back to default if not set
+    let file_path = match env::var("CONFIG_FILE_PATH") {
+        Ok(custom_path) if !custom_path.is_empty() => PathBuf::from(custom_path),
+        _ => Path::new(DOCKER_CONNECTOR_RW).join(CONFIGURATION_FILENAME),
+    };
+
     event!(
         Level::INFO,
         config_path = format!("Configuration file path: {}", file_path.display())

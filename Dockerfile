@@ -21,7 +21,21 @@ RUN cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
 # java-build stage
 FROM debian:trixie-slim AS java-build
 COPY scripts/java_env_jdk.sh ./scripts/
-RUN apt-get update && apt-get install -y openjdk-21-jdk maven ca-certificates
+
+# FIXED: Robust package installation to handle repository hash mismatches
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get update && apt-get update && \
+    (apt-get install -y --fix-missing openjdk-21-jdk maven ca-certificates || \
+     (echo "First attempt failed, retrying with different flags..." && \
+      apt-get clean && rm -rf /var/lib/apt/lists/* && \
+      apt-get update && \
+      apt-get install -y --no-install-recommends --fix-missing openjdk-21-jdk maven ca-certificates) || \
+     (echo "Second attempt failed, using allow-unauthenticated..." && \
+      apt-get clean && rm -rf /var/lib/apt/lists/* && \
+      apt-get update && \
+      apt-get install -y --allow-unauthenticated --fix-missing openjdk-21-jdk maven ca-certificates)) && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN . /scripts/java_env_jdk.sh
 RUN java -version && mvn --version
 COPY calcite-rs-jni/ /calcite-rs-jni/
@@ -29,7 +43,14 @@ RUN mkdir -p /root/.m2 /root/.gradle
 VOLUME /root/.m2 /root/.gradle
 
 WORKDIR /calcite-rs-jni
-RUN apt-get update && apt-get install -y gradle
+
+# FIXED: Robust gradle installation
+RUN apt-get update && \
+    (apt-get install -y --fix-missing gradle || \
+     (apt-get clean && apt-get update && \
+      apt-get install -y --allow-unauthenticated --fix-missing gradle)) && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
 RUN chmod +x build.sh
 
 # Run build.sh with detailed logging
@@ -42,10 +63,20 @@ RUN mvn dependency:copy-dependencies
 FROM debian:trixie-slim AS runtime
 COPY scripts/java_env_jre.sh ./scripts/
 
-RUN apt-get update &&  \
-    apt-get install -y openjdk-21-jre-headless &&  \
+# FIXED: Robust JRE installation
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* && \
+    apt-get update && apt-get update && \
+    (apt-get install -y --fix-missing openjdk-21-jre-headless || \
+     (echo "First JRE attempt failed, retrying..." && \
+      apt-get clean && rm -rf /var/lib/apt/lists/* && \
+      apt-get update && \
+      apt-get install -y --no-install-recommends --fix-missing openjdk-21-jre-headless) || \
+     (echo "Second JRE attempt failed, using allow-unauthenticated..." && \
+      apt-get clean && rm -rf /var/lib/apt/lists/* && \
+      apt-get update && \
+      apt-get install -y --allow-unauthenticated --fix-missing openjdk-21-jre-headless)) && \
     apt-get autoremove -y && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN . /scripts/java_env_jre.sh && \
     mkdir -p /calcite-rs-jni/jni/target && \

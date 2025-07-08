@@ -14,7 +14,7 @@ public class Main {
 
 //        JdbcTest.test();
 
-        String modelPath = "/Users/kennethstott/test/calcite-connector/adapters/databricks/model.json";
+        String modelPath = "/Users/kennethstott/ndc-calcite/adapters/splunk/model.json";
         String username = "<username>";
         String password = "<password>";
         Connection calciteConnection = null;
@@ -47,7 +47,7 @@ public class Main {
             String x = query.getModels();
             System.out.println(x);
 
-            String sql = "SELECT \"TEST\".\"orders\".\"o_clerk\" AS \"o_clerk\",\"TEST\".\"orders\".\"o_comment\" AS \"o_comment\",\"TEST\".\"orders\".\"o_custkey\" AS \"o_custkey\",\"TEST\".\"orders\".\"o_orderdate\" AS \"o_orderdate\",\"TEST\".\"orders\".\"o_orderkey\" AS \"o_orderkey\",\"TEST\".\"orders\".\"o_orderpriority\" AS \"o_orderpriority\",\"TEST\".\"orders\".\"o_orderstatus\" AS \"o_orderstatus\",\"TEST\".\"orders\".\"o_shippriority\" AS \"o_shippriority\",\"TEST\".\"orders\".\"o_totalprice\" AS \"o_totalprice\" FROM \"TEST\".\"orders\" WHERE \"o_orderdate\" = __UTF8__1993-05-21__UTF8__  LIMIT 10";
+            String sql = "SELECT \"splunk\".\"authentication\".\"is_Default_Authentication\", \"splunk\".\"authentication\".\"user\",\"splunk\".\"authentication\".\"dest\" AS \"dest\",\"splunk\".\"authentication\".\"dest_bunit\" AS \"destBunit\",\"splunk\".\"authentication\".\"dest_category\" AS \"destCategory\",\"splunk\".\"authentication\".\"action\" AS \"action\",\"splunk\".\"authentication\".\"app\" AS \"app\",\"splunk\".\"authentication\".\"authentication_method\" AS \"authenticationMethod\",\"splunk\".\"authentication\".\"authentication_service\" AS \"authenticationService\",\"splunk\".\"authentication\".\"dest_nt_domain\" AS \"destNtDomain\",\"splunk\".\"authentication\".\"dest_priority\" AS \"destPriority\",\"splunk\".\"authentication\".\"duration\" AS \"duration\",\"splunk\".\"authentication\".\"_extra\" AS \"extra\",\"splunk\".\"authentication\".\"host\" AS \"host\",\"splunk\".\"authentication\".\"index\" AS \"index\" FROM \"splunk\".\"authentication\" LIMIT 100";
             String z1 = query.queryModels(sql);
 //            z1 = query.queryModels(sql);
             System.out.println(z1);
