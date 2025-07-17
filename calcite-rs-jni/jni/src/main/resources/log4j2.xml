@@ -6,10 +6,23 @@
         </Console>
     </Appenders>
     <Loggers>
+        <!-- OpenTelemetry logging -->
         <Logger name="io.opentelemetry" level="info"/>
+
+        <!-- Hadoop related logging -->
         <Logger name="org.apache.hadoop" level="info"/>
+
+        <!-- Calcite specific logging - set to debug to see detailed logs -->
+        <Logger name="org.apache.calcite" level="debug"/>
         <Logger name="org.apache.calcite.adapter" level="debug"/>
-        <Logger name="org.apache.spark" level="info" />
+
+        <!-- Spark logging -->
+        <Logger name="org.apache.spark" level="info"/>
+
+        <!-- Your project logging (adjust package name as needed) -->
+        <Logger name="com.hasura" level="debug"/>
+
+        <!-- Root logger catches everything else -->
         <Root level="debug">
             <AppenderRef ref="console"/>
         </Root>

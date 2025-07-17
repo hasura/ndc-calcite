@@ -7,7 +7,7 @@
       "type": "custom",
       "factory": "org.apache.calcite.adapter.splunk.SplunkSchemaFactory",
       "operand": {
-        "host": "ec2-18-191-10-145.us-east-2.compute.amazonaws.com",
+        "host": "ec2-3-19-96-30.us-east-2.compute.amazonaws.com",
         "port": 8089,
         "protocol": "https",
         "username": "admin",
