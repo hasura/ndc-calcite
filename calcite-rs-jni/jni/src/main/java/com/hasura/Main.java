@@ -47,7 +47,7 @@ public class Main {
             String x = query.getModels();
             System.out.println(x);
 
-            String sql = "SELECT \"splunk\".\"authentication\".\"is_Default_Authentication\", \"splunk\".\"authentication\".\"user\",\"splunk\".\"authentication\".\"dest\" AS \"dest\",\"splunk\".\"authentication\".\"dest_bunit\" AS \"destBunit\",\"splunk\".\"authentication\".\"dest_category\" AS \"destCategory\",\"splunk\".\"authentication\".\"action\" AS \"action\",\"splunk\".\"authentication\".\"app\" AS \"app\",\"splunk\".\"authentication\".\"authentication_method\" AS \"authenticationMethod\",\"splunk\".\"authentication\".\"authentication_service\" AS \"authenticationService\",\"splunk\".\"authentication\".\"dest_nt_domain\" AS \"destNtDomain\",\"splunk\".\"authentication\".\"dest_priority\" AS \"destPriority\",\"splunk\".\"authentication\".\"duration\" AS \"duration\",\"splunk\".\"authentication\".\"_extra\" AS \"extra\",\"splunk\".\"authentication\".\"host\" AS \"host\",\"splunk\".\"authentication\".\"index\" AS \"index\" FROM \"splunk\".\"authentication\" LIMIT 100";
+            String sql = "SELECT \"splunk\".\"web\".\"_time\" AS \"_time\" FROM \"splunk\".\"web\"";
             String z1 = query.queryModels(sql);
 //            z1 = query.queryModels(sql);
             System.out.println(z1);
