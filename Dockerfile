@@ -1,6 +1,12 @@
-# build stage for cargo-chef
-FROM rust:1.78.0 AS chef
+# build stage for cargo-chef - USE ALPINE VERSION
+FROM rust:1.78.0-alpine AS chef
 WORKDIR /app
+# Install build dependencies for Alpine including OpenSSL static libraries
+RUN apk add --no-cache musl-dev gcc openssl-dev openssl-libs-static pkgconfig
+# Configure OpenSSL for static linking
+ENV OPENSSL_STATIC=1
+ENV OPENSSL_LIB_DIR=/usr/lib
+ENV OPENSSL_INCLUDE_DIR=/usr/include
 RUN cargo install cargo-chef
 
 # planning stage
@@ -18,38 +24,26 @@ FROM chef AS builder
 COPY . .
 RUN cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
 
-# java-build stage
-FROM debian:trixie-slim AS java-build
+# java-build stage - Use Amazon Corretto Alpine (no Debian repos)
+FROM amazoncorretto:21-alpine AS java-build
 COPY scripts/java_env_jdk.sh ./scripts/
 
-# FIXED: Robust package installation to handle repository hash mismatches
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    apt-get update && apt-get update && \
-    (apt-get install -y --fix-missing openjdk-21-jdk maven ca-certificates || \
-     (echo "First attempt failed, retrying with different flags..." && \
-      apt-get clean && rm -rf /var/lib/apt/lists/* && \
-      apt-get update && \
-      apt-get install -y --no-install-recommends --fix-missing openjdk-21-jdk maven ca-certificates) || \
-     (echo "Second attempt failed, using allow-unauthenticated..." && \
-      apt-get clean && rm -rf /var/lib/apt/lists/* && \
-      apt-get update && \
-      apt-get install -y --allow-unauthenticated --fix-missing openjdk-21-jdk maven ca-certificates)) && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install Maven and Gradle using Alpine package manager (not Debian)
+RUN apk add --no-cache maven gradle
 
-RUN . /scripts/java_env_jdk.sh
-RUN java -version && mvn --version
+# Set up Java environment and verify installation
+RUN JAVA_PATH=$(find /usr/lib/jvm -name "*corretto*" -o -name "*amazon*" -o -name "*21*" | head -1) && \
+    if [ -z "$JAVA_PATH" ]; then JAVA_PATH=$(find /usr -name "java" -type f -executable | head -1 | xargs dirname | xargs dirname); fi && \
+    export JAVA_HOME=$JAVA_PATH && \
+    export PATH=$JAVA_HOME/bin:$PATH && \
+    echo "JAVA_HOME set to: $JAVA_HOME" && \
+    java -version && mvn --version
+
 COPY calcite-rs-jni/ /calcite-rs-jni/
 RUN mkdir -p /root/.m2 /root/.gradle
 VOLUME /root/.m2 /root/.gradle
 
 WORKDIR /calcite-rs-jni
-
-# FIXED: Robust gradle installation
-RUN apt-get update && \
-    (apt-get install -y --fix-missing gradle || \
-     (apt-get clean && apt-get update && \
-      apt-get install -y --allow-unauthenticated --fix-missing gradle)) && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN chmod +x build.sh
 
@@ -59,25 +53,11 @@ RUN sh -x build.sh 2>&1 | tee build.log || (echo "=== Build failed. Last 50 line
 # Put all the jars into target/dependency folder
 RUN mvn dependency:copy-dependencies
 
-# runtime stage
-FROM debian:trixie-slim AS runtime
+# runtime stage - Use Amazon Corretto Alpine (no Debian repos)
+FROM amazoncorretto:21-alpine AS runtime
 COPY scripts/java_env_jre.sh ./scripts/
 
-# FIXED: Robust JRE installation
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* && \
-    apt-get update && apt-get update && \
-    (apt-get install -y --fix-missing openjdk-21-jre-headless || \
-     (echo "First JRE attempt failed, retrying..." && \
-      apt-get clean && rm -rf /var/lib/apt/lists/* && \
-      apt-get update && \
-      apt-get install -y --no-install-recommends --fix-missing openjdk-21-jre-headless) || \
-     (echo "Second JRE attempt failed, using allow-unauthenticated..." && \
-      apt-get clean && rm -rf /var/lib/apt/lists/* && \
-      apt-get update && \
-      apt-get install -y --allow-unauthenticated --fix-missing openjdk-21-jre-headless)) && \
-    apt-get autoremove -y && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
+# Clean Java runtime - Alpine, no Debian repositories involved
 RUN . /scripts/java_env_jre.sh && \
     mkdir -p /calcite-rs-jni/jni/target && \
     mkdir -p /etc/ndc-calcite && \
