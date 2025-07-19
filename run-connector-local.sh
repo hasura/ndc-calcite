@@ -7,9 +7,4 @@ export OTEL_TRACES_EXPORTER=console
 export RUST_LOG=debug
 export JAR_DEPENDENCY_FOLDER=../../calcite-rs-jni/jni/target/dependency
 export CALCITE_JAR=../../calcite-rs-jni/jni/target/calcite-rs-jni-1.0-SNAPSHOT.jar
-export CONFIG_FILE_PATH=./configuration.json
-
-# Try using Java Util Logging directly
-export _JAVA_OPTIONS="-Djava.util.logging.config.file=logging.properties -Djava.util.logging.ConsoleHandler.level=ALL"
-
-cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration=.
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 OTEL_SERVICE_NAME=app_calcite LOG_LEVEL=debug OTEL_METRICS_EXPORTER=console OTEL_TRACES_EXPORTER=console OTEL_LOG_EXPORTER=console RUST_LOG=info cargo run --package ndc-calcite --bin ndc-calcite -- serve --configuration=.
