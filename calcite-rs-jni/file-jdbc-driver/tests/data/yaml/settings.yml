@@ -1,0 +1,23 @@
+- id: 1
+  database:
+    host: localhost
+    port: 5432
+    name: production_db
+  cache:
+    enabled: true
+    ttl: 3600
+  features:
+    - authentication
+    - logging
+    - monitoring
+- id: 2
+  database:
+    host: db-backup.local
+    port: 5432
+    name: backup_db
+  cache:
+    enabled: false
+    ttl: 0
+  features:
+    - replication
+    - backup

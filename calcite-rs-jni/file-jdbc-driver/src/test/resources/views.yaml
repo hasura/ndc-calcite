@@ -1,0 +1,22 @@
+- name: monthly_sales
+  sql: SELECT DATE_FORMAT(date, '%Y-%m') as month, SUM(amount) as total_sales FROM files.sales GROUP BY 1
+  description: Monthly sales totals
+
+- name: top_products  
+  sql: SELECT product_id, product_name, SUM(quantity) as total_quantity FROM files.orders GROUP BY product_id, product_name ORDER BY 3 DESC LIMIT 10
+  description: Top 10 products by quantity sold
+
+- name: customer_summary
+  sql: SELECT customer_id, COUNT(*) as order_count, SUM(amount) as total_spent FROM files.orders GROUP BY customer_id  
+  description: Customer order summary
+
+- name: sales_by_region
+  sql: |
+    SELECT 
+      region,
+      DATE_FORMAT(date, '%Y-%m') as month,
+      SUM(amount) as total_sales,
+      COUNT(DISTINCT customer_id) as unique_customers
+    FROM files.sales
+    GROUP BY region, DATE_FORMAT(date, '%Y-%m')
+  description: Sales breakdown by region and month

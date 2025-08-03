@@ -1,0 +1,17 @@
+[
+  {
+    "name": "electronics_products",
+    "sql": "SELECT * FROM \"products\" WHERE \"category\" = 'Electronics'",
+    "description": "View of all electronic products"
+  },
+  {
+    "name": "expensive_products",
+    "sql": "SELECT * FROM \"products\" WHERE \"price\" > 100",
+    "description": "Products with price over $100"
+  },
+  {
+    "name": "sales_summary",
+    "sql": "SELECT \"product_id\", COUNT(*) as order_count, SUM(\"quantity\") as total_quantity, SUM(\"total\") as total_revenue FROM \"sales\" GROUP BY \"product_id\"",
+    "description": "Sales summary by product"
+  }
+]

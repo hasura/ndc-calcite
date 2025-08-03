@@ -1,0 +1,2 @@
+org.apache.arrow.compression.CommonsCompressionFactory
+org.apache.arrow.vector.compression.NoCompressionCodec$Factory

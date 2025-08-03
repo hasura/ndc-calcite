@@ -1,0 +1,64 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------< com.kenstott.components:splunk-jdbc-driver >-------------
+[INFO] Building Splunk JDBC Driver 1.0.1
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- install:3.1.2:install-file (default-cli) @ splunk-jdbc-driver ---
+[INFO] pom.xml not found in calcite-core-1.41.0-SNAPSHOT.jar
+[INFO] Installing /Users/kennethstott/ndc-calcite/calcite-rs-jni/splunk-jdbc-driver/../calcite/core/build/libs/calcite-core-1.41.0-SNAPSHOT.jar to /Users/kennethstott/.m2/repository/org/apache/calcite/calcite-core/1.41.0-SNAPSHOT/calcite-core-1.41.0-SNAPSHOT.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.176 s
+[INFO] Finished at: 2025-08-01T22:51:17-04:00
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------< com.kenstott.components:splunk-jdbc-driver >-------------
+[INFO] Building Splunk JDBC Driver 1.0.1
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- install:3.1.2:install-file (default-cli) @ splunk-jdbc-driver ---
+[INFO] pom.xml not found in calcite-splunk-1.41.0-SNAPSHOT.jar
+[INFO] Installing /Users/kennethstott/ndc-calcite/calcite-rs-jni/splunk-jdbc-driver/../calcite/splunk/build/libs/calcite-splunk-1.41.0-SNAPSHOT.jar to /Users/kennethstott/.m2/repository/org/apache/calcite/calcite-splunk/1.41.0-SNAPSHOT/calcite-splunk-1.41.0-SNAPSHOT.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.158 s
+[INFO] Finished at: 2025-08-01T22:51:18-04:00
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------< com.kenstott.components:splunk-jdbc-driver >-------------
+[INFO] Building Splunk JDBC Driver 1.0.1
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- install:3.1.2:install-file (default-cli) @ splunk-jdbc-driver ---
+[INFO] pom.xml not found in calcite-linq4j-1.41.0-SNAPSHOT.jar
+[INFO] Installing /Users/kennethstott/ndc-calcite/calcite-rs-jni/splunk-jdbc-driver/../calcite/linq4j/build/libs/calcite-linq4j-1.41.0-SNAPSHOT.jar to /Users/kennethstott/.m2/repository/org/apache/calcite/calcite-linq4j/1.41.0-SNAPSHOT/calcite-linq4j-1.41.0-SNAPSHOT.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.144 s
+[INFO] Finished at: 2025-08-01T22:51:19-04:00
+[INFO] ------------------------------------------------------------------------
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] -------------< com.kenstott.components:splunk-jdbc-driver >-------------
+[INFO] Building Splunk JDBC Driver 1.0.1
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- install:3.1.2:install-file (default-cli) @ splunk-jdbc-driver ---
+[INFO] pom.xml not found in calcite-babel-1.41.0-SNAPSHOT.jar
+[INFO] Installing /Users/kennethstott/ndc-calcite/calcite-rs-jni/splunk-jdbc-driver/../calcite/babel/build/libs/calcite-babel-1.41.0-SNAPSHOT.jar to /Users/kennethstott/.m2/repository/org/apache/calcite/calcite-babel/1.41.0-SNAPSHOT/calcite-babel-1.41.0-SNAPSHOT.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  0.146 s
+[INFO] Finished at: 2025-08-01T22:51:19-04:00
+[INFO] ------------------------------------------------------------------------

@@ -1,0 +1,21 @@
+[ {
+  "project_id" : "P001",
+  "project_name" : "Website Redesign",
+  "dept_id" : "2",
+  "status" : "Active"
+}, {
+  "project_id" : "P002",
+  "project_name" : "Mobile App",
+  "dept_id" : "1",
+  "status" : "Planning"
+}, {
+  "project_id" : "P003",
+  "project_name" : "Sales Campaign",
+  "dept_id" : "3",
+  "status" : "Completed"
+}, {
+  "project_id" : "P004",
+  "project_name" : "Data Platform",
+  "dept_id" : "1",
+  "status" : "Active"
+} ]
