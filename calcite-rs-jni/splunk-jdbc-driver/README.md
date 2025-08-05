@@ -17,6 +17,16 @@ A JDBC driver for Splunk that uses Apache Calcite to provide SQL query capabilit
 jdbc:splunk://host:port[/schema]?param1=value1&param2=value2
 ```
 
+Or using semicolon-separated parameters:
+```
+jdbc:splunk:url=https://host:port;user=username;password=pass
+```
+
+Or minimal URL with properties:
+```
+jdbc:splunk:
+```
+
 ### Schema Specification
 
 The driver supports PostgreSQL-like schema specification:
@@ -48,6 +58,15 @@ Connection conn = DriverManager.getConnection(url, props);
 String url = "jdbc:splunk://localhost:8089?schema=splunk&cimModels=web,authentication";
 Connection conn = DriverManager.getConnection(url, props);
 
+// Alternative: Using jdbcUrl property instead of URL format
+String url = "jdbc:splunk:";
+Properties props = new Properties();
+props.setProperty("jdbcUrl", "https://localhost:8089");  // or use "url" property
+props.setProperty("user", "admin");
+props.setProperty("password", "changeme");
+props.setProperty("schema", "splunk");
+Connection conn = DriverManager.getConnection(url, props);
+
 // Query with unqualified table names (schema set as default)
 Statement stmt = conn.createStatement();
 ResultSet rs = stmt.executeQuery(
@@ -69,6 +88,7 @@ ResultSet rs2 = stmt.executeQuery(
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
+| `url` or `jdbcUrl` | Splunk server URL (e.g., https://localhost:8089) | Required |
 | `user` or `username` | Splunk username | `admin` |
 | `password` | Splunk password | Required |
 | `schema` | Default schema for unqualified table names | `splunk` |
@@ -79,6 +99,7 @@ ResultSet rs2 = stmt.executeQuery(
 | `disableSslValidation` | Disable SSL certificate validation | `false` |
 | `connectTimeout` | Connection timeout (ms) | `30000` |
 | `socketTimeout` | Socket timeout (ms) | `60000` |
+| `modelFile` | Path to Calcite model file (for federation) | None |
 
 ### PostgreSQL-Compatible Features
 

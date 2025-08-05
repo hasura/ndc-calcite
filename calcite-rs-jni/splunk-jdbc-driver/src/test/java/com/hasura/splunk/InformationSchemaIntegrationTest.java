@@ -64,7 +64,7 @@ public class InformationSchemaIntegrationTest {
         System.out.println("\n=== Testing information_schema.tables ===");
         
         String query = "SELECT table_catalog, table_schema, table_name, table_type " +
-                      "FROM information_schema.tables " +
+                      "FROM information_schema.\"TABLES\" " +
                       "WHERE table_schema = 'splunk' " +
                       "ORDER BY table_name";
         
@@ -105,7 +105,7 @@ public class InformationSchemaIntegrationTest {
         
         String query = "SELECT table_name, column_name, ordinal_position, column_default, " +
                       "is_nullable, data_type, character_maximum_length, numeric_precision " +
-                      "FROM information_schema.columns " +
+                      "FROM information_schema.\"COLUMNS\" " +
                       "WHERE table_schema = 'splunk' " +
                       "ORDER BY table_name, ordinal_position";
         
@@ -162,7 +162,7 @@ public class InformationSchemaIntegrationTest {
         System.out.println("\n=== Testing information_schema.schemata ===");
         
         String query = "SELECT catalog_name, schema_name, schema_owner, default_character_set_catalog " +
-                      "FROM information_schema.schemata " +
+                      "FROM information_schema.\"SCHEMATA\" " +
                       "ORDER BY schema_name";
         
         try (Statement stmt = connection.createStatement();
@@ -198,7 +198,7 @@ public class InformationSchemaIntegrationTest {
         
         String query = "SELECT table_catalog, table_schema, table_name, view_definition, " +
                       "check_option, is_updatable " +
-                      "FROM information_schema.views " +
+                      "FROM information_schema.\"VIEWS\" " +
                       "WHERE table_schema = 'splunk' " +
                       "ORDER BY table_name";
         
@@ -232,7 +232,7 @@ public class InformationSchemaIntegrationTest {
         
         String query = "SELECT constraint_catalog, constraint_schema, constraint_name, " +
                       "table_catalog, table_schema, table_name, constraint_type " +
-                      "FROM information_schema.table_constraints " +
+                      "FROM information_schema.\"TABLE_CONSTRAINTS\" " +
                       "WHERE table_schema = 'splunk' " +
                       "ORDER BY table_name, constraint_name";
         
@@ -267,7 +267,7 @@ public class InformationSchemaIntegrationTest {
         
         String query = "SELECT constraint_catalog, constraint_schema, constraint_name, " +
                       "table_catalog, table_schema, table_name, column_name, ordinal_position " +
-                      "FROM information_schema.key_column_usage " +
+                      "FROM information_schema.\"KEY_COLUMN_USAGE\" " +
                       "WHERE table_schema = 'splunk' " +
                       "ORDER BY table_name, ordinal_position";
         
@@ -300,8 +300,8 @@ public class InformationSchemaIntegrationTest {
         String query = "SELECT t.table_name, COUNT(c.column_name) as column_count, " +
                       "MIN(c.ordinal_position) as first_column_pos, " +
                       "MAX(c.ordinal_position) as last_column_pos " +
-                      "FROM information_schema.tables t " +
-                      "LEFT JOIN information_schema.columns c " +
+                      "FROM information_schema.\"TABLES\" t " +
+                      "LEFT JOIN information_schema.\"COLUMNS\" c " +
                       "  ON t.table_catalog = c.table_catalog " +
                       "  AND t.table_schema = c.table_schema " +
                       "  AND t.table_name = c.table_name " +
@@ -347,8 +347,8 @@ public class InformationSchemaIntegrationTest {
                       "    COUNT(CASE WHEN c.is_nullable = 'NO' THEN 1 END) as not_null_columns, " +
                       "    COUNT(CASE WHEN c.data_type LIKE '%CHAR%' THEN 1 END) as text_columns, " +
                       "    COUNT(CASE WHEN c.data_type IN ('INTEGER', 'BIGINT', 'DECIMAL', 'NUMERIC') THEN 1 END) as numeric_columns " +
-                      "  FROM information_schema.tables t " +
-                      "  LEFT JOIN information_schema.columns c " +
+                      "  FROM information_schema.\"TABLES\" t " +
+                      "  LEFT JOIN information_schema.\"COLUMNS\" c " +
                       "    ON t.table_schema = c.table_schema AND t.table_name = c.table_name " +
                       "  WHERE t.table_schema = 'splunk' " +
                       "  GROUP BY t.table_name " +
@@ -401,16 +401,16 @@ public class InformationSchemaIntegrationTest {
         // Test various filtering scenarios
         String[] testQueries = {
             // Filter by data type
-            "SELECT table_name, column_name FROM information_schema.columns " +
+            "SELECT table_name, column_name FROM information_schema.\"COLUMNS\" " +
             "WHERE table_schema = 'splunk' AND data_type = 'VARCHAR' ORDER BY table_name, column_name",
             
             // Filter by nullable columns
-            "SELECT table_name, COUNT(*) as nullable_columns FROM information_schema.columns " +
+            "SELECT table_name, COUNT(*) as nullable_columns FROM information_schema.\"COLUMNS\" " +
             "WHERE table_schema = 'splunk' AND is_nullable = 'YES' " +
             "GROUP BY table_name ORDER BY table_name",
             
             // Filter by column name pattern
-            "SELECT table_name, column_name FROM information_schema.columns " +
+            "SELECT table_name, column_name FROM information_schema.\"COLUMNS\" " +
             "WHERE table_schema = 'splunk' AND column_name LIKE '%time%' " +
             "ORDER BY table_name, column_name"
         };

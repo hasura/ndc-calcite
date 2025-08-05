@@ -42,6 +42,9 @@ public class SplunkDriver implements java.sql.Driver {
 
     @Override
     public boolean acceptsURL(String url) throws SQLException {
+        if (url == null) {
+            return false;
+        }
         return delegate.acceptsURL(url);
     }
 

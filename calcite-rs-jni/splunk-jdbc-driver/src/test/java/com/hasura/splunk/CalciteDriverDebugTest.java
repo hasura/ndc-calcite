@@ -2,6 +2,8 @@ package com.hasura.splunk;
 
 import org.apache.calcite.jdbc.Driver;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -10,6 +12,7 @@ import java.util.Properties;
 /**
  * Test to debug Calcite driver behavior
  */
+@Category(UnitTest.class)
 public class CalciteDriverDebugTest {
     
     @Test
@@ -18,86 +21,42 @@ public class CalciteDriverDebugTest {
         
         Driver calciteDriver = new Driver();
         
-        // Test basic connection
+        // Test basic connection acceptance
         String url = "jdbc:calcite:";
         System.out.println("Testing URL: " + url);
         System.out.println("acceptsURL: " + calciteDriver.acceptsURL(url));
         
-        Properties props = new Properties();
-        
-        // Test with minimal model
-        String inlineModel = "{\n" +
-            "  \"version\": \"1.0\",\n" +
-            "  \"defaultSchema\": \"test\",\n" +
-            "  \"schemas\": [\n" +
-            "    {\n" +
-            "      \"name\": \"test\",\n" +
-            "      \"type\": \"map\",\n" +
-            "      \"tables\": {\n" +
-            "        \"dummy\": {\n" +
-            "          \"type\": \"table\",\n" +
-            "          \"rows\": [[1, \"test\"]]\n" +
-            "        }\n" +
-            "      }\n" +
-            "    }\n" +
-            "  ]\n" +
-            "}";
-        
-        props.setProperty("model", "inline:" + inlineModel);
-        
-        try {
-            Connection connection = calciteDriver.connect(url, props);
-            System.out.println("connect result: " + (connection != null ? "SUCCESS" : "NULL"));
-            
-            if (connection != null) {
-                System.out.println("connection type: " + connection.getClass().getName());
-                
-                // Test basic functionality
-                System.out.println("Database Product: " + connection.getMetaData().getDatabaseProductName());
-                
-                connection.close();
-            } else {
-                System.out.println("Connection was NULL!");
-            }
-        } catch (Exception e) {
-            System.out.println("connect failed: " + e.getMessage());
-            e.printStackTrace();
-        }
+        // Just test basic URL acceptance, don't try to connect without a proper model
+        assertTrue("Calcite driver should accept jdbc:calcite: URLs", calciteDriver.acceptsURL(url));
+        assertFalse("Calcite driver should not accept non-calcite URLs", calciteDriver.acceptsURL("jdbc:mysql://localhost"));
     }
     
     @Test
-    public void testSplunkDriverParseProperties() {
-        System.out.println("=== Testing SplunkDriver Property Parsing ===");
+    public void testSplunkDriverUrlAcceptance() {
+        System.out.println("=== Testing SplunkDriver URL Acceptance ===");
         
         SplunkDriver splunkDriver = new SplunkDriver();
         
         try {
-            // Test URL parsing
-            String url = "jdbc:splunk://kentest.xyz:8089/main?user=admin&password=test";
-            System.out.println("Testing URL: " + url);
-            System.out.println("acceptsURL: " + splunkDriver.acceptsURL(url));
+            // Test various URL formats for acceptance (without credentials)
+            String[] testUrls = {
+                "jdbc:splunk:",
+                "jdbc:splunk:url=https://localhost:8089",
+                "jdbc:splunk:url=https://example.com:8089;ssl=true",
+                "jdbc:splunk:url=https://localhost:8089;app=search",
+                "jdbc:calcite:",
+                "jdbc:mysql://localhost:3306/test"
+            };
             
-            Properties info = new Properties();
-            info.setProperty("ssl", "true");
-            
-            // This will fail on connection but we want to see the property parsing
-            try {
-                Connection conn = splunkDriver.connect(url, info);
-                System.out.println("Connection result: " + (conn != null ? "SUCCESS" : "NULL"));
-            } catch (SQLException e) {
-                System.out.println("Expected failure: " + e.getMessage());
-                // Check if it's a connection issue vs property parsing issue
-                if (e.getMessage().contains("Failed to create Calcite connection - returned null")) {
-                    System.out.println("Issue is with Calcite connection creation!");
-                } else if (e.getMessage().contains("Failed to create Splunk schema")) {
-                    System.out.println("Issue is with Splunk schema creation!");
-                } else {
-                    System.out.println("Different issue: " + e.getMessage());
-                }
+            for (String url : testUrls) {
+                System.out.println("Testing URL: " + url);
+                boolean accepts = splunkDriver.acceptsURL(url);
+                System.out.println("acceptsURL: " + accepts);
+                System.out.println();
             }
             
         } catch (Exception e) {
-            System.out.println("URL parsing failed: " + e.getMessage());
+            System.out.println("URL acceptance test failed: " + e.getMessage());
             e.printStackTrace();
         }
     }

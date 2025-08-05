@@ -1,51 +1,23 @@
 package com.hasura.splunk;
 
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import static org.junit.Assert.*;
 
 import java.sql.*;
 import java.util.Properties;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URI;
 
 /**
  * Debug test to troubleshoot Splunk connection issues
  */
-public class SplunkConnectionDebugTest {
-    
-    private Properties loadLocalProperties() {
-        Properties props = new Properties();
-        try (FileInputStream fis = new FileInputStream("local-properties.settings")) {
-            props.load(fis);
-        } catch (IOException e) {
-            System.out.println("Could not load local-properties.settings: " + e.getMessage());
-        }
-        return props;
-    }
+@Category(IntegrationTest.class)
+public class SplunkConnectionDebugTest extends BaseIntegrationTest {
     
     @Test
     public void testSplunkConnectionDebug() throws Exception {
-        Class.forName("com.hasura.splunk.SplunkDriver");
-        
-        Properties localProps = loadLocalProperties();
-        
-        // Build URL from properties
-        String splunkUrl = localProps.getProperty("splunk.url", "https://kentest.xyz:8089");
-        URI uri = new URI(splunkUrl);
-        String jdbcUrl = String.format("jdbc:splunk://%s:%d/main", uri.getHost(), uri.getPort());
-        
-        Properties props = new Properties();
-        props.setProperty("user", localProps.getProperty("splunk.username", "admin"));
-        props.setProperty("password", localProps.getProperty("splunk.password", ""));
-        props.setProperty("ssl", "true");
-        props.setProperty("disableSslValidation", localProps.getProperty("splunk.ssl.insecure", "true"));
-        
         System.out.println("=== Splunk Connection Debug ===");
         System.out.println("URL: " + jdbcUrl);
-        System.out.println("Username: " + props.getProperty("user"));
-        System.out.println("SSL: " + props.getProperty("ssl"));
-        System.out.println("Disable SSL Validation: " + props.getProperty("disableSslValidation"));
+        System.out.println("Connection Properties: " + connectionProps);
         
         // First test basic Calcite connection
         try {
@@ -58,8 +30,9 @@ public class SplunkConnectionDebugTest {
             System.out.println("❌ Basic Calcite connection failed: " + e.getMessage());
         }
         
+        // Test actual Splunk connection
         try {
-            Connection conn = DriverManager.getConnection(jdbcUrl, props);
+            Connection conn = createTestConnection();
             System.out.println("✅ Connection successful!");
             System.out.println("Connection: " + conn.getClass().getName());
             

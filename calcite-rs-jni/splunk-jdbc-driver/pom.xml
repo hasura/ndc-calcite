@@ -49,6 +49,8 @@
         <calcite.version>1.41.0-SNAPSHOT</calcite.version>
         <jar.version>1.0.0</jar.version>
         <avatica.version>1.25.0</avatica.version>
+        <!-- Skip integration tests by default -->
+        <skipITs>true</skipITs>
     </properties>
 
     <dependencies>
@@ -221,7 +223,24 @@
                         -Dotel.java.global-autoconfigure.enabled=true
                         -Dlog_level=verbose
                     </argLine>
+                    <!-- By default, only run unit tests -->
+                    <groups>com.hasura.splunk.UnitTest</groups>
                 </configuration>
+                <executions>
+                    <!-- Profile for running all tests including integration tests -->
+                    <execution>
+                        <id>integration-test</id>
+                        <phase>integration-test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <groups>com.hasura.splunk.IntegrationTest</groups>
+                            <!-- Skip integration tests if skipITs property is set -->
+                            <skipTests>${skipITs}</skipTests>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Exec Plugin for Installing Local Dependencies -->

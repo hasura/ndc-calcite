@@ -2,63 +2,28 @@ package com.hasura.splunk;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.BeforeClass;
+import org.junit.experimental.categories.Category;
 import static org.junit.Assert.*;
 
 import java.sql.*;
 import java.util.*;
-import java.io.InputStream;
 
 /**
  * Integration tests for JDBC DatabaseMetaData functionality.
  * Tests the standard JDBC metadata discovery APIs.
  */
-public class JdbcMetaDataIntegrationTest {
+@Category(IntegrationTest.class)
+public class JdbcMetaDataIntegrationTest extends BaseIntegrationTest {
     
-    private static final String TEST_MODEL_JSON = "/test-splunk-model.json";
     private Connection connection;
     private DatabaseMetaData metaData;
-    private static Properties localProperties;
-    
-    @BeforeClass
-    public static void setUpClass() {
-        try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
-        } catch (ClassNotFoundException e) {
-            fail("SplunkDriver not found: " + e.getMessage());
-        }
-        
-        // Load local properties
-        localProperties = new Properties();
-        try (java.io.FileInputStream fis = new java.io.FileInputStream("local-properties.settings")) {
-            localProperties.load(fis);
-        } catch (java.io.IOException e) {
-            System.out.println("Could not load local-properties.settings: " + e.getMessage());
-            localProperties = new Properties();
-        }
-    }
     
     @Before
     public void setUp() throws Exception {
+        super.setUp(); // This handles credential validation and skipping
+        assumeConnectionWorks(); // Skip if server not reachable
         connection = createTestConnection();
         metaData = connection.getMetaData();
-    }
-    
-    private Connection createTestConnection() throws Exception {
-        // Use configuration from local-properties.settings if available
-        String splunkUrl = localProperties.getProperty("splunk.url", "https://kentest.xyz:8089");
-        java.net.URI uri = new java.net.URI(splunkUrl);
-        String jdbcUrl = String.format("jdbc:splunk://%s:%d/main", uri.getHost(), uri.getPort());
-        
-        Properties props = new Properties();
-        props.setProperty("user", localProperties.getProperty("splunk.username", "admin"));
-        props.setProperty("password", localProperties.getProperty("splunk.password", ""));
-        props.setProperty("ssl", "true");
-        props.setProperty("disableSslValidation", "true");
-        props.setProperty("schema", "splunk");
-        props.setProperty("cimModels", "web,authentication,network_traffic,events");
-        
-        return DriverManager.getConnection(jdbcUrl, props);
     }
     
     @Test
