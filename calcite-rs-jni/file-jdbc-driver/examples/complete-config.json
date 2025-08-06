@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "name": "Enterprise Data Lake",
+  "description": "Complete data lake with multiple schemas and formats",
+  "defaultSchema": "datalake",
+  
+  "executionEngine": "parquet",
+  "batchSize": 2048,
+  "memoryThreshold": 536870912,
+  "refreshInterval": "30 minutes",
+  
+  
+  "awsRegion": "us-east-1",
+  
+  "schemas": [
+    {
+      "name": "files",
+      "operand": {
+        "directory": "/data/files",
+        "recursive": true
+      }
+    },
+    {
+      "name": "csv_data",
+      "operand": {
+        "directory": "/data/csv"
+      }
+    },
+    {
+      "name": "parquet_analytics",
+      "operand": {
+        "directory": "/data/parquet"
+      }
+    },
+    {
+      "name": "s3_datalake",
+      "operand": {
+        "directory": "s3://my-bucket/datalake/",
+        "recursive": true
+      }
+    },
+    {
+      "name": "remote_apis",
+      "operand": {
+        "directory": "https://api.example.com/data/"
+      }
+    }
+  ]
+}

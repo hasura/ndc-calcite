@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "defaultSchema": "splunk",
+  "schemas": [
+    {
+      "name": "splunk",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.splunk.SplunkSchemaFactory",
+      "operand": {
+        "host": "localhost",
+        "port": 8089,
+        "username": "admin",
+        "password": "changeme",
+        "scheme": "http",
+        "index": "*",
+        "earliest": "-24h",
+        "latest": "now",
+        "connectTimeout": 30000,
+        "socketTimeout": 60000,
+        "disableSslValidation": true,
+        "cimModels": ["authentication", "web", "network_traffic"],
+        "customTables": [
+          {
+            "name": "events",
+            "searchQuery": "search *",
+            "columns": [
+              {"name": "_time", "type": "TIMESTAMP", "nullable": false},
+              {"name": "host", "type": "VARCHAR", "nullable": true},
+              {"name": "source", "type": "VARCHAR", "nullable": true},
+              {"name": "sourcetype", "type": "VARCHAR", "nullable": true},
+              {"name": "index", "type": "VARCHAR", "nullable": true},
+              {"name": "_raw", "type": "VARCHAR", "nullable": true}
+            ]
+          },
+          {
+            "name": "users",
+            "searchQuery": "search user=*",
+            "columns": [
+              {"name": "user", "type": "VARCHAR", "nullable": false},
+              {"name": "department", "type": "VARCHAR", "nullable": true},
+              {"name": "role", "type": "VARCHAR", "nullable": true},
+              {"name": "last_login", "type": "TIMESTAMP", "nullable": true}
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -59,13 +59,13 @@ main() {
 cd ..
 
 # Install calcite-core
-mvn install:install-file -Dfile=calcite/core/build/libs/calcite-core-1.38.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-core -Dversion=1.38.0-SNAPSHOT -Dpackaging=jar
+mvn install:install-file -Dfile=calcite/core/build/libs/calcite-core-1.41.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-core -Dversion=1.41.0-SNAPSHOT -Dpackaging=jar
 
 # Install calcite-graphql
-mvn install:install-file -Dfile=calcite/graphql/build/libs/calcite-graphql-1.38.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-graphql -Dversion=1.38.0-SNAPSHOT -Dpackaging=jar
+mvn install:install-file -Dfile=calcite/graphql/build/libs/calcite-graphql-1.41.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-graphql -Dversion=1.41.0-SNAPSHOT -Dpackaging=jar
 
 # Install calcite-linq4j
-mvn install:install-file -Dfile=calcite/linq4j/build/libs/calcite-linq4j-1.38.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-linq4j -Dversion=1.38.0-SNAPSHOT -Dpackaging=jar
+mvn install:install-file -Dfile=calcite/linq4j/build/libs/calcite-linq4j-1.41.0-SNAPSHOT.jar -DgroupId=org.apache.calcite -DartifactId=calcite-linq4j -Dversion=1.41.0-SNAPSHOT -Dpackaging=jar
 
 # Run Maven commands
     echo "Running Maven clean install..."

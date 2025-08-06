@@ -39,3 +39,4 @@ build/
 /calcite/
 /jdbc/dependency-reduced-pom.xml
 /py_graphql_sql/py_graphql_sql/jars/graphql-jdbc-driver-1.0.0-jar-with-dependencies.jar
+/file-jdbc-driver/.venv/

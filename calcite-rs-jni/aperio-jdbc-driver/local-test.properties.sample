@@ -1,0 +1,45 @@
+# Aperio JDBC Driver - Local Test Properties Sample
+# Copy this file to local-test.properties and configure with your file data paths
+
+# File Data Configuration
+file.dataPath=/tmp/test-data
+file.engine=csv
+file.defaultSchema=files
+
+# Test Data Directories
+# Ensure these directories exist and contain test files
+test.csvPath=/tmp/test-data/csv
+test.jsonPath=/tmp/test-data/json
+test.parquetPath=/tmp/test-data/parquet
+test.excelPath=/tmp/test-data/excel
+
+# Sample Test Files
+# These files should exist for integration tests
+test.csvFiles=customers.csv,orders.csv,products.csv
+test.jsonFiles=events.json,logs.json,config.json
+test.parquetFiles=sales_2023.parquet,sales_2024.parquet
+test.excelFiles=financial_report.xlsx,inventory.xlsx
+
+# Engine Testing
+test.engines=csv,json,parquet,excel,arrow
+
+# Performance Testing
+test.enablePerformanceTests=false
+test.largeBatchSize=10000
+test.smallBatchSize=1000
+
+# Advanced Features Testing
+test.enableMaterializedViews=false
+test.mvStoragePath=/tmp/mv_cache
+test.enableSpillover=false
+test.spilloverPath=/tmp/spillover
+
+# Remote Storage Testing (optional)
+# Uncomment and configure for remote storage tests
+# test.httpUrl=https://example.com/data
+# test.s3Bucket=s3://my-test-bucket/data
+# test.ftpUrl=ftp://example.com/data
+
+# Logging Configuration for Tests
+test.enableDebugLogging=false
+test.logSqlQueries=false

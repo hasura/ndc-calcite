@@ -1,0 +1,16 @@
+[ {
+  "dept_id" : "1",
+  "dept_name" : "Engineering",
+  "manager" : "Alice Brown",
+  "budget" : "500000"
+}, {
+  "dept_id" : "2",
+  "dept_name" : "Marketing",
+  "manager" : "Jane Smith",
+  "budget" : "300000"
+}, {
+  "dept_id" : "3",
+  "dept_name" : "Sales",
+  "manager" : "Bob Johnson",
+  "budget" : "400000"
+} ]

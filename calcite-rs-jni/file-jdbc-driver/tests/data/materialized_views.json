@@ -1,0 +1,20 @@
+[
+  {
+    "name": "sales_summary_mv",
+    "sql": "SELECT COUNT(*) as total_orders, SUM(\"total\") as revenue FROM \"sales\"",
+    "materialized": true,
+    "description": "Materialized view of sales summary with order count and total revenue"
+  },
+  {
+    "name": "high_value_orders_mv",
+    "sql": "SELECT order_id, customer_id, total FROM \"sales\" WHERE \"total\" > 500",
+    "materialized": true,
+    "description": "Materialized view of high-value orders over $500"
+  },
+  {
+    "name": "monthly_sales_mv",
+    "sql": "SELECT DATE_TRUNC('month', \"order_date\") as month, COUNT(*) as orders, SUM(\"total\") as revenue FROM \"sales\" GROUP BY DATE_TRUNC('month', \"order_date\")",
+    "materialized": true,
+    "description": "Materialized view of monthly sales aggregation"
+  }
+]
