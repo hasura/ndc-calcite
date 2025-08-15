@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "defaultSchema": "sharepoint",
+  "schemas": [
+    {
+      "name": "sharepoint",
+      "type": "custom",
+      "factory": "org.apache.calcite.adapter.sharepoint.SharePointListSchemaFactory",
+      "operand": {
+        "siteUrl": "https://yourcompany.sharepoint.com/sites/yoursite",
+        "authType": "CLIENT_CREDENTIALS",
+        "clientId": "your-azure-app-client-id",
+        "clientSecret": "your-azure-app-client-secret",
+        "tenantId": "your-azure-tenant-id"
+      }
+    }
+  ]
+}
