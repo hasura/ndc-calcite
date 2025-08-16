@@ -21,9 +21,9 @@ public class PostgreSQLCompatibilityTest {
     @BeforeClass
     public static void setUpClass() {
         try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
+            Class.forName("com.hasura.SplunkDriver");
         } catch (ClassNotFoundException e) {
-            fail("SplunkDriver not found: " + e.getMessage());
+            fail("com.hasura.SplunkDriver not found: " + e.getMessage());
         }
     }
     
@@ -43,7 +43,7 @@ public class PostgreSQLCompatibilityTest {
     }
     
     private Connection createTestConnection() throws Exception {
-        // First try to connect with SplunkDriver using real settings from local properties
+        // First try to connect with com.hasura.SplunkDriver using real settings from local properties
         try {
             Properties localProps = loadLocalProperties();
             

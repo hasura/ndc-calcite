@@ -15,9 +15,9 @@ public class SplunkDriverTest {
     public void setUp() {
         // Ensure driver is registered
         try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
+            Class.forName("com.hasura.SplunkDriver");
         } catch (ClassNotFoundException e) {
-            fail("SplunkDriver not found");
+            fail("com.hasura.SplunkDriver not found");
         }
     }
     
@@ -27,15 +27,15 @@ public class SplunkDriverTest {
         Driver driver = DriverManager.getDriver("jdbc:splunk:");
         assertNotNull("Driver should be registered", driver);
         
-        // Test that our SplunkDriver can be instantiated directly
-        SplunkDriver splunkDriver = new SplunkDriver();
-        assertNotNull("SplunkDriver should be instantiable", splunkDriver);
-        assertTrue("SplunkDriver should accept Splunk URLs", splunkDriver.acceptsURL("jdbc:splunk:"));
+        // Test that our com.hasura.SplunkDriver can be instantiated directly
+        com.hasura.SplunkDriver splunkDriver = new com.hasura.SplunkDriver();
+        assertNotNull("com.hasura.SplunkDriver should be instantiable", splunkDriver);
+        assertTrue("com.hasura.SplunkDriver should accept Splunk URLs", splunkDriver.acceptsURL("jdbc:splunk:"));
     }
     
     @Test
     public void testAcceptsURL() throws SQLException {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         // Valid URLs (Splunk driver uses semicolon-separated parameters)
         assertTrue(driver.acceptsURL("jdbc:splunk:"));
@@ -52,7 +52,7 @@ public class SplunkDriverTest {
     
     @Test
     public void testGetPropertyInfo() throws SQLException {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         Properties info = new Properties();
         info.setProperty("user", "testuser");
@@ -67,7 +67,7 @@ public class SplunkDriverTest {
     
     @Test
     public void testVersionInfo() throws SQLException {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         // Test version methods
         int majorVersion = driver.getMajorVersion();

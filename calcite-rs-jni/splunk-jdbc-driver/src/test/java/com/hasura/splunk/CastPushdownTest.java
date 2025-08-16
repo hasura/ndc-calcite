@@ -14,9 +14,9 @@ public class CastPushdownTest {
     @BeforeClass
     public static void setUpClass() {
         try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
+            Class.forName("com.hasura.SplunkDriver");
         } catch (ClassNotFoundException e) {
-            fail("SplunkDriver not found: " + e.getMessage());
+            fail("com.hasura.SplunkDriver not found: " + e.getMessage());
         }
     }
     
@@ -40,7 +40,7 @@ public class CastPushdownTest {
     }
     
     private Connection createTestConnection() throws SQLException {
-        // First try to connect with SplunkDriver using real settings from local properties
+        // First try to connect with com.hasura.SplunkDriver using real settings from local properties
         try {
             Properties localProps = loadLocalProperties();
             

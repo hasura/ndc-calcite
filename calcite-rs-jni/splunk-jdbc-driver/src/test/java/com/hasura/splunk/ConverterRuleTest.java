@@ -14,9 +14,9 @@ public class ConverterRuleTest {
     @BeforeClass
     public static void setUpClass() {
         try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
+            Class.forName("com.hasura.SplunkDriver");
         } catch (ClassNotFoundException e) {
-            fail("SplunkDriver not found: " + e.getMessage());
+            fail("com.hasura.SplunkDriver not found: " + e.getMessage());
         }
     }
     

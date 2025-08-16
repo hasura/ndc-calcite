@@ -33,9 +33,9 @@ public class CalciteDriverDebugTest {
     
     @Test
     public void testSplunkDriverUrlAcceptance() {
-        System.out.println("=== Testing SplunkDriver URL Acceptance ===");
+        System.out.println("=== Testing com.hasura.SplunkDriver URL Acceptance ===");
         
-        SplunkDriver splunkDriver = new SplunkDriver();
+        com.hasura.SplunkDriver splunkDriver = new com.hasura.SplunkDriver();
         
         try {
             // Test various URL formats for acceptance (without credentials)

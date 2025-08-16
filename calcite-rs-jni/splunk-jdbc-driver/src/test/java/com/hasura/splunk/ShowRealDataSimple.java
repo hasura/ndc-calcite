@@ -10,9 +10,9 @@ public class ShowRealDataSimple {
     @BeforeClass
     public static void setUpClass() {
         try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
+            Class.forName("com.hasura.SplunkDriver");
         } catch (ClassNotFoundException e) {
-            System.err.println("SplunkDriver not found: " + e.getMessage());
+            System.err.println("com.hasura.SplunkDriver not found: " + e.getMessage());
         }
     }
     

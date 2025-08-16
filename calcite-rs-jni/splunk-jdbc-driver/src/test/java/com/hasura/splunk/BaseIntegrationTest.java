@@ -49,7 +49,7 @@ public abstract class BaseIntegrationTest {
         Assume.assumeTrue("Splunk credentials not configured - skipping integration test", 
                          hasToken || hasCredentials);
         
-        // Build JDBC URL in the format expected by the SplunkDriver
+        // Build JDBC URL in the format expected by the com.hasura.SplunkDriver
         StringBuilder urlBuilder = new StringBuilder("jdbc:splunk:");
         urlBuilder.append("url=").append(splunkUrl);
         
@@ -94,9 +94,9 @@ public abstract class BaseIntegrationTest {
      */
     protected Connection createTestConnection() throws SQLException {
         try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
+            Class.forName("com.hasura.SplunkDriver");
         } catch (ClassNotFoundException e) {
-            throw new SQLException("SplunkDriver not found", e);
+            throw new SQLException("com.hasura.SplunkDriver not found", e);
         }
         return DriverManager.getConnection(jdbcUrl, connectionProps);
     }

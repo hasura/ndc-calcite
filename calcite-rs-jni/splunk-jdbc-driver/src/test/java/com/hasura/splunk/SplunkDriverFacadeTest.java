@@ -10,7 +10,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 /**
- * Comprehensive test to verify the SplunkDriver facade correctly delegates 
+ * Comprehensive test to verify the com.hasura.SplunkDriver facade correctly delegates 
  * all Splunk adapter capabilities and features.
  */
 public class SplunkDriverFacadeTest {
@@ -34,7 +34,7 @@ public class SplunkDriverFacadeTest {
     @Test
     public void testFacadeDriverDelegation() throws SQLException {
         // Verify the facade driver is properly registered
-        SplunkDriver facadeDriver = new SplunkDriver();
+        com.hasura.SplunkDriver facadeDriver = new com.hasura.SplunkDriver();
         assertNotNull("Facade driver should not be null", facadeDriver);
         
         // Check delegation methods
@@ -53,7 +53,7 @@ public class SplunkDriverFacadeTest {
     @Test
     public void testDirectJdbcUrlFormat() {
         // Test all URL formats supported by the adapter
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // Direct parameter format: jdbc:splunk:url='https://host:port';param='value'
@@ -78,7 +78,7 @@ public class SplunkDriverFacadeTest {
         // Test that environment variables are properly supported
         // Note: This would require setting actual env vars for full testing
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         // Verify that minimal URL (relying on env vars) is accepted
         try {
@@ -91,7 +91,7 @@ public class SplunkDriverFacadeTest {
     
     @Test 
     public void testAuthenticationMethods() {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // Username/password authentication
@@ -109,7 +109,7 @@ public class SplunkDriverFacadeTest {
     
     @Test
     public void testAppContextSupport() {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // CIM app context
@@ -134,7 +134,7 @@ public class SplunkDriverFacadeTest {
     
     @Test
     public void testDataModelFeatures() {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // Data model filtering
@@ -160,7 +160,7 @@ public class SplunkDriverFacadeTest {
     
     @Test
     public void testSSLConfiguration() {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // SSL disabled for development
@@ -178,7 +178,7 @@ public class SplunkDriverFacadeTest {
     
     @Test
     public void testPropertiesObjectSupport() throws SQLException {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         // Test that properties object is properly passed through
         Properties props = new Properties();
@@ -198,7 +198,7 @@ public class SplunkDriverFacadeTest {
     
     @Test
     public void testPropertyInfoDelegation() throws SQLException {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         Properties props = new Properties();
         DriverPropertyInfo[] propertyInfo = driver.getPropertyInfo("jdbc:splunk://localhost:8089", props);
@@ -218,7 +218,7 @@ public class SplunkDriverFacadeTest {
         props.setProperty("password", localProperties.getProperty("splunk.password"));
         props.setProperty("disableSslValidation", "true"); // For testing
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         // Just test that the delegation doesn't throw exceptions during setup
         try {
@@ -235,7 +235,7 @@ public class SplunkDriverFacadeTest {
     
     @Test
     public void testFederationUrlSupport() {
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         // Federation would use Calcite model files, but verify URL handling
         try {

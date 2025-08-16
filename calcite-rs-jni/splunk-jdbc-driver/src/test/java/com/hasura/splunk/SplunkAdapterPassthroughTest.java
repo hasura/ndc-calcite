@@ -96,7 +96,7 @@ public class SplunkAdapterPassthroughTest {
     public void testJdbcDriverOperandPassthrough() throws Exception {
         System.out.println("\n=== Testing JDBC Driver Operand Passthrough ===");
         
-        Class.forName("com.hasura.splunk.SplunkDriver");
+        Class.forName("com.hasura.SplunkDriver");
         
         String splunkUrl = localProperties.getProperty("splunk.url", "https://kentest.xyz:8089");
         URI uri = new URI(splunkUrl);
@@ -271,7 +271,7 @@ public class SplunkAdapterPassthroughTest {
     public void testSplunkSchemaTableAccess() throws Exception {
         System.out.println("\n=== Testing Splunk Schema Table Access ===");
         
-        Class.forName("com.hasura.splunk.SplunkDriver");
+        Class.forName("com.hasura.SplunkDriver");
         
         String splunkUrl = localProperties.getProperty("splunk.url", "https://kentest.xyz:8089");
         URI uri = new URI(splunkUrl);

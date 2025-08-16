@@ -11,9 +11,9 @@ public class ShowWebDataWithRealConnection {
     @BeforeClass
     public static void setUpClass() {
         try {
-            Class.forName("com.hasura.splunk.SplunkDriver");
+            Class.forName("com.hasura.SplunkDriver");
         } catch (ClassNotFoundException e) {
-            fail("SplunkDriver not found: " + e.getMessage());
+            fail("com.hasura.SplunkDriver not found: " + e.getMessage());
         }
     }
     
@@ -29,7 +29,7 @@ public class ShowWebDataWithRealConnection {
     
     @Test
     public void showWebData() throws Exception {
-        // Try to connect with SplunkDriver using real settings from local properties
+        // Try to connect with com.hasura.SplunkDriver using real settings from local properties
         Properties localProps = loadLocalProperties();
         
         // Build URL from properties

@@ -22,7 +22,7 @@ public class JdbcUrlAliasTest {
         props.setProperty("password", "testpass");
         
         // Create facade driver
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // This should work with jdbcUrl instead of url

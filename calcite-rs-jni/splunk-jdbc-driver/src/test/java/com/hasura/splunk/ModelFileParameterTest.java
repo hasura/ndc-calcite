@@ -18,7 +18,7 @@ public class ModelFileParameterTest {
         // Test that modelFile can be passed in JDBC URL
         String testUrl = "jdbc:splunk:modelFile=/path/to/model.json";
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // The driver should accept this URL format
@@ -39,7 +39,7 @@ public class ModelFileParameterTest {
         Properties props = new Properties();
         props.setProperty("modelFile", "/path/to/model.json");
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             String testUrl = "jdbc:splunk:";
@@ -58,7 +58,7 @@ public class ModelFileParameterTest {
         // Test modelFile in standard JDBC URL format with query parameters
         String testUrl = "jdbc:splunk://host:8089?modelFile=/path/to/model.json";
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             assertTrue("Driver should accept standard JDBC URL with modelFile parameter", 
@@ -77,7 +77,7 @@ public class ModelFileParameterTest {
         // URL should override properties
         String testUrl = "jdbc:splunk:modelFile=/path/from/url.json";
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             assertTrue("Driver should accept URL", driver.acceptsURL(testUrl));
@@ -92,7 +92,7 @@ public class ModelFileParameterTest {
         // Test modelFile combined with other parameters
         String testUrl = "jdbc:splunk:modelFile=/path/to/model.json;debug=true;datamodelCacheTtl=-1";
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             assertTrue("Driver should accept URL with modelFile and other parameters", 

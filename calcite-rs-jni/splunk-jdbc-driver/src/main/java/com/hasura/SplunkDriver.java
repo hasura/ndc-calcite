@@ -1,4 +1,4 @@
-package com.hasura.splunk;
+package com.hasura;
 
 import java.sql.Connection;
 import java.sql.DriverPropertyInfo;

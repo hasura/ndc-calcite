@@ -26,7 +26,7 @@ public class JdbcUrlParsingTest {
         props.setProperty("password", "testpass");
         
         // Create facade driver
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // Test with standard JDBC URL format
@@ -49,7 +49,7 @@ public class JdbcUrlParsingTest {
         props.setProperty("password", "testpass");
         
         // Create facade driver
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // Use minimal URL, with actual URL in jdbcUrl property
@@ -83,7 +83,7 @@ public class JdbcUrlParsingTest {
             "jdbc:splunk://host:8089/main?ssl=true"
         };
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         for (String url : testUrls) {
             try {
@@ -100,7 +100,7 @@ public class JdbcUrlParsingTest {
         // Test the original semicolon-separated format still works
         Properties props = new Properties();
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             String testUrl = "jdbc:splunk:url=https://kentest.xyz:8089;user=admin;password=changeme";
@@ -118,7 +118,7 @@ public class JdbcUrlParsingTest {
         props.setProperty("user", "testuser");
         props.setProperty("password", "testpass");
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             assertTrue("Driver should accept URL with database", driver.acceptsURL(testUrl));
@@ -136,7 +136,7 @@ public class JdbcUrlParsingTest {
         props.setProperty("user", "testuser");
         props.setProperty("password", "testpass");
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             assertTrue("Driver should accept URL with query parameters", driver.acceptsURL(testUrl));
@@ -151,7 +151,7 @@ public class JdbcUrlParsingTest {
         // Test JDBC URL with both database and query parameters
         String testUrl = "jdbc:splunk://host:8089/mysplunk?ssl=true&user=admin&password=changeme";
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             assertTrue("Driver should accept URL with database and query parameters", driver.acceptsURL(testUrl));
@@ -175,7 +175,7 @@ public class JdbcUrlParsingTest {
         // URL should override properties
         String testUrl = "jdbc:splunk://host:8089/url_schema?ssl=true";
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             assertTrue("Driver should accept URL", driver.acceptsURL(testUrl));
@@ -200,7 +200,7 @@ public class JdbcUrlParsingTest {
         // - ssl: true
         // - disableSslValidation: true
         
-        SplunkDriver driver = new SplunkDriver();
+        com.hasura.SplunkDriver driver = new com.hasura.SplunkDriver();
         
         try {
             // Use minimal URL for driver selection

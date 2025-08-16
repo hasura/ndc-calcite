@@ -47,7 +47,7 @@ public class AllCimModelsTest {
     
     @BeforeClass
     public static void setUpClass() throws Exception {
-        Class.forName("com.hasura.splunk.SplunkDriver");
+        Class.forName("com.hasura.SplunkDriver");
         
         // Load local properties
         localProperties = new Properties();
