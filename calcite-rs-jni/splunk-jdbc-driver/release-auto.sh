@@ -41,6 +41,49 @@ increment_version() {
     echo "${VERSION_PARTS[0]}.${VERSION_PARTS[1]}.${VERSION_PARTS[2]}"
 }
 
+# Parse command line arguments
+RELEASE_TYPE=""
+RELEASE_METHOD=""
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --patch)
+            RELEASE_TYPE="patch"
+            shift
+            ;;
+        --minor)
+            RELEASE_TYPE="minor"
+            shift
+            ;;
+        --major)
+            RELEASE_TYPE="major"
+            shift
+            ;;
+        --maven-release)
+            RELEASE_METHOD="maven"
+            shift
+            ;;
+        --manual)
+            RELEASE_METHOD="manual"
+            shift
+            ;;
+        --help)
+            echo "Usage: $0 [OPTIONS]"
+            echo "Options:"
+            echo "  --patch          Patch release (bug fixes)"
+            echo "  --minor          Minor release (new features)"
+            echo "  --major          Major release (breaking changes)"
+            echo "  --maven-release  Use maven-release-plugin"
+            echo "  --manual         Manual release"
+            echo "  --help           Show this help message"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
 # Check if we're on a clean working directory
 if [[ -n $(git status -s) ]]; then
     echo -e "${RED}Error: Working directory has uncommitted changes${NC}"
@@ -55,44 +98,52 @@ echo -e "Current version: ${BLUE}$CURRENT_VERSION${NC}"
 # Remove -SNAPSHOT if present
 BASE_VERSION=${CURRENT_VERSION%-SNAPSHOT}
 
-# Ask for release type
-echo -e "\n${YELLOW}Select release type:${NC}"
-echo "1) Patch release (bug fixes)"
+# Ask for release type if not provided
+if [[ -z "$RELEASE_TYPE" ]]; then
+    echo -e "\n${YELLOW}Select release type:${NC}"
+    echo "1) Patch release (bug fixes)"
 echo "2) Minor release (new features, backward compatible)"
 echo "3) Major release (breaking changes)"
 echo "4) Custom version"
-read -p "Enter choice (1-4): " choice
+    read -p "Enter choice (1-4): " choice
 
-case $choice in
-    1)
-        RELEASE_TYPE="patch"
-        NEW_VERSION=$(increment_version $BASE_VERSION patch)
-        ;;
-    2)
-        RELEASE_TYPE="minor"
-        NEW_VERSION=$(increment_version $BASE_VERSION minor)
-        ;;
-    3)
-        RELEASE_TYPE="major"
-        NEW_VERSION=$(increment_version $BASE_VERSION major)
-        ;;
-    4)
-        read -p "Enter custom version: " NEW_VERSION
-        RELEASE_TYPE="custom"
-        ;;
-    *)
-        echo -e "${RED}Invalid choice${NC}"
-        exit 1
-        ;;
-esac
+    case $choice in
+        1)
+            RELEASE_TYPE="patch"
+            ;;
+        2)
+            RELEASE_TYPE="minor"
+            ;;
+        3)
+            RELEASE_TYPE="major"
+            ;;
+        4)
+            read -p "Enter custom version: " NEW_VERSION
+            RELEASE_TYPE="custom"
+            ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            exit 1
+            ;;
+    esac
+fi
+
+# Calculate new version based on release type
+if [[ "$RELEASE_TYPE" != "custom" ]]; then
+    NEW_VERSION=$(increment_version $BASE_VERSION $RELEASE_TYPE)
+fi
 
 echo -e "\nWill release version: ${GREEN}$NEW_VERSION${NC}"
-read -p "Continue? (y/n): " -n 1 -r
-echo
 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Release cancelled"
-    exit 0
+# Only ask for confirmation in interactive mode
+if [[ -z "$RELEASE_METHOD" ]]; then
+    read -p "Continue? (y/n): " -n 1 -r
+    echo
+    
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Release cancelled"
+        exit 0
+    fi
 fi
 
 # Build Calcite dependencies first
@@ -143,21 +194,37 @@ manual_release() {
     git commit -m "Prepare for next development iteration"
 }
 
-# Ask which method to use
-echo -e "\n${YELLOW}Select release method:${NC}"
-echo "1) Use maven-release-plugin (recommended)"
-echo "2) Manual release"
-read -p "Enter choice (1-2): " method_choice
+# Ask which method to use (if not provided via command line)
+if [[ -z "$RELEASE_METHOD" ]]; then
+    echo -e "\n${YELLOW}Select release method:${NC}"
+    echo "1) Use maven-release-plugin (recommended)"
+    echo "2) Manual release"
+    read -p "Enter choice (1-2): " method_choice
+    
+    case $method_choice in
+        1)
+            RELEASE_METHOD="maven"
+            ;;
+        2)
+            RELEASE_METHOD="manual"
+            ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            exit 1
+            ;;
+    esac
+fi
 
-case $method_choice in
-    1)
+# Execute the chosen release method
+case $RELEASE_METHOD in
+    maven)
         use_release_plugin
         ;;
-    2)
+    manual)
         manual_release
         ;;
     *)
-        echo -e "${RED}Invalid choice${NC}"
+        echo -e "${RED}Invalid release method${NC}"
         exit 1
         ;;
 esac
