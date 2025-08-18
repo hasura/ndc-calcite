@@ -1,0 +1,11 @@
+id,name,category,price,in_stock
+1,Laptop,Electronics,999.99,true
+2,Mouse,Electronics,29.99,true
+3,Keyboard,Electronics,79.99,false
+4,Monitor,Electronics,299.99,true
+5,Desk Chair,Furniture,199.99,true
+6,Standing Desk,Furniture,599.99,false
+7,Notebook,Office Supplies,4.99,true
+8,Pen Set,Office Supplies,12.99,true
+9,Coffee Maker,Appliances,89.99,true
+10,Water Bottle,Accessories,19.99,true

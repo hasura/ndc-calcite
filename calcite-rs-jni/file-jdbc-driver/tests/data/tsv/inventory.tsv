@@ -1,0 +1,6 @@
+sku	product	quantity	warehouse	last_updated
+A001	Widget	100	North	2025-01-15
+A002	Gadget	50	South	2025-01-14  
+A003	Gizmo	75	East	2025-01-16
+A004	Doohickey	200	West	2025-01-13
+A005	Thingamajig	25	North	2025-01-17

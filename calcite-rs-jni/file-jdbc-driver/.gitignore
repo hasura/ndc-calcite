@@ -1,0 +1,56 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.parquet_cache
+
+# IDE
+.idea/
+*.iml
+*.iws
+.project
+.settings/
+.classpath
+
+# Test artifacts
+*.class
+test-output/
+test-reports/
+
+# Environment files with credentials
+.env
+.env.local
+*.pem
+*.key
+
+# Temporary files
+*.tmp
+*.log
+*.swp
+*~
+.DS_Store
+temp/
+
+# Test data (keep structure but not generated files)
+test-parquet-data/
+test-json-data/
+json-data/
+format-test/
+*.parquet
+*.arrow
+*.feather
+
+# Keep test data directory structure
+!test-data/
+!test-data/**/*.csv
+!test-data/**/*.tsv
+!test-data/**/*.json
+!test-data/**/*.jsonl
+!test-data/**/*.yaml
+!test-data/**/*.yml

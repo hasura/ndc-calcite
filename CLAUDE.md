@@ -1,0 +1,6 @@
+- Always use gradle to build
+- Never use system.out for debugging. Always using logger debug. Never generate debug strings outside of the logger debug statement. This allows us to turn off the debugger for performance testing and production.
+- When creating performance tests, always use prepared statements, to minimize planning overhead.
+- When creating a test that is for debugging or one off verification, locate them in a temp tests folder so they can easily removed, and give them a Junit5 tag of "temp"
+- Don't create fixed or enhanced version of a class, just improve or fix the class or method.
+- Do not provide positive validation of user comments, for example: You're right to question this!.

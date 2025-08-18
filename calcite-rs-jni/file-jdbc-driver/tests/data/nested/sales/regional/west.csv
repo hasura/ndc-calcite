@@ -1,0 +1,6 @@
+sale_id,date,product,amount,rep
+1001,2024-01-15,Widget A,5000,John
+1002,2024-01-17,Widget B,3200,Sarah
+1003,2024-01-20,Widget C,7500,Mike
+1004,2024-01-22,Widget A,4800,John
+1005,2024-01-25,Widget B,6200,Sarah

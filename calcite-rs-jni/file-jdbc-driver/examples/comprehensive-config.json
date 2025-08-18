@@ -1,0 +1,140 @@
+{
+  "version": "1.0",
+  "name": "Enterprise Data Lake",
+  "description": "Comprehensive data lake configuration demonstrating all supported features",
+  "defaultSchema": "analytics",
+  
+  "executionEngine": "parquet",
+  "batchSize": 2048,
+  "memoryThreshold": 67108864,
+  "refreshInterval": "15 minutes",
+  
+  "awsRegion": "us-west-2",
+  
+  "schemas": [
+    {
+      "name": "analytics",
+      "operand": {
+        "directory": "/data/analytics",
+        "recursive": true,
+        "tables": [
+          {
+            "name": "sales",
+            "url": "/data/analytics/sales.csv"
+          },
+          {
+            "name": "customers", 
+            "url": "/data/analytics/customers.json"
+          },
+          {
+            "name": "products",
+            "url": "/data/analytics/products.parquet"
+          },
+          {
+            "name": "sales_partitioned", 
+            "url": "/data/partitioned/sales/year=*/month=*/*.parquet"
+          },
+          {
+            "name": "events_by_date",
+            "url": "/data/events/**/*.parquet"  
+          },
+          {
+            "name": "app_logs",
+            "url": "/data/logs/app_log_*.parquet",
+            "refreshInterval": "5 minutes"
+          }
+        ],
+        "views": [
+          {
+            "name": "monthly_sales",
+            "sql": "SELECT DATE_TRUNC('month', order_date) as month, SUM(amount) as total_revenue, COUNT(*) as order_count FROM sales GROUP BY DATE_TRUNC('month', order_date) ORDER BY month"
+          },
+          {
+            "name": "customer_ltv", 
+            "sql": "SELECT customer_id, COUNT(*) as total_orders, SUM(amount) as lifetime_value, AVG(amount) as avg_order_value FROM sales GROUP BY customer_id HAVING COUNT(*) > 1"
+          },
+          {
+            "name": "top_products",
+            "sql": "SELECT p.name, p.category, COUNT(s.product_id) as sales_count, SUM(s.amount) as total_revenue FROM products p JOIN sales s ON p.product_id = s.product_id GROUP BY p.product_id, p.name, p.category ORDER BY total_revenue DESC"
+          }
+        ],
+        "materializations": [
+          {
+            "view": "sales_summary_mv",
+            "sql": "SELECT product_id, DATE_TRUNC('day', order_date) as day, COUNT(*) as daily_sales, SUM(amount) as daily_revenue FROM sales GROUP BY product_id, DATE_TRUNC('day', order_date)"
+          },
+          {
+            "view": "customer_segments_mv",
+            "sql": "SELECT CASE WHEN lifetime_value > 1000 THEN 'Premium' WHEN lifetime_value > 500 THEN 'Standard' ELSE 'Basic' END as segment, COUNT(*) as customer_count, AVG(lifetime_value) as avg_ltv FROM customer_ltv GROUP BY segment"
+          },
+          {
+            "view": "daily_metrics",
+            "table": "daily_metrics_custom_table",
+            "sql": "SELECT DATE(order_date) as date, COUNT(*) as orders, SUM(amount) as revenue FROM sales GROUP BY DATE(order_date)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "s3_datalake",
+      "operand": {
+        "directory": "s3://company-datalake/raw/",
+        "recursive": true,
+        "refreshInterval": "1 hour"
+      }
+    },
+    {
+      "name": "csv_archive",
+      "operand": {
+        "directory": "/data/archive/csv"
+      }
+    },
+    {
+      "name": "parquet_warehouse",
+      "operand": {
+        "directory": "/data/warehouse/parquet"
+      }
+    },
+    {
+      "name": "remote_apis",
+      "operand": {
+        "directory": "https://api.company.com/data/",
+        "batchSize": 1024,
+        "refreshInterval": "5 minutes"
+      }
+    },
+    {
+      "name": "multi_format_mixed",
+      "operand": {
+        "tables": [
+          {
+            "name": "local_sales",
+            "url": "/data/local/sales.csv"
+          },
+          {
+            "name": "s3_products", 
+            "url": "s3://company-bucket/products.parquet"
+          },
+          {
+            "name": "api_customers",
+            "url": "https://api.company.com/customers.json"
+          },
+          {
+            "name": "excel_reports",
+            "url": "/data/reports/quarterly.xlsx"
+          },
+          {
+            "name": "web_tables",
+            "url": "https://company.com/reports/summary.html"
+          }
+        ],
+        "views": [
+          {
+            "name": "unified_sales",
+            "sql": "SELECT 'local' as source, product_id, customer_id, amount, order_date FROM local_sales UNION ALL SELECT 's3' as source, product_id, customer_id, amount, order_date FROM s3_products WHERE order_date IS NOT NULL"
+          }
+        ]
+      }
+    }
+  ]
+}

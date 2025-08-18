@@ -1,0 +1,42 @@
+[
+  {
+    "id": 101,
+    "name": "Alice Johnson",
+    "email": "alice@example.com",
+    "city": "New York",
+    "country": "USA",
+    "created_at": "2023-01-15"
+  },
+  {
+    "id": 102,
+    "name": "Bob Smith",
+    "email": "bob@example.com",
+    "city": "London",
+    "country": "UK",
+    "created_at": "2023-02-20"
+  },
+  {
+    "id": 103,
+    "name": "Charlie Brown",
+    "email": "charlie@example.com",
+    "city": "Tokyo",
+    "country": "Japan",
+    "created_at": "2023-03-10"
+  },
+  {
+    "id": 104,
+    "name": "Diana Prince",
+    "email": "diana@example.com",
+    "city": "Paris",
+    "country": "France",
+    "created_at": "2023-04-05"
+  },
+  {
+    "id": 105,
+    "name": "Eve Wilson",
+    "email": "eve@example.com",
+    "city": "Sydney",
+    "country": "Australia",
+    "created_at": "2023-05-12"
+  }
+]

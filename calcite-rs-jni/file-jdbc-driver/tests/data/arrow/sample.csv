@@ -1,0 +1,6 @@
+id,product,price,in_stock
+1,Widget,19.99,true
+2,Gadget,29.99,false
+3,Tool,39.99,true
+4,Device,49.99,true
+5,Component,9.99,false
