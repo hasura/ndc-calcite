@@ -27,7 +27,7 @@
         <module>./splunk-jdbc-driver</module>
 <!--        <module>./file-jdbc-driver</module>-->
         <module>./sharepoint-list-jdbc-driver</module>
-        <module>./aperio-jdbc-driver</module>
+        <module>./apericio-jdbc-driver</module>
         <module>./sqlengine</module>
     </modules>
 </project>

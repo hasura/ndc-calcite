@@ -332,7 +332,32 @@ You can still specify a custom table name:
 
 ## Error Handling
 
-Common issues and solutions:
+### Available Error Handling Features
+
+The File JDBC Driver provides basic error handling capabilities:
+
+| Feature | Description | Configuration |
+|---------|-------------|--------------|
+| HTTP Timeout | Connection timeout for HTTP/HTTPS requests | `httpTimeout` property (milliseconds) |
+| HTTP Retries | Simple retry count for failed HTTP requests | `httpRetries` property (integer) |
+
+**Example:**
+```java
+Properties props = new Properties();
+props.setProperty("httpTimeout", "30000");  // 30 second timeout
+props.setProperty("httpRetries", "3");       // Retry 3 times
+
+Connection conn = DriverManager.getConnection("jdbc:file:https://api.example.com/data.json", props);
+```
+
+**Note:** The driver does NOT currently support:
+- Exponential backoff strategies
+- Circuit breaker patterns
+- Health check monitoring
+- Configurable retry policies
+- Custom error recovery strategies
+
+### Common Issues and Solutions
 
 **"Table not found"**
 - Check file paths and permissions
@@ -349,6 +374,11 @@ Common issues and solutions:
 - HTML files must use directory discovery
 - Cannot be used with explicit table mapping
 - Verify table extraction from HTML content
+
+**"Connection timeouts"**
+- Increase `httpTimeout` value for slow APIs
+- Check network connectivity
+- Verify URL accessibility
 
 ## Testing
 

@@ -35,7 +35,7 @@ public class SharePointListDriverFacadeTest {
     @Test
     public void testDriverDelegation() throws SQLException {
         // Verify the driver is properly registered
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         assertNotNull("Driver should not be null", driver);
         
         // Check basic JDBC methods
@@ -53,7 +53,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testDirectJdbcUrlFormat() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         try {
             // Direct parameter format
@@ -75,7 +75,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testPostgreSQLStyleUrl() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         try {
             // PostgreSQL-style URL formats
@@ -92,7 +92,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testEnvironmentVariableSupport() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // Test that minimal URL (relying on env vars) is accepted
         try {
@@ -105,7 +105,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test 
     public void testAuthenticationMethods() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         try {
             // Client Credentials authentication
@@ -135,7 +135,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testCRUDSupport() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // Verify CRUD operations are supported through URL acceptance
         try {
@@ -149,7 +149,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testDDLSupport() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // DDL operations (CREATE TABLE, DROP TABLE) are supported through the adapter
         try {
@@ -163,7 +163,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testBatchOperationSupport() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // Batch operations are automatically optimized by the adapter
         try {
@@ -177,7 +177,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testMetadataSchemaSupport() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // PostgreSQL-compatible metadata schemas are provided by the adapter
         try {
@@ -191,7 +191,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testPropertiesObjectSupport() throws SQLException {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // Test that properties object is properly passed through
         Properties props = new Properties();
@@ -211,7 +211,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testPropertyInfoDelegation() throws SQLException {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         Properties props = new Properties();
         DriverPropertyInfo[] propertyInfo = driver.getPropertyInfo("jdbc:sharepoint://company.sharepoint.com/sites/test", props);
@@ -232,7 +232,7 @@ public class SharePointListDriverFacadeTest {
         props.setProperty("clientSecret", localProperties.getProperty("sharepoint.clientSecret", "test-client-secret"));
         props.setProperty("tenantId", localProperties.getProperty("sharepoint.tenantId", "test-tenant-id"));
         
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // Just test that the URL handling doesn't throw exceptions during setup
         try {
@@ -249,7 +249,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testSchemaConfiguration() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         try {
             // Test custom schema configuration
@@ -263,7 +263,7 @@ public class SharePointListDriverFacadeTest {
     
     @Test
     public void testGraphAPIIntegration() {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // The driver uses Microsoft Graph API through the adapter
         try {

@@ -13,7 +13,7 @@ public class SharePointListDriverTest {
     public void setUp() {
         // Ensure driver is registered
         try {
-            Class.forName("com.hasura.sharepoint.SharePointListDriver");
+            Class.forName("com.hasura.SharePointListDriver");
         } catch (ClassNotFoundException e) {
             fail("SharePointListDriver not found");
         }
@@ -23,12 +23,12 @@ public class SharePointListDriverTest {
     public void testDriverRegistration() throws SQLException {
         Driver driver = DriverManager.getDriver("jdbc:sharepoint://company.sharepoint.com/sites/test");
         assertNotNull("Driver should be registered", driver);
-        assertTrue("Should be SharePointListDriver", driver instanceof SharePointListDriver);
+        assertTrue("Should be SharePointListDriver", driver instanceof com.hasura.SharePointListDriver);
     }
     
     @Test
     public void testAcceptsURL() throws SQLException {
-        SharePointListDriver driver = new SharePointListDriver();
+        com.hasura.SharePointListDriver driver = new com.hasura.SharePointListDriver();
         
         // Valid URLs
         assertTrue(driver.acceptsURL("jdbc:sharepoint://company.sharepoint.com/sites/test"));
