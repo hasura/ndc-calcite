@@ -122,8 +122,12 @@ async fn initialize(
             DOCKER_IMAGE_NAME,
             context.release_version.unwrap_or("latest")
         );
-        let update_command =
-            format!("docker run --entry-point ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:{} {} update", DOCKER_CONNECTOR_DIR, docker_image);
+        // let update_command =
+        //     format!("docker run --entry-point ndc-calcite-cli -e HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH -v ${{HASURA_PLUGIN_CONNECTOR_CONTEXT_PATH}}:{} {} update", DOCKER_CONNECTOR_DIR, docker_image);
+        let update_command = metadata::UpdateOptions::Dockerized(metadata::DockerComposeUpdateOptions {
+            docker_image: docker_image.clone(),
+            command_args: vec!["update".to_string()],
+        });
         let metadata = metadata::ConnectorMetadataDefinition {
             packaging_definition: metadata::PackagingDefinition::PrebuiltDockerImage(
                 metadata::PrebuiltDockerImagePackaging { docker_image },
@@ -137,7 +141,7 @@ async fn initialize(
                 required: true,
             }],
             commands: metadata::Commands {
-                update: Some(update_command.to_string()),
+                update: Some(update_command),
                 watch: None,
             },
             cli_plugin: None,
