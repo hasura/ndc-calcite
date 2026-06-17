@@ -25,7 +25,7 @@ COPY . .
 RUN cargo build --release --bin ndc-calcite --bin ndc-calcite-cli
 
 # java-build stage - Use Amazon Corretto Alpine (no Debian repos)
-FROM amazoncorretto:21-alpine AS java-build
+FROM us-docker.pkg.dev/hasura-container-images/external-images/docker.io/library/amazoncorretto:21-alpine-stable AS java-build
 COPY scripts/java_env_jdk.sh ./scripts/
 
 # Install Maven and Gradle using Alpine package manager (not Debian)
@@ -54,7 +54,7 @@ RUN sh -x build.sh 2>&1 | tee build.log || (echo "=== Build failed. Last 50 line
 RUN mvn dependency:copy-dependencies
 
 # runtime stage - Use Amazon Corretto Alpine (no Debian repos)
-FROM amazoncorretto:21-alpine AS runtime
+FROM us-docker.pkg.dev/hasura-container-images/external-images/docker.io/library/amazoncorretto:21-alpine-stable AS runtime
 COPY scripts/java_env_jre.sh ./scripts/
 
 # Clean Java runtime - Alpine, no Debian repositories involved
